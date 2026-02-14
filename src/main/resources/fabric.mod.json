@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "lomka",
+	"version": "0.0.1",
+	"name": "Lomka",
+	"description": "A less powerful optimization mod. Perfomes various optimizations: caching, culling, chunks, textures, rendering, nbt and network.",
+	"authors": [
+		"Starlev"
+	],
+	"contact": {
+		"sources": "https://github.com/Starlevka/Lomka",
+		"issues": "https://github.com/Starlevka/Lomka/issues",
+		"homepage": "https://modrinth.com/mod/lomka"
+	},
+	"license": "MIT",
+	"icon": "assets/lomka/icon.png",
+	"environment": "*",
+	"custom": {
+		"fabric-loom:generated": true,
+		"modmenu:parent": {
+			"id": "optimization",
+			"name": "Optimization"
+		}
+	},
+	"entrypoints": {
+		"main": [
+			"set.starl.Lomka"
+		]
+	},
+	"mixins": [
+		"lomka.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.11",
+		"java": ">=21"
+	}
+}

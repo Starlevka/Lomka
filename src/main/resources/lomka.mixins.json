@@ -1,0 +1,41 @@
+{
+	"required": true,
+	"package": "set.starl.mixin",
+	"plugin": "set.starl.mixin.LomkaMixinPlugin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"cache.FallbackResourceManagerBbmodelCacheMixin",
+		"cache.LazyLoadedImageMixin",
+		"cache.MinecraftResourceReloadSaltMixin",
+		"cache.MipmapGeneratorMixin",
+		"cache.SpriteResourceLoaderMixin",
+		"cache.TextureContentsDiskCacheMixin",
+		"chunk.LevelRendererChunkCompileThrottleMixin",
+		"chunk.LevelRendererTranslucencyResortThrottleMixin",
+		"chunk.SectionRenderDispatcherPriorityMixin",
+		"chunk.SectionRenderDispatcherRenderSectionUploadBudgetMixin",
+		"chunk.SectionRenderDispatcherUploadThrottleMixin",
+		"network.CompressionDecoderDirectInputReuseMixin",
+		"network.FriendlyByteBufNbtCodecThrottleMixin",
+		"network.NbtIoThrottleMixin",
+		"particles.ElderGuardianParticleGroupMixin",
+		"particles.ItemPickupParticleGroupMixin",
+		"particles.QuadParticleGroupDistanceCullingMixin",
+		"render.AbstractTextureMarkUsedMixin",
+		"render.BlockEntityRenderDispatcherShouldRenderFastPathMixin",
+		"render.CameraFluidInCameraMixin",
+		"render.EntityRendererCullingMixin",
+		"render.FrustumMixin",
+		"render.OctreeLeafMixin",
+		"render.RenderSystemInitRendererOpenGlDebugOffMixin",
+		"render.TextureManagerTextureCullingMixin",
+		"render.WeatherEffectRendererMixin",
+		"shader.GlDeviceProgramBinaryCacheMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}
