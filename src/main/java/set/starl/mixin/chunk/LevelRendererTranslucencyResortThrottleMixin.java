@@ -5,6 +5,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.client.renderer.LevelRenderer;
+import set.starl.Lomka;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,6 +19,9 @@ public class LevelRendererTranslucencyResortThrottleMixin {
 
 	@Unique
 	private static final long LOMKA$MAX_SKIP_MS = Long.parseLong(System.getProperty("lomka.translucencyResort.maxSkipMs", "100"));
+
+	@Unique
+	private static final boolean LOMKA$ADAPTIVE_BUDGETS = !"false".equalsIgnoreCase(System.getProperty("lomka.translucencyResort.budgets.adaptive", "true"));
 
 	@Unique
 	private static final double LOMKA$MIN_MOVE = Double.parseDouble(System.getProperty("lomka.translucencyResort.minMove", "0.03125"));
@@ -46,8 +50,19 @@ public class LevelRendererTranslucencyResortThrottleMixin {
 			return;
 		}
 
+		long maxSkipMs = LOMKA$MAX_SKIP_MS;
+		if (LOMKA$ADAPTIVE_BUDGETS) {
+			float scale = Lomka.getRenderBudgetScale();
+			if (scale > 0.0f) {
+				maxSkipMs = (long)((double)maxSkipMs / (double)scale);
+			}
+		}
+		if (maxSkipMs <= 0L) {
+			return;
+		}
+
 		long now = Util.getMillis();
-		if (now - this.lomka$lastRunMs >= LOMKA$MAX_SKIP_MS) {
+		if (now - this.lomka$lastRunMs >= maxSkipMs) {
 			return;
 		}
 

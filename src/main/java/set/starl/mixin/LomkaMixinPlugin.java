@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 public class LomkaMixinPlugin implements IMixinConfigPlugin {
 	private static final boolean LOMKA$ALLOW_CHUNK_MIXINS_WITH_SODIUM = "true".equalsIgnoreCase(System.getProperty("lomka.compat.sodium.allowChunkMixins", "false"));
+	private static final boolean LOMKA$ALLOW_UNSAFE_CHUNK_MIXINS_WITH_SODIUM = "true".equalsIgnoreCase(System.getProperty("lomka.compat.sodium.allowChunkMixins.unsafe", "false"));
+	private static final Set<String> LOMKA$SAFE_CHUNK_MIXINS_WITH_SODIUM = Set.of(
+		"set.starl.mixin.chunk.LevelRendererTranslucencyResortThrottleMixin"
+	);
 
 	private static volatile boolean lomka$checkedMods;
 	private static volatile boolean lomka$hasSodium;
@@ -37,12 +41,20 @@ public class LomkaMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(final String targetClassName, final String mixinClassName) {
-		if (!LOMKA$ALLOW_CHUNK_MIXINS_WITH_SODIUM && (lomka$hasSodium || lomka$hasC2ME)) {
-			if (mixinClassName.startsWith("set.starl.mixin.chunk.")) {
-				return false;
-			}
+		if (!(lomka$hasSodium || lomka$hasC2ME)) {
+			return true;
 		}
-		return true;
+		if (!mixinClassName.startsWith("set.starl.mixin.chunk.")) {
+			return true;
+		}
+
+		if (!LOMKA$ALLOW_CHUNK_MIXINS_WITH_SODIUM) {
+			return false;
+		}
+		if (LOMKA$ALLOW_UNSAFE_CHUNK_MIXINS_WITH_SODIUM) {
+			return true;
+		}
+		return LOMKA$SAFE_CHUNK_MIXINS_WITH_SODIUM.contains(mixinClassName);
 	}
 
 	@Override

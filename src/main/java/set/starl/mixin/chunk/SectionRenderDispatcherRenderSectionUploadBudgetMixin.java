@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SectionRenderDispatcher.RenderSection.class)
 public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 	@Unique
-	private static final ThreadLocal<Long> LOMKA$NEXT_UPLOAD_BYTES = ThreadLocal.withInitial(() -> Long.valueOf(-1L));
+	private static final ThreadLocal<long[]> LOMKA$NEXT_UPLOAD_BYTES = ThreadLocal.withInitial(() -> new long[] { -1L });
 
 	@Inject(method = "upload", at = @At("HEAD"))
 	private void lomka$estimateUploadBytes(
@@ -44,7 +44,7 @@ public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 			} catch (Exception ignored) {
 			}
 		}
-		LOMKA$NEXT_UPLOAD_BYTES.set(Long.valueOf(bytes));
+		LOMKA$NEXT_UPLOAD_BYTES.get()[0] = bytes;
 	}
 
 	@Inject(method = "upload", at = @At("RETURN"))
@@ -53,7 +53,7 @@ public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 		final CompiledSectionMesh compiledSectionMesh,
 		final CallbackInfoReturnable<CompletableFuture<?>> cir
 	) {
-		LOMKA$NEXT_UPLOAD_BYTES.set(Long.valueOf(-1L));
+		LOMKA$NEXT_UPLOAD_BYTES.get()[0] = -1L;
 	}
 
 	@Redirect(
@@ -64,8 +64,9 @@ public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 		)
 	)
 	private CompletableFuture<?> lomka$wrapUploadRunnable(final Runnable runnable, final Executor executor) {
-		long bytes = LOMKA$NEXT_UPLOAD_BYTES.get().longValue();
-		LOMKA$NEXT_UPLOAD_BYTES.set(Long.valueOf(-1L));
+		long[] ref = LOMKA$NEXT_UPLOAD_BYTES.get();
+		long bytes = ref[0];
+		ref[0] = -1L;
 		if (bytes >= 0L) {
 			return CompletableFuture.runAsync(new Lomka.UploadSizedRunnable(bytes, runnable), executor);
 		}
@@ -73,7 +74,7 @@ public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 	}
 
 	@Unique
-	private static final ThreadLocal<Long> LOMKA$NEXT_INDEX_UPLOAD_BYTES = ThreadLocal.withInitial(() -> Long.valueOf(-1L));
+	private static final ThreadLocal<long[]> LOMKA$NEXT_INDEX_UPLOAD_BYTES = ThreadLocal.withInitial(() -> new long[] { -1L });
 
 	@Inject(method = "uploadSectionIndexBuffer", at = @At("HEAD"))
 	private void lomka$estimateIndexUploadBytes(
@@ -88,7 +89,7 @@ public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 			bytes = bb == null ? -1L : (long) bb.remaining();
 		} catch (Exception ignored) {
 		}
-		LOMKA$NEXT_INDEX_UPLOAD_BYTES.set(Long.valueOf(bytes));
+		LOMKA$NEXT_INDEX_UPLOAD_BYTES.get()[0] = bytes;
 	}
 
 	@Inject(method = "uploadSectionIndexBuffer", at = @At("RETURN"))
@@ -98,7 +99,7 @@ public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 		final ChunkSectionLayer layer,
 		final CallbackInfoReturnable<CompletableFuture<?>> cir
 	) {
-		LOMKA$NEXT_INDEX_UPLOAD_BYTES.set(Long.valueOf(-1L));
+		LOMKA$NEXT_INDEX_UPLOAD_BYTES.get()[0] = -1L;
 	}
 
 	@Redirect(
@@ -109,8 +110,9 @@ public class SectionRenderDispatcherRenderSectionUploadBudgetMixin {
 		)
 	)
 	private CompletableFuture<?> lomka$wrapIndexUploadRunnable(final Runnable runnable, final Executor executor) {
-		long bytes = LOMKA$NEXT_INDEX_UPLOAD_BYTES.get().longValue();
-		LOMKA$NEXT_INDEX_UPLOAD_BYTES.set(Long.valueOf(-1L));
+		long[] ref = LOMKA$NEXT_INDEX_UPLOAD_BYTES.get();
+		long bytes = ref[0];
+		ref[0] = -1L;
 		if (bytes >= 0L) {
 			return CompletableFuture.runAsync(new Lomka.UploadSizedRunnable(bytes, runnable), executor);
 		}

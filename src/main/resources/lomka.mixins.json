@@ -27,6 +27,7 @@
 		"render.EntityRendererCullingMixin",
 		"render.FrustumMixin",
 		"render.OctreeLeafMixin",
+		"render.TrackingItemStackRenderStateModelIdentityCacheMixin",
 		"render.RenderSystemInitRendererOpenGlDebugOffMixin",
 		"render.TextureManagerTextureCullingMixin",
 		"render.WeatherEffectRendererMixin",

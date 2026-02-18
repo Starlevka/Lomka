@@ -11,9 +11,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import set.starl.bridge.FrustumIntersectionAccess;
 
 @Mixin(Frustum.class)
-public class FrustumMixin {
+public class FrustumMixin implements FrustumIntersectionAccess {
 	@Unique
 	private static final int LOMKA$CAMERA_CUBE_MODE = lomka$cameraCubeMode();
 
@@ -87,6 +88,12 @@ public class FrustumMixin {
 	private double lomka$fastCeil(final double v) {
 		long i = (long)v;
 		return v > (double)i ? (double)(i + 1L) : (double)i;
+	}
+
+	@Unique
+	@Override
+	public FrustumIntersection lomka$getIntersection() {
+		return this.intersection;
 	}
 
 	@Unique

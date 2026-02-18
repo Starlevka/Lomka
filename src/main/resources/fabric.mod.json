@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "lomka",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"name": "Lomka",
 	"description": "A less powerful optimization mod. Perfomes various optimizations: caching, culling, chunks, textures, rendering, nbt and network.",
 	"authors": [
@@ -14,7 +14,7 @@
 	},
 	"license": "MIT",
 	"icon": "assets/lomka/icon.png",
-	"environment": "*",
+	"environment": "client",
 	"custom": {
 		"fabric-loom:generated": true,
 		"modmenu:parent": {

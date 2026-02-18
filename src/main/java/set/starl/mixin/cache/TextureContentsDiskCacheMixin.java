@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -41,6 +42,21 @@ public class TextureContentsDiskCacheMixin {
 
 	@Unique
 	private static final boolean LOMKA$ENABLE = !"false".equalsIgnoreCase(System.getProperty("lomka.textures.cache.simple", "true"));
+
+	@Unique
+	private static final ThreadLocal<byte[]> LOMKA$IO_BUFFER = ThreadLocal.withInitial(() -> new byte[64 * 1024]);
+
+	@Unique
+	private static final boolean LOMKA$WRITE_ASYNC = Lomka.JAVA_22_25_OPTIMIZATIONS
+		&& !"false".equalsIgnoreCase(System.getProperty("lomka.textures.cache.writeAsync", "true"));
+
+	@Unique
+	private static final int LOMKA$WRITE_PARALLELISM = Integer.parseInt(System.getProperty("lomka.textures.cache.write.parallelism", "1"));
+
+	@Unique
+	private static final Semaphore LOMKA$WRITE_GUARD = (LOMKA$WRITE_ASYNC && LOMKA$WRITE_PARALLELISM > 0)
+		? new Semaphore(Math.max(1, Math.min(8, LOMKA$WRITE_PARALLELISM)))
+		: null;
 
 	@Unique
 	private static final long LOMKA$MAX_TOTAL_BYTES = Long.parseLong(System.getProperty("lomka.textures.cache.maxTotalBytes", "536870912"));
@@ -86,9 +102,9 @@ public class TextureContentsDiskCacheMixin {
 			return;
 		}
 
-		String packId = resource.sourcePackId();
+		String packId = Lomka.dedupString(resource.sourcePackId());
 		Object known = resource.knownPackInfo().orElse(null);
-		String packVersion = known == null ? "" : known.toString();
+		String packVersion = Lomka.dedupString(known == null ? "" : known.toString());
 		Path cacheFile = lomka$cacheFile(packId, packVersion, String.valueOf(id), Lomka.TEXTURE_MAX_DIMENSION);
 		NativeImage loaded;
 		try {
@@ -225,34 +241,50 @@ public class TextureContentsDiskCacheMixin {
 			} else {
 				boolean written = rawSize > 0L && rawSize <= LOMKA$MAX_ENTRY_BYTES;
 				if (written) {
+					long tempTid = Thread.currentThread().threadId();
 					if (rawBytes != null) {
-						try {
-							Path temp = cacheFile.resolveSibling(cacheFile.getFileName().toString() + "." + Thread.currentThread().threadId() + ".tmp");
-							try (OutputStream os = Files.newOutputStream(temp)) {
-								os.write(rawBytes);
-							}
+						byte[] rawBytesFinal = rawBytes;
+						lomka$runWriteJob(() -> {
 							try {
-								Files.move(temp, cacheFile, StandardCopyOption.ATOMIC_MOVE);
+								Path temp = cacheFile.resolveSibling(cacheFile.getFileName().toString() + "." + tempTid + ".tmp");
+								try (OutputStream os = Files.newOutputStream(temp)) {
+									os.write(rawBytesFinal);
+								}
+								try {
+									Files.move(temp, cacheFile, StandardCopyOption.ATOMIC_MOVE);
+								} catch (Exception ignored) {
+									try {
+										Files.move(temp, cacheFile, StandardCopyOption.REPLACE_EXISTING);
+									} catch (Exception ignored2) {
+									}
+								}
+								lomka$touch(cacheFile);
+								lomka$scheduleTrimCache();
+							} catch (Exception ignored) {
+							}
+						});
+					} else {
+						Path rawTempFinal = rawTemp;
+						lomka$runWriteJob(() -> {
+							try {
+								try {
+									Files.move(rawTempFinal, cacheFile, StandardCopyOption.ATOMIC_MOVE);
+								} catch (Exception ignored) {
+									try {
+										Files.move(rawTempFinal, cacheFile, StandardCopyOption.REPLACE_EXISTING);
+									} catch (Exception ignored2) {
+									}
+								}
+								lomka$touch(cacheFile);
+								lomka$scheduleTrimCache();
 							} catch (Exception ignored) {
 								try {
-									Files.move(temp, cacheFile, StandardCopyOption.REPLACE_EXISTING);
+									Files.deleteIfExists(rawTempFinal);
 								} catch (Exception ignored2) {
 								}
 							}
-						} catch (Exception ignored) {
-						}
-					} else {
-						try {
-							Files.move(rawTemp, cacheFile, StandardCopyOption.ATOMIC_MOVE);
-						} catch (Exception ignored) {
-							try {
-								Files.move(rawTemp, cacheFile, StandardCopyOption.REPLACE_EXISTING);
-							} catch (Exception ignored2) {
-							}
-						}
+						});
 					}
-					lomka$touch(cacheFile);
-					lomka$scheduleTrimCache();
 				} else {
 					try {
 						if (rawTempExists) {
@@ -292,8 +324,29 @@ public class TextureContentsDiskCacheMixin {
 	}
 
 	@Unique
+	private static void lomka$runWriteJob(final Runnable job) {
+		if (!LOMKA$WRITE_ASYNC) {
+			job.run();
+			return;
+		}
+		CompletableFuture.runAsync(() -> {
+			Semaphore guard = LOMKA$WRITE_GUARD;
+			if (guard == null) {
+				job.run();
+				return;
+			}
+			guard.acquireUninterruptibly();
+			try {
+				job.run();
+			} finally {
+				guard.release();
+			}
+		}, Lomka.TEXTURE_DECODE_EXECUTOR);
+	}
+
+	@Unique
 	private static boolean lomka$writeToFileCapped(final InputStream in, final Path out, final long maxBytes) throws IOException {
-		byte[] buffer = new byte[64 * 1024];
+		byte[] buffer = LOMKA$IO_BUFFER.get();
 		long written = 0L;
 		try (java.io.OutputStream os = Files.newOutputStream(out)) {
 			while (true) {
@@ -318,7 +371,7 @@ public class TextureContentsDiskCacheMixin {
 		final long maxInMemoryBytes,
 		final long[] totalOut
 	) throws IOException {
-		byte[] buffer = new byte[64 * 1024];
+		byte[] buffer = LOMKA$IO_BUFFER.get();
 		long total = 0L;
 		boolean spilled = false;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(64 * 1024);
@@ -359,7 +412,7 @@ public class TextureContentsDiskCacheMixin {
 
 	@Unique
 	private static long lomka$copyToFile(final InputStream in, final Path out) throws IOException {
-		byte[] buffer = new byte[64 * 1024];
+		byte[] buffer = LOMKA$IO_BUFFER.get();
 		long written = 0L;
 		try (java.io.OutputStream os = Files.newOutputStream(out)) {
 			while (true) {
@@ -402,7 +455,7 @@ public class TextureContentsDiskCacheMixin {
 	@Unique
 	private static Path lomka$cacheFile(final String packId, final String packVersion, final String idString, final int maxDimension) {
 		Path gameDir = Minecraft.getInstance().gameDirectory.toPath();
-		String packDirName = lomka$sanitize(packId);
+		String packDirName = Lomka.dedupString(lomka$sanitize(packId));
 		String key = packId + "|" + packVersion + "|" + idString + "|gen:" + Lomka.getResourceReloadSalt();
 		if (maxDimension > 0) {
 			key = key + "|max:" + maxDimension;

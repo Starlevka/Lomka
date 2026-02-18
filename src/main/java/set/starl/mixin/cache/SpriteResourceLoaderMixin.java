@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SpriteResourceLoader.class)
 public interface SpriteResourceLoaderMixin {
+
 	@Inject(method = "create", at = @At("RETURN"), cancellable = true)
 	private static void lomka$wrapCreate(final Set additionalMetadataSections, final CallbackInfoReturnable<SpriteResourceLoader> cir) {
 		SpriteResourceLoader original = cir.getReturnValue();
@@ -124,9 +125,9 @@ public interface SpriteResourceLoaderMixin {
 		final int scale,
 		final NativeImage alreadyDecoded
 	) throws IOException {
-		String packId = resource.sourcePackId();
+		String packId = Lomka.dedupString(resource.sourcePackId());
 		Object known = resource.knownPackInfo().orElse(null);
-		String packVersion = known == null ? "" : known.toString();
+		String packVersion = Lomka.dedupString(known == null ? "" : known.toString());
 		int maxDim = Lomka.TEXTURE_MAX_DIMENSION;
 		Path cacheFile = lomka$cacheFile(packId, packVersion, String.valueOf(spriteLocation), maxDim, scale);
 		Path baseCacheFile = scale == 1 ? cacheFile : lomka$cacheFile(packId, packVersion, String.valueOf(spriteLocation), maxDim, 1);
@@ -263,7 +264,7 @@ public interface SpriteResourceLoaderMixin {
 
 	private static Path lomka$cacheFile(final String packId, final String packVersion, final String spriteIdString, final int maxDim, final int scale) {
 		Path gameDir = Minecraft.getInstance().gameDirectory.toPath();
-		String packDirName = lomka$sanitize(packId);
+		String packDirName = Lomka.dedupString(lomka$sanitize(packId));
 		String key = "atlas|" + packId + "|" + packVersion + "|" + spriteIdString + "|gen:" + Lomka.getResourceReloadSalt() + "|max:" + maxDim + "|scale:" + scale;
 		String hash = lomka$sha1(key);
 		return gameDir.resolve("cache").resolve("lomka").resolve(packDirName).resolve(hash.substring(0, 2)).resolve(hash + ".png");
@@ -291,8 +292,16 @@ public interface SpriteResourceLoaderMixin {
 
 	private static int[] lomka$tryReadPngDimensions(final Resource resource) {
 		try (InputStream is = resource.open()) {
-			byte[] header = is.readNBytes(32);
-			if (header.length < 24) {
+			byte[] header = Lomka.PNG_HEADER_32.get();
+			int off = 0;
+			while (off < 32) {
+				int r = is.read(header, off, 32 - off);
+				if (r < 0) {
+					break;
+				}
+				off += r;
+			}
+			if (off < 24) {
 				return null;
 			}
 			if ((header[0] & 0xFF) != 0x89 || header[1] != 0x50 || header[2] != 0x4E || header[3] != 0x47) {

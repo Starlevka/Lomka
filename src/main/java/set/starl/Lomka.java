@@ -4,6 +4,8 @@ import net.fabricmc.api.ModInitializer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +36,18 @@ public class Lomka implements ModInitializer {
 			throw new RuntimeException(e);
 		}
 	});
+	public static final ThreadLocal<byte[]> SHA1_ASCII_BUF = ThreadLocal.withInitial(() -> new byte[4096]);
+	public static final boolean STRING_DEDUP_ENABLE = !"false".equalsIgnoreCase(System.getProperty("lomka.strings.dedup", "true"));
+	public static final int STRING_DEDUP_MAX_ENTRIES = Integer.parseInt(System.getProperty("lomka.strings.dedup.maxEntries", "8192"));
+	public static final int STRING_DEDUP_MAX_LEN = Integer.parseInt(System.getProperty("lomka.strings.dedup.maxLen", "256"));
+	private static final LinkedHashMap<String, String> STRING_DEDUP_CACHE = new LinkedHashMap<>(8192, 0.75f, true);
+	public static final ThreadLocal<byte[]> PNG_HEADER_32 = ThreadLocal.withInitial(() -> new byte[32]);
+	public static volatile float RENDER_BUDGET_SCALE = 1.0f;
+	public static volatile double RENDER_LEVEL_MS_EMA = -1.0;
+	public static final double RENDER_BUDGET_TARGET_MS = Double.parseDouble(System.getProperty("lomka.frameBudget.targetMs", "16.6667"));
+	public static final double RENDER_BUDGET_EMA_ALPHA = Double.parseDouble(System.getProperty("lomka.frameBudget.emaAlpha", "0.15"));
+	public static final float RENDER_BUDGET_MIN_SCALE = Float.parseFloat(System.getProperty("lomka.frameBudget.minScale", "0.25"));
+	public static final float RENDER_BUDGET_MAX_SCALE = Float.parseFloat(System.getProperty("lomka.frameBudget.maxScale", "2.0"));
 
 	// This logger is used to write text to the console and the log file.
 	// It is considered best practice to use your mod id as the logger's name.
@@ -84,7 +98,33 @@ public class Lomka implements ModInitializer {
 	public static String sha1Hex(final String s) {
 		MessageDigest md = SHA1.get();
 		md.reset();
-		byte[] digest = md.digest(s.getBytes(StandardCharsets.UTF_8));
+		if (s == null || s.isEmpty()) {
+			byte[] digest = md.digest();
+			return lomka$toHex(digest);
+		}
+
+		byte[] buf = SHA1_ASCII_BUF.get();
+		int off = 0;
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c > 0x7F) {
+				byte[] digest = md.digest(s.getBytes(StandardCharsets.UTF_8));
+				return lomka$toHex(digest);
+			}
+			buf[off++] = (byte)c;
+			if (off == buf.length) {
+				md.update(buf, 0, off);
+				off = 0;
+			}
+		}
+		if (off > 0) {
+			md.update(buf, 0, off);
+		}
+		byte[] digest = md.digest();
+		return lomka$toHex(digest);
+	}
+
+	private static String lomka$toHex(final byte[] digest) {
 		char[] hex = new char[digest.length * 2];
 		for (int i = 0; i < digest.length; i++) {
 			int v = digest[i] & 0xff;
@@ -92,6 +132,80 @@ public class Lomka implements ModInitializer {
 			hex[i * 2 + 1] = Character.forDigit(v & 0xf, 16);
 		}
 		return new String(hex);
+	}
+
+	public static void recordRenderLevelNanos(final long nanos) {
+		if (nanos <= 0L) {
+			return;
+		}
+		double ms = (double)nanos * 1.0e-6;
+		if (!(ms > 0.0)) {
+			return;
+		}
+		double alpha = RENDER_BUDGET_EMA_ALPHA;
+		if (!(alpha > 0.0) || alpha > 1.0) {
+			alpha = 0.15;
+		}
+		double ema = RENDER_LEVEL_MS_EMA;
+		if (!(ema > 0.0)) {
+			ema = ms;
+		} else {
+			ema += (ms - ema) * alpha;
+		}
+		RENDER_LEVEL_MS_EMA = ema;
+
+		double target = RENDER_BUDGET_TARGET_MS;
+		if (!(target > 0.0)) {
+			target = 16.6667;
+		}
+		float scale = (float)(target / ema);
+		float min = RENDER_BUDGET_MIN_SCALE;
+		float max = RENDER_BUDGET_MAX_SCALE;
+		if (min <= 0.0f) {
+			min = 0.25f;
+		}
+		if (max < min) {
+			max = min;
+		}
+		if (scale < min) {
+			scale = min;
+		} else if (scale > max) {
+			scale = max;
+		}
+		RENDER_BUDGET_SCALE = scale;
+	}
+
+	public static float getRenderBudgetScale() {
+		return RENDER_BUDGET_SCALE;
+	}
+
+	public static String dedupString(final String s) {
+		if (!STRING_DEDUP_ENABLE || s == null) {
+			return s;
+		}
+		int maxEntries = STRING_DEDUP_MAX_ENTRIES;
+		if (maxEntries <= 0) {
+			return s;
+		}
+		int maxLen = STRING_DEDUP_MAX_LEN;
+		if (maxLen > 0 && s.length() > maxLen) {
+			return s;
+		}
+		synchronized (STRING_DEDUP_CACHE) {
+			String existing = STRING_DEDUP_CACHE.get(s);
+			if (existing != null) {
+				return existing;
+			}
+			STRING_DEDUP_CACHE.put(s, s);
+			if (STRING_DEDUP_CACHE.size() > maxEntries) {
+				Iterator<String> it = STRING_DEDUP_CACHE.keySet().iterator();
+				if (it.hasNext()) {
+					it.next();
+					it.remove();
+				}
+			}
+			return s;
+		}
 	}
 
 	public static final class UploadSizedRunnable implements Runnable {
