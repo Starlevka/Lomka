@@ -1,0 +1,35 @@
+{
+	"required": true,
+	"package": "set.starl.injection.mixins",
+	"plugin": "set.starl.util.compat.LomkaMixinPlugin",
+	"compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "chunk.ClientChunkCacheMixin",
+        "chunk.LevelRendererTranslucencyResortThrottleMixin",
+        "crash.CrashReportCategoryFileNameNullGuardMixin",
+        "network.CompressionDecoderDirectInputReuseMixin",
+        "network.FriendlyByteBufNbtCodecThrottleMixin",
+        "network.NbtIoThrottleMixin",
+        "render.RenderSystemGlDebugOffMixin",
+        "texture.LazyLoadedImageOffThreadMixin",
+        "cull.BlockEntityCullingMixin",
+        "cull.ClientLevelEntityTickCullMixin",
+        "cull.EntityCullingMixin",
+        "cull.EntityRendererCullingMixin",
+        "cull.FrustumMixin",
+        "cull.OctreeLeafMixin",
+        "cull.SmartLeavesCullingMixin",
+        "accessors.LevelRendererAccessor",
+        "render.GlCommandEncoderPolygonModeMixin",
+        "render.GlCommandEncoderScissorCacheMixin",
+        "render.GlCommandEncoderViewportCacheMixin",
+        "render.GlRenderPassReuseMixin"
+    ],
+	"injectors": {
+		"defaultRequire": 1
+	},
+    "overwrites": {
+        "requireAnnotations": true
+    },
+    "suppressAll": true
+}

@@ -1,0 +1,52 @@
+{
+	"lomka.config.title": "Lomka Configuration",
+	"lomka.config.on": "ON",
+	"lomka.config.off": "OFF",
+	
+	"lomka.config.section.shaders": "Shaders",
+    "lomka.config.section.textures": "Textures",
+    "lomka.config.section.chunks": "Chunks",
+    "lomka.config.section.nbt": "NBT",
+    "lomka.config.section.network": "Network",
+    "lomka.config.section.render": "Render",
+    "lomka.config.section.culling": "Culling",
+    "lomka.config.section.java": "Java Optimizations",
+	
+	"lomka.config.shaders.program_binary_cache.enable": "Program Binary Cache",
+	"lomka.config.shaders.program_binary_cache.enable.tooltip": "Cache compiled shader programs to disk for faster loading",
+	
+    "lomka.config.culling.enable": "Culling",
+    "lomka.config.culling.enable.tooltip": "Enable all culling optimizations",
+    "lomka.config.culling.frustum_cull_all": "Frustum Cull All Entities",
+    "lomka.config.culling.frustum_cull_all.tooltip": "Apply frustum culling to all entities",
+    "lomka.config.culling.section_occlusion_cull": "Section Occlusion Culling",
+    "lomka.config.culling.section_occlusion_cull.tooltip": "Cull entities in occluded sections",
+    "lomka.config.culling.block_entity_culling": "Block Entity Culling",
+    "lomka.config.culling.block_entity_culling.tooltip": "Apply occlusion and frustum culling to block entities",
+	
+	"lomka.config.textures.decode.off_thread": "Off-Thread Texture Decode",
+	"lomka.config.textures.decode.off_thread.tooltip": "Decode textures on separate threads",
+	
+	"lomka.config.chunks.silence_ignore_out_of_range_log": "Silence Chunk Log Spam",
+	"lomka.config.chunks.silence_ignore_out_of_range_log.tooltip": "Suppress 'Ignoring chunk since it's not in the view range' warnings",
+	
+	"lomka.config.nbt.cache.read_compressed_path": "NBT Read Compressed Path Cache",
+	"lomka.config.nbt.cache.read_compressed_path.tooltip": "Cache compressed NBT path reads",
+	
+	"lomka.config.network.compression_decoder.direct_input_reuse": "Direct Input Reuse",
+	"lomka.config.network.compression_decoder.direct_input_reuse.tooltip": "Reuse direct input buffers for network decompression",
+	
+	"lomka.config.render.opengl_debug_disable": "Disable OpenGL Debug",
+	"lomka.config.render.opengl_debug_disable.tooltip": "Disable OpenGL debug output for better performance",
+    "lomka.config.render.translucency_resort_throttle": "Translucency Resort Throttle",
+    "lomka.config.render.translucency_resort_throttle.tooltip": "Throttle translucency resorting for better performance",
+
+    "lomka.config.culling.smart_leaves_culling": "Smart Leaves Culling",
+    "lomka.config.culling.smart_leaves_culling.tooltip": "Cull faces between adjacent leaf blocks to reduce geometry",
+
+    "lomka.config.culling.force_frustum_culling": "Force Frustum Culling",
+    "lomka.config.culling.force_frustum_culling.tooltip": "Force frustum culling even for entities with custom names (normally they are always visible)",
+
+    "lomka.config.java.java25_optimizations": "Java 25 Optimizations",
+	"lomka.config.java.java25_optimizations.tooltip": "Enable Java 25 optimizations: ScopedValue, compact object headers (-XX:+UseCompactObjectHeaders), AOT cache hints. Requires Java 25+."
+}

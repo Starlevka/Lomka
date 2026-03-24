@@ -1,0 +1,23 @@
+[versions]
+# Mod
+mod = "0.2.0"
+
+# Minecraft
+minecraft = "1.21.10"
+
+# Fabric
+fabric-loader = "0.16.9"
+fabric-loom = "1.15-SNAPSHOT"
+
+# Dependencies
+modmenu = "16.0.0"
+
+[libraries]
+# Fabric Loader
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+
+# ModMenu
+modmenu = { module = "com.terraformersmc:modmenu", version.ref = "modmenu" }
+
+[plugins]
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }

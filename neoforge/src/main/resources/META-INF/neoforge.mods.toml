@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="lomka"
+version="0.2.0"
+displayName="Lomka"
+authors="Starlev"
+description='''A less powerful optimization mod. Performs various optimizations: caching, culling, textures, rendering, nbt and network.'''
+logoFile="icon.png"
+
+[[dependencies.lomka]]
+modId="neoforge"
+type="required"
+versionRange="[21.10.64,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lomka]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.10,1.21.11)"
+ordering="NONE"
+side="BOTH"
