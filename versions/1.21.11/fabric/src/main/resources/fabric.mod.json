@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "lomka",
-	"version": "0.1.0",
+    "version": "0.2.0",
 	"name": "Lomka",
 	"description": "A less powerful optimization mod. Perfomes various optimizations: caching, culling, chunks, textures, rendering, nbt and network.",
 	"authors": [
@@ -27,8 +27,8 @@
 		"lomka.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.18.4",
-		"minecraft": ">=1.21.11"
+        "fabricloader": ">=0.16.10",
+        "minecraft": ">=1.21.10"
 	},
 	"suggests": {
 		"modmenu": "*"

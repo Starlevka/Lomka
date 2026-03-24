@@ -3,8 +3,8 @@ package set.starl.injection.mixins.texture;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.Set;
-import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.server.packs.metadata.MetadataSectionType;
+import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.SpriteLoader;
 import net.minecraft.client.renderer.texture.atlas.SpriteResourceLoader;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,16 +26,16 @@ public class SpriteResourceLoaderOffThreadMixin {
         if (!LomkaCore.TEXTURE_DECODE_OFF_THREAD) {
             return original;
         }
-        SpriteResourceLoader wrapped = (spriteLocation, resource) -> {
+        SpriteResourceLoader wrapped = (spriteLocation, resource, metadata) -> {
             if (Boolean.TRUE.equals(LomkaCore.IN_TEXTURE_DECODE.get())) {
-                return original.loadSprite(spriteLocation, resource);
+                return original.loadSprite(spriteLocation, resource, metadata);
             }
             LomkaCore.TEXTURE_DECODE_GUARD.acquireUninterruptibly();
             LomkaCore.IN_TEXTURE_DECODE.set(Boolean.TRUE);
 
             SpriteContents result;
             try {
-                CompletableFuture<SpriteContents> future = CompletableFuture.supplyAsync(() -> original.loadSprite(spriteLocation, resource), LomkaCore.TEXTURE_DECODE_EXECUTOR);
+                CompletableFuture<SpriteContents> future = CompletableFuture.supplyAsync(() -> original.loadSprite(spriteLocation, resource, metadata), LomkaCore.TEXTURE_DECODE_EXECUTOR);
                 try {
                     result = future.join();
                 } catch (CompletionException e) {
