@@ -14,7 +14,7 @@
 
 <br>
 
-Lomka is a client-side optimization mod for Minecraft. Unlike many other optimization mods that focus solely on rendering or game logic, Lomka improves the game experience by optimizing various subsystems including texture caching, frustum culling, network protocols, NBT processing, chunks optimizations and shader rendering-all without compromising visual quality.
+Lomka is a client-side optimization mod for Minecraft. Unlike many other optimization mods that focus solely on rendering or game logic, Lomka improves the game experience by optimizing various subsystems including texture caching, frustum culling, network protocols, NBT processing and shaders rendering-all without compromising visual quality.
 
 ## Benchmarks
 
@@ -22,7 +22,7 @@ Lomka is a client-side optimization mod for Minecraft. Unlike many other optimiz
 *Config:* `config/lomka.json`
 *Note: All mod options enabled during testing.*
 
-### Singleplayer World (1000 mobs)
+### Singleplayer World (1000 entities)
 
 | Setup | Average FPS |
 | :--- | :--- |
