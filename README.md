@@ -1,8 +1,9 @@
 # Lomka
 
 <div align="center">
-    <img src="https://img.shields.io/badge/Minecraft-1.21.11-blue?style=for-the-badge&logo=minecraft&logoColor=white" alt="Minecraft Version">
     <img src="https://img.shields.io/badge/Fabric-Loader-orange?style=for-the-badge&logo=fabric&logoColor=white" alt="Fabric">
+    <img src="https://img.shields.io/badge/Quilt-Loader-blue?style=for-the-badge&logo=quilt&logoColor=white" alt="Quilt">
+    <img src="https://img.shields.io/badge/NeoForge-Loader-purple?style=for-the-badge&logo=neoforge&logoColor=white" alt="NeoForge">
     <br>
     <a href="https://modrinth.com/mod/lomka">
         <img src="https://img.shields.io/modrinth/dt/lomka?style=for-the-badge&logo=modrinth&logoColor=white&label=Modrinth&color=00AF5C" alt="Modrinth Downloads">
@@ -14,27 +15,26 @@
 
 <br>
 
-Lomka is a client-side optimization mod for Minecraft. Unlike many other optimization mods that focus solely on rendering or game logic, Lomka improves the game experience by optimizing various subsystems including texture caching, frustum culling, network protocols, NBT processing and shaders rendering-all without compromising visual quality.
+Lomka is a client-side optimization mod for Minecraft. Unlike many other optimization mods that focus solely on rendering or game logic, Lomka improves the game experience by optimizing various subsystems including opengl improvements, frustum culling, network protocols, NBT processing, rendering-all without compromising visual quality.
 
 ## Benchmarks
 
 *Test Hardware: Intel CC150, 16GB DDR4, GTX 1050 TI*
-*Config:* `config/lomka.json`
-*Note: All mod options enabled during testing.*
+*Note: All mod options enabled during testing including Java 25 optimizations*
 
-### Singleplayer World (1000 entities)
+### Singleplayer World (1000 mobs)
 
 | Setup | Average FPS |
 | :--- | :--- |
 | **Vanilla** | 53 FPS |
-| **With Lomka** | **78 FPS** |
+| **With Lomka** | **76 FPS** |
 
 ### Iris Shaders (ComplementaryReimagined_r5.7.1, High)
 
 | Setup | Max FPS |
 | :--- | :--- |
-| **Without Lomka** | 70 FPS |
-| **With Lomka** | **80 FPS** |
+| **Without Lomka** | 32 FPS |
+| **With Lomka** | **39 FPS** |
 
 ### Multiplayer Server w/ lots of entities
 
@@ -47,8 +47,8 @@ Lomka is a client-side optimization mod for Minecraft. Unlike many other optimiz
 
 | Setup | Average FPS |
 | :--- | :--- |
-| **Vanilla** | 219 FPS |
-| **With mod** | **422 FPS** |
+| **Vanilla** | 220 FPS |
+| **With mod** | **418 FPS** |
 
 ### Multiplayer Server, if too close to server
 
@@ -61,26 +61,20 @@ Lomka is a client-side optimization mod for Minecraft. Unlike many other optimiz
 
 | Setup | Average ping |
 | :--- | :--- |
-| **Vanilla** | 215 ms |
-| **With mod** | **207 ms** |
+| **Vanilla** | 197 ms |
+| **With mod** | **192 ms** |
 
 CEMT - Custom Entity Model Textures
 
 ## Options
-Lomka uses JSON config only: `config/lomka.json` (created on first launch).
+Lomka uses properties config only: `config/lomka.properties` (created on first launch).
 
-- `java22Optimizations` : Enables experimental optimizations for Java 22+. (default: false)
-- `entities.cullInvisible` : Enables entity culling of all invisible entities. (default: false)
+- `java25Optimizations` : Enables experimental optimizations for Java 25. (default: false)
 
 
 ### ✅ Compatibility
 
 Lomka is designed to be highly compatible with the Fabric ecosystem. It works alongside most other mods and optimization tools (Sodium, Lithium, etc.).
 
-**Lomka works better with quick pack and Helium**
-
-### ⚠️ May be useless/with conflicts
-- C2ME
-- Entity Culling (uses friendly culling, can be unused)
 ### ❌ Known incompatibilities
-- VulkanMod (for now not considered for future compatibility)
+- VulkanMod
