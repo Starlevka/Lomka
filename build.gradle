@@ -1,0 +1,35 @@
+plugins {
+	id 'java'
+}
+
+allprojects {
+	apply plugin: 'java'
+	
+	group = 'set.starl'
+	version = libs.versions.mod.get()
+	
+	repositories {
+		mavenCentral()
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		maven {
+			name = 'TerraformersMC'
+			url = 'https://maven.terraformersmc.com/releases/'
+		}
+        maven {
+            name = 'Mojang'
+            url = 'https://libraries.minecraft.net/'
+            metadataSources {
+                artifact()
+            }
+        }
+	}
+}
+
+subprojects {
+	tasks.withType(JavaCompile).configureEach {
+		options.encoding = 'UTF-8'
+	}
+}

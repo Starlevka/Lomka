@@ -1,0 +1,19 @@
+v1	named	intermediary
+FIELD	set/starl/injection/mixins/accessors/LevelRendererAccessor	Lit/unimi/dsi/fastutil/objects/ObjectArrayList;	visibleSections	field_45616
+FIELD	set/starl/injection/mixins/accessors/LevelRendererAccessor	Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;	destructionProgress	field_20950
+FIELD	set/starl/injection/mixins/accessors/LevelRendererAccessor	Lnet/minecraft/client/renderer/culling/Frustum;	capturedFrustum	field_4056
+FIELD	set/starl/injection/mixins/cull/FrustumMixin	Lorg/joml/FrustumIntersection;	intersection	field_40823
+FIELD	set/starl/injection/mixins/cull/FrustumMixin	Lorg/joml/Matrix4f;	matrix	field_40824
+FIELD	set/starl/injection/mixins/cull/FrustumMixin	Lorg/joml/Vector4f;	viewVector	field_34821
+FIELD	set/starl/injection/mixins/cull/FrustumMixin	D	camX	field_20995
+FIELD	set/starl/injection/mixins/cull/FrustumMixin	D	camY	field_20996
+FIELD	set/starl/injection/mixins/cull/FrustumMixin	D	camZ	field_20997
+FIELD	set/starl/injection/mixins/cull/OctreeLeafMixin	Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection;	section	field_54166
+FIELD	set/starl/injection/mixins/gl/GlRenderPassReuseMixin	Ljava/util/HashMap;	uniforms	field_57873
+FIELD	set/starl/injection/mixins/gl/GlRenderPassReuseMixin	Ljava/util/HashMap;	samplers	field_57874
+FIELD	set/starl/injection/mixins/gl/GlRenderPassReuseMixin	Ljava/util/Set;	dirtyUniforms	field_57875
+METHOD	set/starl/injection/mixins/cull/EntityRendererCullingMixin	(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/phys/AABB;	getBoundingBoxForCulling	method_62358
+METHOD	set/starl/injection/mixins/network/NbtIoThrottleMixin	(Ljava/io/InputStream;)Ljava/io/DataInputStream;	createDecompressorStream	method_40059
+METHOD	set/starl/injection/mixins/network/NbtIoThrottleMixin	(Ljava/io/OutputStream;)Ljava/io/DataOutputStream;	createCompressorStream	method_54906
+METHOD	set/starl/injection/mixins/network/NbtIoThrottleMixin	(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/CompoundTag;	read	method_10625
+METHOD	set/starl/injection/mixins/network/NbtIoThrottleMixin	(Lnet/minecraft/nbt/CompoundTag;Ljava/io/DataOutput;)V	write	method_10628

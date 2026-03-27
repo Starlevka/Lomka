@@ -1,0 +1,90 @@
+plugins {
+	id 'net.neoforged.moddev' version '2.0.140'
+	id 'maven-publish'
+}
+
+version = '0.2.1'
+
+base {
+	archivesName = "lomka-1.21.10-neoforge"
+}
+
+neoForge {
+    version = "21.10.64"
+
+	runs {
+		client {
+			client()
+		}
+	}
+
+	mods {
+		lomka {
+			sourceSet sourceSets.main
+		}
+	}
+	processResources {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+}
+
+dependencies {
+    // Зависимости для common кода
+    implementation "org.jspecify:jspecify:1.0.0"
+    implementation "it.unimi.dsi:fastutil:8.5.13"
+    // ModDevGradle handles NeoForge dependency automatically
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir project(':common').file('src/main/java')
+        }
+        resources {
+            srcDir project(':common').file('src/main/resources')
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 21
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+jar {
+    // Exclude Fabric-specific resources from NeoForge JAR
+    exclude('fabric.mod.json')
+    from(rootProject.file("LICENSE")) {
+		rename { "${it}_${base.archivesName.get()}"}
+	}
+
+	manifest {
+		attributes([
+			"Specification-Title": "lomka",
+			"Specification-Vendor": "starl",
+			"Specification-Version": "1",
+			"Implementation-Title": project.name,
+			"Implementation-Version": project.version,
+			"Implementation-Vendor": "starl"
+		])
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = base.archivesName.get()
+			from(components["java"])
+		}
+	}
+}

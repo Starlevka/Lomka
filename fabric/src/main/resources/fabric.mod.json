@@ -1,0 +1,36 @@
+{
+	"schemaVersion": 1,
+	"id": "lomka",
+    "version": "0.2.1",
+	"name": "Lomka",
+	"description": "A less powerful optimization mod. Performs various optimizations: chunks, culling, opengl, nbt and network.",
+	"authors": [
+		"Starlev"
+	],
+	"contact": {
+		"sources": "https://github.com/Starlevka/Lomka",
+		"issues": "https://github.com/Starlevka/Lomka/issues",
+		"homepage": "https://modrinth.com/mod/lomka"
+	},
+	"license": "MIT",
+	"icon": "assets/lomka/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"main": [
+			"set.starl.Lomka"
+		],
+		"modmenu": [
+			"set.starl.config.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"lomka.mixins.json"
+	],
+    "depends": {
+        "fabricloader": ">=0.16.9",
+        "minecraft": "=1.21.10"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}

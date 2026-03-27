@@ -1,0 +1,110 @@
+{
+  "mappings": {
+    "set/starl/injection/mixins/chunk/ClientChunkCacheMixin": {
+      "replaceBiomes(IILnet/minecraft/network/FriendlyByteBuf;)V": "Lnet/minecraft/class_631;method_49630(IILnet/minecraft/class_2540;)V",
+      "replaceWithPacketData(IILnet/minecraft/network/FriendlyByteBuf;Ljava/util/Map;Ljava/util/function/Consumer;)Lnet/minecraft/world/level/chunk/LevelChunk;": "Lnet/minecraft/class_631;method_16020(IILnet/minecraft/class_2540;Ljava/util/Map;Ljava/util/function/Consumer;)Lnet/minecraft/class_2818;"
+    },
+    "set/starl/injection/mixins/chunk/LevelRendererTranslucencyResortThrottleMixin": {
+      "scheduleTranslucentSectionResort(Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/class_761;method_62198(Lnet/minecraft/class_243;)V"
+    },
+    "set/starl/injection/mixins/crash/CrashReportCategoryFileNameNullGuardMixin": {
+      "validateStackTrace": "Lnet/minecraft/class_129;method_584(Ljava/lang/StackTraceElement;Ljava/lang/StackTraceElement;)Z"
+    },
+    "set/starl/injection/mixins/cull/BlockEntityCullingMixin": {
+      "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;tryExtractRenderState(Lnet/minecraft/world/level/block/entity/BlockEntity;FLnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;": "Lnet/minecraft/class_824;method_74348(Lnet/minecraft/class_2586;FLnet/minecraft/class_11683$class_11792;)Lnet/minecraft/class_11954;",
+      "extractVisibleBlockEntities": "Lnet/minecraft/class_761;method_74314(Lnet/minecraft/class_4184;FLnet/minecraft/class_11658;)V"
+    },
+    "set/starl/injection/mixins/cull/ClientLevelEntityTickCullMixin": {
+      "tickNonPassenger": "Lnet/minecraft/class_638;method_18646(Lnet/minecraft/class_1297;)V"
+    },
+    "set/starl/injection/mixins/cull/EntityRendererCullingMixin": {
+      "shouldRender": "Lnet/minecraft/class_897;method_3933(Lnet/minecraft/class_1297;Lnet/minecraft/class_4604;DDD)Z"
+    },
+    "set/starl/injection/mixins/cull/FrustumMixin": {
+      "calculateFrustum": "Lnet/minecraft/class_4604;method_23092(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+      "offsetToFullyIncludeCameraCube": "Lnet/minecraft/class_4604;method_38557(I)Lnet/minecraft/class_4604;"
+    },
+    "set/starl/injection/mixins/cull/OctreeLeafMixin": {
+      "net.minecraft.client.renderer.Octree$Leaf": "net/minecraft/class_10143$class_10146",
+      "visitNodes": "Lnet/minecraft/class_10143$class_10146;method_62917(Lnet/minecraft/class_10143$class_10148;ZLnet/minecraft/class_4604;IIZ)V"
+    },
+    "set/starl/injection/mixins/cull/SmartLeavesCullingMixin": {
+      "skipRendering(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;)Z": "Lnet/minecraft/class_4970;method_9522(Lnet/minecraft/class_2680;Lnet/minecraft/class_2680;Lnet/minecraft/class_2350;)Z"
+    },
+    "set/starl/injection/mixins/gl/GlCommandEncoderPolygonModeMixin": {
+      "applyPipelineState": "Lnet/minecraft/class_10860;method_68356(Lcom/mojang/blaze3d/pipeline/RenderPipeline;)V"
+    },
+    "set/starl/injection/mixins/gl/GlRenderPassReuseMixin": {
+      "close": "Lnet/minecraft/class_10866;close()V"
+    },
+    "set/starl/injection/mixins/gl/RenderSystemGlDebugOffMixin": {
+      "Lcom/mojang/blaze3d/opengl/GlDevice;<init>(JIZLjava/util/function/BiFunction;Z)V": "Lnet/minecraft/class_10865;<init>(JIZLjava/util/function/BiFunction;Z)V"
+    },
+    "set/starl/injection/mixins/network/FriendlyByteBufNbtCodecThrottleMixin": {
+      "Lnet/minecraft/nbt/NbtIo;readAnyTag(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/Tag;": "Lnet/minecraft/class_2507;method_52894(Ljava/io/DataInput;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2520;",
+      "Lnet/minecraft/nbt/NbtIo;writeAnyTag(Lnet/minecraft/nbt/Tag;Ljava/io/DataOutput;)V": "Lnet/minecraft/class_2507;method_52893(Lnet/minecraft/class_2520;Ljava/io/DataOutput;)V",
+      "readNbt(Lio/netty/buffer/ByteBuf;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/Tag;": "Lnet/minecraft/class_2540;method_56340(Lio/netty/buffer/ByteBuf;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2520;",
+      "writeNbt(Lio/netty/buffer/ByteBuf;Lnet/minecraft/nbt/Tag;)V": "Lnet/minecraft/class_2540;method_56341(Lio/netty/buffer/ByteBuf;Lnet/minecraft/class_2520;)V"
+    },
+    "set/starl/injection/mixins/network/NbtIoThrottleMixin": {
+      "readCompressed(Ljava/io/InputStream;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/CompoundTag;": "Lnet/minecraft/class_2507;method_10629(Ljava/io/InputStream;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2487;",
+      "readCompressed(Ljava/nio/file/Path;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/CompoundTag;": "Lnet/minecraft/class_2507;method_30613(Ljava/nio/file/Path;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2487;",
+      "writeCompressed(Lnet/minecraft/nbt/CompoundTag;Ljava/io/OutputStream;)V": "Lnet/minecraft/class_2507;method_10634(Lnet/minecraft/class_2487;Ljava/io/OutputStream;)V"
+    }
+  },
+  "data": {
+    "named:intermediary": {
+      "set/starl/injection/mixins/chunk/ClientChunkCacheMixin": {
+        "replaceBiomes(IILnet/minecraft/network/FriendlyByteBuf;)V": "Lnet/minecraft/class_631;method_49630(IILnet/minecraft/class_2540;)V",
+        "replaceWithPacketData(IILnet/minecraft/network/FriendlyByteBuf;Ljava/util/Map;Ljava/util/function/Consumer;)Lnet/minecraft/world/level/chunk/LevelChunk;": "Lnet/minecraft/class_631;method_16020(IILnet/minecraft/class_2540;Ljava/util/Map;Ljava/util/function/Consumer;)Lnet/minecraft/class_2818;"
+      },
+      "set/starl/injection/mixins/chunk/LevelRendererTranslucencyResortThrottleMixin": {
+        "scheduleTranslucentSectionResort(Lnet/minecraft/world/phys/Vec3;)V": "Lnet/minecraft/class_761;method_62198(Lnet/minecraft/class_243;)V"
+      },
+      "set/starl/injection/mixins/crash/CrashReportCategoryFileNameNullGuardMixin": {
+        "validateStackTrace": "Lnet/minecraft/class_129;method_584(Ljava/lang/StackTraceElement;Ljava/lang/StackTraceElement;)Z"
+      },
+      "set/starl/injection/mixins/cull/BlockEntityCullingMixin": {
+        "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;tryExtractRenderState(Lnet/minecraft/world/level/block/entity/BlockEntity;FLnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;": "Lnet/minecraft/class_824;method_74348(Lnet/minecraft/class_2586;FLnet/minecraft/class_11683$class_11792;)Lnet/minecraft/class_11954;",
+        "extractVisibleBlockEntities": "Lnet/minecraft/class_761;method_74314(Lnet/minecraft/class_4184;FLnet/minecraft/class_11658;)V"
+      },
+      "set/starl/injection/mixins/cull/ClientLevelEntityTickCullMixin": {
+        "tickNonPassenger": "Lnet/minecraft/class_638;method_18646(Lnet/minecraft/class_1297;)V"
+      },
+      "set/starl/injection/mixins/cull/EntityRendererCullingMixin": {
+        "shouldRender": "Lnet/minecraft/class_897;method_3933(Lnet/minecraft/class_1297;Lnet/minecraft/class_4604;DDD)Z"
+      },
+      "set/starl/injection/mixins/cull/FrustumMixin": {
+        "calculateFrustum": "Lnet/minecraft/class_4604;method_23092(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+        "offsetToFullyIncludeCameraCube": "Lnet/minecraft/class_4604;method_38557(I)Lnet/minecraft/class_4604;"
+      },
+      "set/starl/injection/mixins/cull/OctreeLeafMixin": {
+        "net.minecraft.client.renderer.Octree$Leaf": "net/minecraft/class_10143$class_10146",
+        "visitNodes": "Lnet/minecraft/class_10143$class_10146;method_62917(Lnet/minecraft/class_10143$class_10148;ZLnet/minecraft/class_4604;IIZ)V"
+      },
+      "set/starl/injection/mixins/cull/SmartLeavesCullingMixin": {
+        "skipRendering(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;)Z": "Lnet/minecraft/class_4970;method_9522(Lnet/minecraft/class_2680;Lnet/minecraft/class_2680;Lnet/minecraft/class_2350;)Z"
+      },
+      "set/starl/injection/mixins/gl/GlCommandEncoderPolygonModeMixin": {
+        "applyPipelineState": "Lnet/minecraft/class_10860;method_68356(Lcom/mojang/blaze3d/pipeline/RenderPipeline;)V"
+      },
+      "set/starl/injection/mixins/gl/GlRenderPassReuseMixin": {
+        "close": "Lnet/minecraft/class_10866;close()V"
+      },
+      "set/starl/injection/mixins/gl/RenderSystemGlDebugOffMixin": {
+        "Lcom/mojang/blaze3d/opengl/GlDevice;<init>(JIZLjava/util/function/BiFunction;Z)V": "Lnet/minecraft/class_10865;<init>(JIZLjava/util/function/BiFunction;Z)V"
+      },
+      "set/starl/injection/mixins/network/FriendlyByteBufNbtCodecThrottleMixin": {
+        "Lnet/minecraft/nbt/NbtIo;readAnyTag(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/Tag;": "Lnet/minecraft/class_2507;method_52894(Ljava/io/DataInput;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2520;",
+        "Lnet/minecraft/nbt/NbtIo;writeAnyTag(Lnet/minecraft/nbt/Tag;Ljava/io/DataOutput;)V": "Lnet/minecraft/class_2507;method_52893(Lnet/minecraft/class_2520;Ljava/io/DataOutput;)V",
+        "readNbt(Lio/netty/buffer/ByteBuf;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/Tag;": "Lnet/minecraft/class_2540;method_56340(Lio/netty/buffer/ByteBuf;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2520;",
+        "writeNbt(Lio/netty/buffer/ByteBuf;Lnet/minecraft/nbt/Tag;)V": "Lnet/minecraft/class_2540;method_56341(Lio/netty/buffer/ByteBuf;Lnet/minecraft/class_2520;)V"
+      },
+      "set/starl/injection/mixins/network/NbtIoThrottleMixin": {
+        "readCompressed(Ljava/io/InputStream;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/CompoundTag;": "Lnet/minecraft/class_2507;method_10629(Ljava/io/InputStream;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2487;",
+        "readCompressed(Ljava/nio/file/Path;Lnet/minecraft/nbt/NbtAccounter;)Lnet/minecraft/nbt/CompoundTag;": "Lnet/minecraft/class_2507;method_30613(Ljava/nio/file/Path;Lnet/minecraft/class_2505;)Lnet/minecraft/class_2487;",
+        "writeCompressed(Lnet/minecraft/nbt/CompoundTag;Ljava/io/OutputStream;)V": "Lnet/minecraft/class_2507;method_10634(Lnet/minecraft/class_2487;Ljava/io/OutputStream;)V"
+      }
+    }
+  }
+}
