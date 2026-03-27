@@ -1,0 +1,28 @@
+[versions]
+# Mod
+mod = "0.2.1"
+
+# Minecraft
+minecraft = "26.1"
+
+# Fabric
+fabric-loader = "0.18.4"
+fabric-loom = "1.15-SNAPSHOT"
+
+# NeoForge
+neoforge = "21.1.0.1-beta"
+neoforge-moddev = "2.0.141"
+
+# Dependencies
+modmenu = "18.0.0-alpha.7"
+
+[libraries]
+# Fabric Loader
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+
+# ModMenu
+modmenu = { module = "com.terraformersmc:modmenu", version.ref = "modmenu" }
+
+[plugins]
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
+neoforge-moddev = { id = "net.neoforged.moddev", version.ref = "neoforge-moddev" }

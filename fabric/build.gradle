@@ -1,0 +1,100 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = "lomka-${project.minecraft_version}-fabric"
+}
+
+repositories {
+	maven {
+		name = 'TerraformersMC'
+		url = 'https://maven.terraformersmc.com/releases/'
+	}
+	maven {
+		name = 'Nucleoid'
+		url = 'https://maven.nucleoid.xyz/'
+	}
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+    implementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+	// Common code dependencies
+	implementation "org.jspecify:jspecify:1.0.0"
+	implementation "it.unimi.dsi:fastutil:8.5.13"
+	
+	// ModMenu (optional)
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+}
+
+// Include common source sets
+sourceSets {
+	main {
+		java {
+			srcDir project(':common').file('src/main/java')
+		}
+		resources {
+			srcDir project(':common').file('src/main/resources')
+		}
+	}
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "loader_version", project.fabric_loader_version
+
+    filesMatching("fabric.mod.json") {
+        expand(
+            "version": inputs.properties.version,
+            "minecraft_version": inputs.properties.minecraft_version,
+            "loader_version": inputs.properties.loader_version
+        )
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+    // Exclude NeoForge-specific resources from Fabric JAR
+    exclude('META-INF/neoforge.mods.toml')
+    inputs.property "archivesName", project.base.archivesName
+
+	from(rootProject.file("LICENSE")) {
+		rename { "${it}_${inputs.properties.archivesName}"}
+	}
+
+	manifest {
+		attributes([
+			"Specification-Title": "lomka",
+			"Specification-Vendor": "starl",
+			"Specification-Version": "1",
+			"Implementation-Title": project.name,
+			"Implementation-Version": project.version,
+			"Implementation-Vendor": "starl"
+		])
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.base.archivesName.get()
+			from components.java
+		}
+	}
+}

@@ -1,0 +1,97 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+
+base {
+    archivesName = "lomka-${project.minecraft_version}-neoforge"
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+		client {
+			client()
+		}
+	}
+
+	mods {
+		lomka {
+			sourceSet sourceSets.main
+		}
+	}
+    processResources {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+
+    processResources {
+        inputs.property "version", project.version
+        filesMatching("META-INF/neoforge.mods.toml") {
+            expand("mod_version": project.version)
+        }
+    }
+}
+
+dependencies {
+    // Зависимости для common кода
+    implementation "org.jspecify:jspecify:1.0.0"
+    implementation "it.unimi.dsi:fastutil:8.5.13"
+    // ModDevGradle handles NeoForge dependency automatically
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir project(':common').file('src/main/java')
+        }
+        resources {
+            srcDir project(':common').file('src/main/resources')
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 25
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+jar {
+    // Exclude Fabric-specific resources from NeoForge JAR
+    exclude('fabric.mod.json')
+    from(rootProject.file("LICENSE")) {
+            rename { "${it}_${base.archivesName.get()}"}
+        }
+
+	manifest {
+		attributes([
+			"Specification-Title": "lomka",
+			"Specification-Vendor": "starl",
+			"Specification-Version": "1",
+			"Implementation-Title": project.name,
+			"Implementation-Version": project.version,
+			"Implementation-Vendor": "starl"
+		])
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+            artifactId = base.archivesName.get()
+            from(components["java"])
+		}
+	}
+}

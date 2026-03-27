@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "lomka-${libs.versions.minecraft.get()}-common"
+}
+
+dependencies {
+    // Общие зависимости без привязки к лоадеру
+    compileOnly "org.spongepowered:mixin:0.8.7"
+    compileOnly "it.unimi.dsi:fastutil:8.5.13"
+    compileOnly "org.jetbrains:annotations:24.1.0"
+    compileOnly "org.jspecify:jspecify:1.0.0"
+
+    // Minecraft 26.1 dependencies
+    compileOnly "com.mojang:minecraft:${libs.versions.minecraft.get()}"
+}
+
+// Отключаем компиляцию в самом common, так как он будет компилироваться 
+// как часть платформенных модулей через добавление исходников.
+compileJava.enabled = false
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${base.archivesName.get()}"}
+    }
+    
+    manifest {
+        attributes([
+            "Specification-Title": "lomka",
+            "Specification-Vendor": "starl",
+            "Specification-Version": "1",
+            "Implementation-Title": project.name,
+            "Implementation-Version": project.version,
+            "Implementation-Vendor": "starl"
+        ])
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = base.archivesName.get()
+            from components.java
+        }
+    }
+}
