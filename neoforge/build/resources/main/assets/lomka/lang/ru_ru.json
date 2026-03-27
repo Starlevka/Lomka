@@ -1,0 +1,44 @@
+{
+	"lomka.config.title": "Конфигурация Lomka",
+	"lomka.config.on": "ВКЛ",
+	"lomka.config.off": "ВЫКЛ",
+	
+    "lomka.config.section.chunks": "Чанки",
+    "lomka.config.section.nbt": "NBT",
+    "lomka.config.section.render": "Рендер",
+    "lomka.config.section.culling": "Отсечение",
+    "lomka.config.section.entities": "Сущности",
+    "lomka.config.section.java": "Оптимизации Java",
+	
+    "lomka.config.culling.enable": "Отсечение",
+    "lomka.config.culling.enable.tooltip": "Включить все оптимизации отсечения",
+    "lomka.config.culling.frustum_cull_all": "Отсечение по фрустуму для всех",
+    "lomka.config.culling.frustum_cull_all.tooltip": "Применять отсечение по фрустуму ко всем сущностям",
+    "lomka.config.culling.section_occlusion_cull": "Отсечение окклюзии секций",
+    "lomka.config.culling.section_occlusion_cull.tooltip": "Отсекать сущности в окклюдированных секциях",
+    "lomka.config.culling.block_entity_culling": "Отсечение Block Entity",
+    "lomka.config.culling.block_entity_culling.tooltip": "Применять отсечение окклюзии и фрустума к Block Entity",
+    "lomka.config.culling.smart_leaves_culling": "Умное отсечение листвы",
+    "lomka.config.culling.smart_leaves_culling.tooltip": "Отсекать грани между соседними блоками листвы для уменьшения геометрии",
+
+    "lomka.config.entities.enable": "Оптимизации сущностей",
+    "lomka.config.entities.enable.tooltip": "Включить оптимизации тиков сущностей",
+    "lomka.config.entities.client_tick_cull": "Отсечение тиков",
+    "lomka.config.entities.client_tick_cull.tooltip": "Ограничивать тики далёких декоративных сущностей (рамки, картины)",
+    "lomka.config.entities.client_tick_cull_include_display": "Включить Display сущности",
+    "lomka.config.entities.client_tick_cull_include_display.tooltip": "Также ограничивать тики Display сущностей (текстовые и предметные дисплеи)",
+	
+	"lomka.config.chunks.silence_ignore_out_of_range_log": "Подавить спам логов чанков",
+	"lomka.config.chunks.silence_ignore_out_of_range_log.tooltip": "Подавить предупреждения 'Ignoring chunk since it's not in the view range'",
+	
+	"lomka.config.nbt.cache.read_compressed_path": "Кэш сжатых путей NBT",
+	"lomka.config.nbt.cache.read_compressed_path.tooltip": "Кэшировать чтение сжатых путей NBT",
+	
+	"lomka.config.render.opengl_debug_disable": "Отключить OpenGL Debug",
+	"lomka.config.render.opengl_debug_disable.tooltip": "Отключить отладочный вывод OpenGL для лучшей производительности",
+    "lomka.config.render.translucency_resort_throttle": "Регулирование сортировки прозрачности",
+    "lomka.config.render.translucency_resort_throttle.tooltip": "Регулировать пересортировку прозрачности для лучшей производительности",
+
+    "lomka.config.java.java25_optimizations": "Оптимизации Java 25",
+	"lomka.config.java.java25_optimizations.tooltip": "Включить оптимизации Java 25: ScopedValue, компактные заголовки объектов (-XX:+UseCompactObjectHeaders), подсказки AOT кэша. Требуется Java 25+."
+}

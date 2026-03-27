@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Specification-Title: lomka
+Specification-Vendor: starl
+Specification-Version: 1
+Implementation-Title: fabric
+Implementation-Version: 0.2.1
+Implementation-Vendor: starl
+
