@@ -15,7 +15,7 @@
 
 <br>
 
-Lomka is a client-side optimization mod for Minecraft. Unlike many other optimization mods that focus solely on rendering or game logic, Lomka improves the game experience by optimizing various subsystems including opengl improvements, frustum culling, network protocols, NBT processing, rendering-all without compromising visual quality.
+Lomka is a lightweight client-side optimization mod for Minecraft. It boosts FPS and reduces lag by optimizing multiple subsystems: block-entity and entity frustum, occusion culling, OpenGL state management, NBT processing, network packet handling, and chunks processes - all without changing gameplay or breaking visual quality.
 
 ## Benchmarks
 
@@ -34,7 +34,7 @@ Lomka is a client-side optimization mod for Minecraft. Unlike many other optimiz
 | Setup | Max FPS |
 | :--- | :--- |
 | **Without Lomka** | 32 FPS |
-| **With Lomka** | **39 FPS** |
+| **With Lomka** | **38 FPS** |
 
 ### Multiplayer Server w/ lots of entities
 
@@ -69,8 +69,8 @@ CEMT - Custom Entity Model Textures
 ## Options
 Lomka uses properties config only: `config/lomka.properties` (created on first launch).
 
+- `culling.frustum_camera_cube_mode` : Controls frustum camera cube culling mode. Values: `vanilla` (default, vanilla behavior), `none`/`off`/`false`/`0` (disables optimization), or any other value (aggressive mode).
 - `java25Optimizations` : Enables experimental optimizations for Java 25. (default: false)
-
 
 ### ✅ Compatibility
 
