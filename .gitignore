@@ -1,15 +1,13 @@
 # ── Build outputs ──
-stonecutter/build/
-stonecutter/*/build/
-stonecutter/versions/*/build/
+build/
+*/build/
 
 # ── Gradle cache ──
-stonecutter/.gradle/
-stonecutter/*/.gradle/
-stonecutter/versions/*/.gradle/
+.gradle/
+*/.gradle/
 
 # ── Game run directories (excluded per requirement) ──
-stonecutter/versions/*/run/
+versions/*/run/
 
 # ── IDE / Editor ──
 .kilo/
@@ -23,6 +21,4 @@ Thumbs.db
 .DS_Store
 
 # ── Other project files not part of the mod source ──
-/changelog.md
-/MAIN_RULES.md
 /SOURCE CODE/
