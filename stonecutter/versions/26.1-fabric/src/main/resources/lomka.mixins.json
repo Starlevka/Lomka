@@ -1,0 +1,61 @@
+﻿{
+  "required": true,
+  "package": "lomka.starl.mixins",
+  "compatibilityLevel": "${java}",
+  "client": [
+    "accessor.AccessorCameraNearPlane",
+    "accessor.InvokerQuadCollectionBuilder",
+    "com.mojang.blaze3d.audio.MixinChannel",
+    "com.mojang.blaze3d.audio.MixinListener",
+    "com.mojang.blaze3d.audio.MixinSoundBuffer",
+    "com.mojang.blaze3d.buffers.MixinStd140SizeCalculator",
+    "com.mojang.blaze3d.buffers.MixinStd140Builder",
+    "com.mojang.blaze3d.buffers.MixinGpuBuffer",
+    "com.mojang.blaze3d.opengl.MixinGlBackend",
+    "com.mojang.blaze3d.platform.MixinInputConstants",
+    "com.mojang.blaze3d.platform.MixinNativeImage",
+    "com.mojang.blaze3d.platform.MixinTextureUtil",
+    "com.mojang.blaze3d.vertex.MixinMeshData",
+    "com.mojang.blaze3d.vertex.MixinMeshDataSortState",
+    "com.mojang.blaze3d.vertex.MixinVertexFormat",
+    "com.mojang.blaze3d.vertex.MixinVertexConsumer",
+    "com.mojang.blaze3d.vertex.MixinBufferBuilder",
+    "com.mojang.blaze3d.vertex.MixinByteBufferBuilder",
+    "com.mojang.math.MixinQuadrant",
+    "com.mojang.math.MixinTransformation",
+    "net.minecraft.client.MixinMinecraft",
+    "net.minecraft.client.animation.MixinKeyframeAnimation",
+    "net.minecraft.client.gui.render.MixinTextureSetup",
+    "net.minecraft.client.gui.font.MixinFontSet",
+    "net.minecraft.client.model.MixinModel",
+    "net.minecraft.client.model.geom.MixinModelPartCube",
+    "net.minecraft.client.particle.MixinSingleQuadParticle",
+    "net.minecraft.client.renderer.MixinDynamicUniformStorage",
+    "net.minecraft.client.renderer.MixinDynamicUniforms",
+    "net.minecraft.client.renderer.MixinMultiBufferSource",
+    "net.minecraft.client.renderer.block.model.MixinFaceBakery",
+    "net.minecraft.client.renderer.block.model.MixinItemTransform",
+    "net.minecraft.client.renderer.texture.MixinSpriteContents",
+    "net.minecraft.client.renderer.texture.MixinMipmapGenerator",
+    "net.minecraft.client.renderer.texture.atlas.sources.MixinPalettedPermutations",
+    "net.minecraft.client.resources.model.MixinMaterial",
+    "net.minecraft.client.resources.model.MixinQuadCollectionBuilder",
+    "net.minecraft.client.resources.model.geometry.MixinBakedQuad",
+    "net.minecraft.client.sounds.MixinJOrbisAudioStream",
+    "net.minecraft.client.sounds.MixinSoundEngine"
+  ],
+  "main": [
+    "net.minecraft.util.thread.MixinBlockableEventLoop",
+    "net.minecraft.util.MixinArrayListDeque",
+    "net.minecraft.util.MixinByIdMap",
+    "net.minecraft.util.MixinMth",
+    "net.minecraft.util.MixinARGB",
+    "net.minecraft.resources.MixinResource"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

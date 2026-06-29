@@ -1,0 +1,12 @@
+accessWidener v2 named
+
+accessible class net/minecraft/client/animation/KeyframeAnimation$Entry
+accessible method net/minecraft/client/animation/KeyframeAnimation$Entry <init> (Lnet/minecraft/client/model/geom/ModelPart;Lnet/minecraft/client/animation/AnimationChannel$Target;[Lnet/minecraft/client/animation/Keyframe;)V
+
+accessible field net/minecraft/client/renderer/texture/atlas/sources/PalettedPermutations LOGGER Lorg/slf4j/Logger;
+
+accessible field net/minecraft/util/ARGB SRGB_TO_LINEAR [S
+accessible field net/minecraft/util/ARGB LINEAR_TO_SRGB [B
+
+accessible method com/mojang/blaze3d/audio/OpenAlUtil checkALError (Ljava/lang/String;)Z
+accessible method com/mojang/blaze3d/audio/OpenAlUtil audioFormatToOpenAl (Ljavax/sound/sampled/AudioFormat;)I

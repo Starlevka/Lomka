@@ -1,0 +1,59 @@
+mod.id = "lomka"
+mod.name = "Lomka"
+mod.group = "lomka.starl"
+mod.version = "0.3.0"
+mod.description = "Applies various, compatible optimizations to improve perfomance and stability. Ready for client, server or both uses!"
+mod.authors = ["Starlev"]
+mod.license.name = "MIT"
+mod.sources_url = "https://github.com/Starlevka/Lomka"
+mod.homepage_url = "https://modrinth.com/mod/lomka"
+mod.issues_url = "https://github.com/Starlevka/Lomka/issues"
+
+[fabric]
+deps.fabric-loader = "0.19.0"
+
+[neoforge]
+deps.fabric-loader = "0.19.0"
+
+[fabric."1.21"]
+deps.minecraft = "1.21"
+deps.minecraft_max = "1.21.9"
+
+[fabric."1.21.9"]
+deps.minecraft = "1.21.9"
+deps.minecraft_max = "1.21.10"
+
+[fabric."1.21.11"]
+deps.minecraft = "1.21.11"
+deps.minecraft_max = "26.1"
+
+[fabric."26.1"]
+deps.minecraft = "26.1"
+deps.minecraft_max = "26.2"
+
+[fabric."26.2"]
+deps.minecraft = "26.2"
+
+[neoforge."1.21"]
+deps.minecraft = "1.21"
+deps.minecraft_max = "1.21.9"
+deps.neoforge = "21.0.157"
+
+[neoforge."1.21.9"]
+deps.minecraft = "1.21.9"
+deps.minecraft_max = "1.21.10"
+deps.neoforge = "21.9.10-beta"
+
+[neoforge."1.21.11"]
+deps.minecraft = "1.21.11"
+deps.minecraft_max = "26.1"
+deps.neoforge = "21.11.42"
+
+[neoforge."26.1"]
+deps.minecraft = "26.1"
+deps.minecraft_max = "26.2"
+deps.neoforge = "26.1.0.12-beta"
+
+[neoforge."26.2"]
+deps.minecraft = "26.2"
+deps.neoforge = "26.2.0.7-beta"

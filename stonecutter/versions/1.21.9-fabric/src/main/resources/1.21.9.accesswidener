@@ -1,0 +1,7 @@
+accessWidener v2 named
+
+accessible class net/minecraft/client/animation/KeyframeAnimation$Entry
+accessible method net/minecraft/client/animation/KeyframeAnimation$Entry <init> (Lnet/minecraft/client/model/geom/ModelPart;Lnet/minecraft/client/animation/AnimationChannel$Target;[Lnet/minecraft/client/animation/Keyframe;)V
+
+accessible method com/mojang/blaze3d/audio/OpenAlUtil checkALError (Ljava/lang/String;)Z
+accessible method com/mojang/blaze3d/audio/OpenAlUtil audioFormatToOpenAl (Ljavax/sound/sampled/AudioFormat;)I
