@@ -1,3 +1,4 @@
+![Lomka icon](https://cdn.modrinth.com/data/bd9cFfiC/827fe2486df2288c1fb2bc50ab513eb474a821fa_96.webp)
 ## Summary
 
 - Reduces micro-stutters
