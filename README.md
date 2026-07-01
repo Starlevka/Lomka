@@ -12,6 +12,7 @@
 - Prevents unnecessary allocations (sounds, calcs and rendering)
 - Improves hashCode() game's caches 
 - Slightly improves threading system
+- Disables GL/Vk debug
 - Caching JOML calls (experimental)
 
 ## FAQ
