@@ -1,15 +1,17 @@
 package lomka.starl.mixins.net.minecraft.client.resources.model;
 
 //? if >=26.1 {
-/*import net.minecraft.client.resources.model.sprite.Material;
-import net.minecraft.resources.Identifier;*/
-//?} else if >=1.21.11 {
+/*import net.minecraft.client.resources.model.sprite.Material;*/
+//?} else {
 import net.minecraft.client.resources.model.Material;
+//?}
+
+//? if >=1.21.11 {
 import net.minecraft.resources.Identifier;
 //?} else {
-/*import net.minecraft.client.resources.model.Material;
-import net.minecraft.resources.ResourceLocation;*/
+/*import net.minecraft.resources.ResourceLocation;*/
 //?}
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -38,15 +40,11 @@ public abstract class MixinMaterial {
         if (!this.lomka$hashCodeCached) {
             //? if >=26.1 {
             /*int h = 31 + this.sprite.hashCode();
-            h = 31 * h + Boolean.hashCode(this.forceTranslucent);*/
-            //?} else if >=1.21.11 {
-            int h = 31 + this.atlasLocation.hashCode();
-            h = 31 * h + this.texture.hashCode();
+            this.lomka$hashCode = 31 * h + Boolean.hashCode(this.forceTranslucent);*/
             //?} else {
-            /*int h = 31 + this.atlasLocation.hashCode();
-            h = 31 * h + this.texture.hashCode();*/
+            int h = 31 + this.atlasLocation.hashCode();
+            this.lomka$hashCode = 31 * h + this.texture.hashCode();
             //?}
-            this.lomka$hashCode = h;
             this.lomka$hashCodeCached = true;
         }
         return this.lomka$hashCode;

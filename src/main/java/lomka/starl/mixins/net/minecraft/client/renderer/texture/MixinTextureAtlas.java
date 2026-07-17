@@ -1,5 +1,7 @@
 package lomka.starl.mixins.net.minecraft.client.renderer.texture;
 
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -19,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 
 @Mixin(value = TextureAtlas.class, priority = 500)
 public abstract class MixinTextureAtlas {
@@ -29,14 +32,19 @@ public abstract class MixinTextureAtlas {
     @Shadow private Identifier location;
     @Shadow private List<TextureAtlasSprite> sprites;
 
-    @Unique private @Nullable String lomka$animateName;
+    @Unique private GpuDevice lomka$device;
+    @Unique private @Nullable Supplier<String> lomka$animateLabelSupplier;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void lomka$initDevice(Identifier location, CallbackInfo ci) {
+        this.lomka$device = RenderSystem.getDevice();
+    }
 
     /**
      * @author Starlev
-     * @reason Replaces the per-tick Iterator allocation with a zero-allocation
-     * indexed loop. Called every game tick.
+     * @reason Replaces the per-tick Iterator allocation with a zero-allocation indexed loop.
      */
-    @Overwrite(remap = false)
+    @Overwrite
     public void cycleAnimationFrames() {
         List<SpriteContents.AnimationState> states = this.animatedTexturesStates;
         for (int i = 0, n = states.size(); i < n; i++) {
@@ -47,11 +55,10 @@ public abstract class MixinTextureAtlas {
 
     /**
      * @author Starlev
-     * @reason Eliminates Stream, Iterator, and string concatenation allocations
-     * on every tick when animated textures are present. Caches the render pass
-     * label as an instance field since location is final.
+     * @reason Eliminates Stream, Iterator, string and lambda allocations on every tick.
+     *         Reuses a single CommandEncoder instance across all mip-level render passes.
      */
-    @Overwrite(remap = false)
+    @Overwrite
     private void uploadAnimationFrames() {
         List<SpriteContents.AnimationState> states = this.animatedTexturesStates;
         int count = states.size();
@@ -65,21 +72,21 @@ public abstract class MixinTextureAtlas {
         }
         if (!needsDraw) return;
 
-        String passLabel = this.lomka$animateName;
-        if (passLabel == null) {
-            passLabel = "Animate " + this.location;
-            this.lomka$animateName = passLabel;
+        Supplier<String> labelSupplier = this.lomka$animateLabelSupplier;
+        if (labelSupplier == null) {
+            String passLabel = "Animate " + this.location;
+            labelSupplier = () -> passLabel;
+            this.lomka$animateLabelSupplier = labelSupplier;
         }
-        final String label = passLabel;
+
+        CommandEncoder encoder = this.lomka$device.createCommandEncoder();
 
         for (int mip = 0; mip <= this.maxMipLevel; mip++) {
-            RenderPass renderpass = RenderSystem.getDevice()
-                .createCommandEncoder()
-                //? if >=26.2 {
-                /*.createRenderPass(() -> label, this.mipViews[mip], java.util.Optional.empty());*/
-                //? } else {
-                .createRenderPass(() -> label, this.mipViews[mip], OptionalInt.empty());
-                //? }
+            //? if >=26.2 {
+            /*RenderPass renderpass = encoder.createRenderPass(labelSupplier, this.mipViews[mip], java.util.Optional.empty());*/
+            //? } else {
+            RenderPass renderpass = encoder.createRenderPass(labelSupplier, this.mipViews[mip], OptionalInt.empty());
+            //? }
 
             try {
                 for (int i = 0; i < count; i++) {

@@ -17,7 +17,7 @@ public abstract class MixinKeyframeAnimation {
     @Shadow private List<KeyframeAnimation.Entry> entries;
     @Shadow protected abstract float getElapsedSeconds(long i);
 
-    @Unique private final Vector3f lomka$tempVec = new Vector3f();
+    @Unique private final Vector3f lomka$vec = new Vector3f();
 
     /**
      * @author Starlev
@@ -30,7 +30,7 @@ public abstract class MixinKeyframeAnimation {
     public void apply(long i, float f) {
         float f1 = this.getElapsedSeconds(i);
         
-        Vector3f vector3f = this.lomka$tempVec;
+        Vector3f vector3f = this.lomka$vec;
 
         List<KeyframeAnimation.Entry> localEntries = this.entries;
         for (int j = 0, len = localEntries.size(); j < len; j++) {

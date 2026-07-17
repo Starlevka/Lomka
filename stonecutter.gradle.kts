@@ -32,4 +32,11 @@ stonecutter parameters {
 		replace("ResourceLocation", "Identifier")
 		replace("location()", "identifier()")
 	}
+	replacements.string(current.parsed < "1.21.11") {
+		replace("net.minecraft.client.renderer.rendertype.RenderType", "net.minecraft.client.renderer.RenderType")
+	}
+	replacements.string(current.parsed >= "26.1") {
+		replace("net.minecraft.client.resources.model.AtlasManager", "net.minecraft.client.resources.model.sprite.AtlasManager")
+		replace("net.minecraft.client.resources.model.Material", "net.minecraft.client.resources.model.sprite.Material")
+	}
 }

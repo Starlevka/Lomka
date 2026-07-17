@@ -121,9 +121,9 @@ public class MixinARGB {
         }
 
         int reciprocal = lomka$RECIPROCALS[outA];
-        int r = (rSum * reciprocal) >>> 24;
-        int g = (gSum * reciprocal) >>> 24;
-        int b = (bSum * reciprocal) >>> 24;
+        int r = (int) (((long) rSum * reciprocal) >>> 24);
+        int g = (int) (((long) gSum * reciprocal) >>> 24);
+        int b = (int) (((long) bSum * reciprocal) >>> 24);
 
         return (outA << 24) | (r << 16) | (g << 8) | b;
     }

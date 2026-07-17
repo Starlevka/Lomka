@@ -90,7 +90,7 @@ public class MixinPalettedPermutations {
                 int i1 = k & 16777215;
                 int j1 = int2intopenhashmap.getOrDefault(i1, i1 | -16777216);
                 int k1 = j1 >>> 24;
-                int outA = (l * k1 * 65794) >>> 24;
+                int outA = (l * k1) / 255;
                 return (outA << 24) | (j1 & 16777215);
             };
         }

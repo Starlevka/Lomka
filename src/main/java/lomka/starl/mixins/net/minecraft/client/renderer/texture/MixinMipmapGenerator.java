@@ -38,13 +38,23 @@ public class MixinMipmapGenerator {
         float invScale = scale / 255.0F;
         int count = 0;
 
+        float[] topRow = new float[w];
+        float[] botRow = new float[w];
+
+        for (int x = 0; x < w; ++x) {
+            topRow[x] = Math.min((image.getPixel(x, 0) >>> 24) * invScale, 1.0F);
+        }
+
         for (int y = 0; y < h - 1; ++y) {
-            float tl = Math.min((image.getPixel(0, y    ) >>> 24) * invScale, 1.0F);
-            float bl = Math.min((image.getPixel(0, y + 1) >>> 24) * invScale, 1.0F);
+            for (int x = 0; x < w; ++x) {
+                botRow[x] = Math.min((image.getPixel(x, y + 1) >>> 24) * invScale, 1.0F);
+            }
 
             for (int x = 0; x < w - 1; ++x) {
-                float tr = Math.min((image.getPixel(x + 1, y    ) >>> 24) * invScale, 1.0F);
-                float br = Math.min((image.getPixel(x + 1, y + 1) >>> 24) * invScale, 1.0F);
+                float tl = topRow[x];
+                float tr = topRow[x + 1];
+                float bl = botRow[x];
+                float br = botRow[x + 1];
                 int hits = 0;
 
                 for (int s = 0; s < 16; ++s) {
@@ -54,9 +64,11 @@ public class MixinMipmapGenerator {
                 }
 
                 count += hits;
-                tl = tr;
-                bl = br;
             }
+
+            float[] tmp = topRow;
+            topRow = botRow;
+            botRow = tmp;
         }
 
         return (float) count / (float) ((w - 1) * (h - 1) * 16);
@@ -77,10 +89,102 @@ public class MixinMipmapGenerator {
         int a3 = l >>> 24;
         if (a3 != 0) { aSum += lin[a3]; rSum += lin[(l >> 16) & 255]; gSum += lin[(l >> 8) & 255]; bSum += lin[l & 255]; }
 
-        return ((srgb[(aSum + 2) >> 2] & 255) << 24)
-             | ((srgb[(rSum + 2) >> 2] & 255) << 16)
-             | ((srgb[(gSum + 2) >> 2] & 255) << 8)
-             |  (srgb[(bSum + 2) >> 2] & 255);
+        return ((srgb[aSum >> 2] & 255) << 24)
+             | ((srgb[rSum >> 2] & 255) << 16)
+             | ((srgb[gSum >> 2] & 255) << 8)
+             |  (srgb[bSum >> 2] & 255);
     }
 }
+//?}
+
+//? if <1.21.11 {
+/*package lomka.starl.mixins.net.minecraft.client.renderer.texture;
+
+import net.minecraft.client.renderer.texture.MipmapGenerator;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+
+@Mixin(MipmapGenerator.class)
+public class MixinMipmapGenerator {
+
+    @Unique
+    private static final byte[] lomka$LINEAR_TO_SRGB = new byte[4096];
+
+    static {
+        for (int i = 0; i < 4096; i++) {
+            float v = i / 4095.0F;
+            lomka$LINEAR_TO_SRGB[i] = (byte) (int) (Math.pow(v, 0.45454545454545453D) * 255.0D);
+        }
+    }
+
+    @Shadow
+    private static float getPow22(int i) {
+        throw new AssertionError();
+    }
+
+    @Overwrite
+    private static int gammaBlend(int i, int j, int k, int l, int i1) {
+        float f  = getPow22(i >> i1);
+        float f1 = getPow22(j >> i1);
+        float f2 = getPow22(k >> i1);
+        float f3 = getPow22(l >> i1);
+
+        int idx = (int) ((f + f1 + f2 + f3) * 1023.75F);
+        if (idx > 4095) idx = 4095;
+
+        return lomka$LINEAR_TO_SRGB[idx] & 255;
+    }
+
+    @Overwrite
+    private static int alphaBlend(int i, int j, int k, int l, boolean flag) {
+        if (flag) {
+            float f = 0.0F, f1 = 0.0F, f2 = 0.0F, f3 = 0.0F;
+
+            if (i >> 24 != 0) {
+                f  += getPow22(i >> 24);
+                f1 += getPow22(i >> 16);
+                f2 += getPow22(i >> 8);
+                f3 += getPow22(i);
+            }
+            if (j >> 24 != 0) {
+                f  += getPow22(j >> 24);
+                f1 += getPow22(j >> 16);
+                f2 += getPow22(j >> 8);
+                f3 += getPow22(j);
+            }
+            if (k >> 24 != 0) {
+                f  += getPow22(k >> 24);
+                f1 += getPow22(k >> 16);
+                f2 += getPow22(k >> 8);
+                f3 += getPow22(k);
+            }
+            if (l >> 24 != 0) {
+                f  += getPow22(l >> 24);
+                f1 += getPow22(l >> 16);
+                f2 += getPow22(l >> 8);
+                f3 += getPow22(l);
+            }
+
+            f  *= 0.25F; f1 *= 0.25F; f2 *= 0.25F; f3 *= 0.25F;
+
+            int a = lomka$LINEAR_TO_SRGB[Math.min((int) (f * 4095F), 4095)] & 255;
+            int r = lomka$LINEAR_TO_SRGB[Math.min((int) (f1 * 4095F), 4095)] & 255;
+            int g = lomka$LINEAR_TO_SRGB[Math.min((int) (f2 * 4095F), 4095)] & 255;
+            int b = lomka$LINEAR_TO_SRGB[Math.min((int) (f3 * 4095F), 4095)] & 255;
+
+            if (a < 96) a = 0;
+
+            return a << 24 | r << 16 | g << 8 | b;
+        } else {
+            int i2 = gammaBlend(i, j, k, l, 24);
+            int j2 = gammaBlend(i, j, k, l, 16);
+            int k2 = gammaBlend(i, j, k, l, 8);
+            int l2 = gammaBlend(i, j, k, l, 0);
+
+            return i2 << 24 | j2 << 16 | k2 << 8 | l2;
+        }
+    }
+}*/
 //?}

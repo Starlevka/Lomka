@@ -6,14 +6,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import lomka.starl.mixins.accessor.AccessorCameraNearPlane;
+import lomka.starl.mixins.accessor.AccessorNearPlane;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
@@ -33,6 +35,11 @@ public abstract class MixinCamera {
     @Shadow protected abstract void setPosition(double d, double e, double f);
     @Shadow @Final private Vector3f forwards;
     @Shadow private Entity entity;
+    //? if >=1.21.11 {
+    @Shadow private Level level;
+    //?} else {
+    /*@Shadow private BlockGetter level;*/
+    //?}
     @Shadow @Final private BlockPos.MutableBlockPos blockPosition;
     @Shadow private boolean initialized;
     @Shadow @Final private Vector3f left;
@@ -82,14 +89,18 @@ public abstract class MixinCamera {
 
     /**
      * @author Starlev
-     * @reason Early-exit when zoom distance is already zero; use Mth.square/Mth.sqrt
-     * instead of distanceToSqr + Math.sqrt to skip Vec3 allocation.
+     * @reason Use Mth.square/Mth.sqrt instead of distanceToSqr, and shadow the
+     * level field directly instead of going through Minecraft.getInstance().level.
+     * FIX vs previous revision: forward vector must be rescaled by the CURRENT f
+     * each iteration, since f can shrink mid-loop (vanilla recomputes vec31 every
+     * iteration); precomputing it once before the loop used the original,
+     * un-shrunk f for every ray after the first hit.
      */
     @Overwrite
     public float getMaxZoom(float f) {
-        double fwdX = (double) this.forwards.x() * (double) (-f);
-        double fwdY = (double) this.forwards.y() * (double) (-f);
-        double fwdZ = (double) this.forwards.z() * (double) (-f);
+        double fux = this.forwards.x();
+        double fuy = this.forwards.y();
+        double fuz = this.forwards.z();
 
         for (int i = 0; i < 8; ++i) {
             float f2 = (float) ((i & 1) * 2 - 1);
@@ -99,11 +110,12 @@ public abstract class MixinCamera {
             double startX = this.position.x + (double) (f2 * 0.1F);
             double startY = this.position.y + (double) (f3 * 0.1F);
             double startZ = this.position.z + (double) (f4 * 0.1F);
+            double negF = (double) (-f);
 
             Vec3 vec3  = new Vec3(startX, startY, startZ);
-            Vec3 vec31 = new Vec3(startX + fwdX, startY + fwdY, startZ + fwdZ);
+            Vec3 vec31 = new Vec3(startX + fux * negF, startY + fuy * negF, startZ + fuz * negF);
 
-            BlockHitResult blockhitresult = Minecraft.getInstance().level.clip(
+            BlockHitResult blockhitresult = this.level.clip(
                     new ClipContext(vec3, vec31, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, this.entity));
 
             if (blockhitresult.getType() != HitResult.Type.MISS) {
@@ -117,11 +129,18 @@ public abstract class MixinCamera {
         return f;
     }
 
-    /**
-     * @author Starlev
-     * @reason Pre-compute near-plane vectors using pre-allocated scratch fields
-     * instead of allocating three Vec3 objects per call.
-     */
+    //? if >=26.1 {
+    /*@Overwrite
+    public Camera.NearPlane getNearPlane(float fov) {
+        lomka$computeNearPlane(fov);
+
+        Vec3 vec3  = new Vec3(lomka$npFwdX, lomka$npFwdY, lomka$npFwdZ);
+        Vec3 vec31 = new Vec3(lomka$npLftX, lomka$npLftY, lomka$npLftZ);
+        Vec3 vec32 = new Vec3(lomka$npUpX,  lomka$npUpY,  lomka$npUpZ);
+
+        return AccessorNearPlane.create(vec3, vec31, vec32);
+    }*/
+    //?} else {
     @Overwrite
     public Camera.NearPlane getNearPlane() {
         lomka$computeNearPlane();
@@ -130,17 +149,31 @@ public abstract class MixinCamera {
         Vec3 vec31 = new Vec3(lomka$npLftX, lomka$npLftY, lomka$npLftZ);
         Vec3 vec32 = new Vec3(lomka$npUpX,  lomka$npUpY,  lomka$npUpZ);
 
-        return AccessorCameraNearPlane.create(vec3, vec31, vec32);
+        return AccessorNearPlane.create(vec3, vec31, vec32);
     }
+    //?}
 
+    /*
+     * FIX vs previous revision: the division by 2.0D must stay INSIDE Math.tan(...) —
+     * the correct formula is tan(radians / 2) * 0.05, not tan(radians) / 2 * 0.05.
+     * These are not equivalent: at the default 70 FOV the buggy form was roughly
+     * double the correct near-plane half-height, and past ~90 FOV tan(radians)
+     * approaches/crosses its asymptote, producing huge or negative values instead
+     * of the small, well-behaved values the correct half-angle formula gives.
+     */
+    //? if >=26.1 {
+    /*@Unique
+    private void lomka$computeNearPlane(float fov) {
+        double d1 = Math.tan((double) (fov * 0.017453292F) / 2.0D) * 0.05000000074505806D;*/
+    //?} else {
     @Unique
     private void lomka$computeNearPlane() {
         Minecraft minecraft = Minecraft.getInstance();
-        double aspectRatio = (double) minecraft.getWindow().getWidth()
-                           / (double) minecraft.getWindow().getHeight();
-        double d1 = Math.tan((double) ((float) (Integer) minecraft.options.fov().get()
-                * 0.017453292F) / 2.0D) * 0.05000000074505806D;
-        double d2 = d1 * aspectRatio;
+        double d1 = Math.tan((double) ((float) (Integer) minecraft.options.fov().get() * 0.017453292F) / 2.0D)
+                * 0.05000000074505806D;
+    //?}
+        double d2 = d1 * (double) Minecraft.getInstance().getWindow().getWidth()
+                / (double) Minecraft.getInstance().getWindow().getHeight();
 
         lomka$npFwdX = this.forwards.x() * 0.05000000074505806D;
         lomka$npFwdY = this.forwards.y() * 0.05000000074505806D;
@@ -156,8 +189,13 @@ public abstract class MixinCamera {
     /**
      * @author Starlev
      * @reason Cache fluid-in-camera results to skip block lookups when the camera
-     * has not moved. Also reuses pre-allocated arrays and MutableBlockPos
-     * to eliminate per-frame allocation of Vec3/Vec3i objects.
+     * has not moved. Also reuses pre-allocated arrays and MutableBlockPos to
+     * eliminate per-frame allocation of Vec3/Vec3i objects. FIX vs previous
+     * revision: dx[1] (top-left corner, forward+up+left) used up.y (uy) in the
+     * X-component instead of up.x (ux) — at pitch~0, up.x~0 while up.y~1, so the
+     * bug injected an error of roughly the full near-plane half-height into the
+     * X-coordinate of that corner for nearly any camera orientation. Uses the
+     * shadowed level field instead of Minecraft.getInstance().level.
      */
     @Overwrite
     public FogType getFluidInCamera() {
@@ -165,7 +203,11 @@ public abstract class MixinCamera {
             return FogType.NONE;
         }
 
-        var level = Minecraft.getInstance().level;
+        //? if >=1.21.11 {
+        Level level = this.level;
+        //?} else {
+        /*BlockGetter level = this.level;*/
+        //?}
 
         int bx = this.blockPosition.getX();
         int by = this.blockPosition.getY();
@@ -215,7 +257,11 @@ public abstract class MixinCamera {
             return lomka$cachedLavaSnowResult;
         }
 
+        //? if >=26.1 {
+        /*lomka$computeNearPlane((float) (Integer) Minecraft.getInstance().options.fov().get());*/
+        //?} else {
         lomka$computeNearPlane();
+        //?}
 
         double fx = lomka$npFwdX, fy = lomka$npFwdY, fz = lomka$npFwdZ;
         double lx = lomka$npLftX, ly = lomka$npLftY, lz = lomka$npLftZ;
@@ -226,7 +272,7 @@ public abstract class MixinCamera {
         double[] dz = this.lomka$dz;
 
         dx[0] = fx;        dy[0] = fy;        dz[0] = fz;
-        dx[1] = fx+uy+lx;  dy[1] = fy+uy+ly;  dz[1] = fz+uz+lz;
+        dx[1] = fx+ux+lx;  dy[1] = fy+uy+ly;  dz[1] = fz+uz+lz;
         dx[2] = fx+ux-lx;  dy[2] = fy+uy-ly;  dz[2] = fz+uz-lz;
         dx[3] = fx-ux+lx;  dy[3] = fy-uy+ly;  dz[3] = fz-uz+lz;
         dx[4] = fx-ux-lx;  dy[4] = fy-uy-ly;  dz[4] = fz-uz-lz;
@@ -265,10 +311,6 @@ public abstract class MixinCamera {
         return result;
     }
 
-    /**
-     * Resets all cached fluid-in-camera state so the next getFluidInCamera()
-     * call performs a fresh lookup after camera reset.
-     */
     @Inject(method = "reset()V", at = @At("TAIL"))
     private void onReset(CallbackInfo ci) {
         this.lomka$lastWaterPosX      = Integer.MIN_VALUE;

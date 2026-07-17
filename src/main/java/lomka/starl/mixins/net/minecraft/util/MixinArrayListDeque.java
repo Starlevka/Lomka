@@ -19,7 +19,7 @@ public class MixinArrayListDeque<T> {
     @Shadow private int head;
     @Shadow private int size;
 
-    @Shadow(remap = false) @Dynamic private transient int modCount;
+    @Shadow @Dynamic private transient int modCount;
 
     @Unique
     private void lomka$incModCount() {

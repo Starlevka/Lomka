@@ -1,22 +1,24 @@
 ## Summary
 
 - Reduces micro-stutters
-- Slightly improves FPS and decreases texture loading (feels diffrent on some systems)
+- Slightly improves FPS, decreases textures load (feels diffrent on some systems)
+- Slightly changes network packet garbages (should not affect to ping)
 - Could decrease RAM usage sometimes
 
 ## What actually does the mod do?
 
 - Speeds up some calculations (colors engine, maths, texture loading)
-- Fixes code's bugs
+- Fixes bugs in game code
 - Prevents unnecessary allocations (sounds, calcs and rendering)
-- Improves hashCode() game's caches 
+- Improves game hashCode() caching
 - Slightly improves threading system
-- Caching JOML calls (experimental)
+- Faster lighting and biome data access
+- FaceSturdy block state caching
 
 ## FAQ
 
 **Q: I'm having performance issues, and removing Lomka fixes them!**
-A: Make sure you are using the latest version. Lomka targets hot-paths across multiple Minecraft versions — if you encounter a compatibility issue, please report it. **At the moment the most perfomance friendly mod versions are 0.2.0 and 0.3.0.**
+A: Make sure you are using the latest version. Lomka targets hot-paths across multiple Minecraft versions — if you encounter a compatibility issue, please report it. **At the moment the most perfomance friendly mod versions are 0.2.0 and 0.3.0+.**
 
 **Q: Can I run Lomka on the server-side?**
 A: Yes. 

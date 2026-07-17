@@ -38,7 +38,7 @@ public abstract class MixinJOrbisAudioStream {
      * and int[channels]. Both are output containers that JOrbis unconditionally
      * overwrites before any field is read, making reuse across calls safe.
      */
-    @Overwrite(remap = false)
+    @Overwrite
     public boolean readChunk(FloatConsumer floatconsumer) throws IOException {
         int[] aint = this.lomka$pcmIndex;
         if (aint == null) {

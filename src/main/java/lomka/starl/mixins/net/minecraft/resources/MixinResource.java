@@ -24,35 +24,24 @@ public class MixinResource {
     @Shadow @Final private String path;
 
     @Unique private String lomka$cachedString;
+    @Unique private boolean lomka$hashComputed;
     @Unique private int lomka$hashCode;
 
-    /**
-     * @author Starlev
-     * @reason Caches the string representation to avoid repeated namespace:path concatenation.
-     */
     @Overwrite
     public String toString() {
         String s = this.lomka$cachedString;
         if (s == null) {
-            s = this.namespace + ":" + this.path;
-            this.lomka$cachedString = s;
+            this.lomka$cachedString = s = this.namespace + ":" + this.path;
         }
         return s;
     }
 
-    /**
-     * @author Starlev
-     * @reason Lazily computes and caches the hash code to avoid redundant namespace+path hashing.
-     */
     @Overwrite
     public int hashCode() {
-        int h = this.lomka$hashCode;
-        if (h == 0) {
-            int result = 31 * this.namespace.hashCode() + this.path.hashCode();
-            h = result;
-            if (h == 0) h = 1;
-            this.lomka$hashCode = h;
+        if (!this.lomka$hashComputed) {
+            this.lomka$hashCode = 31 * this.namespace.hashCode() + this.path.hashCode();
+            this.lomka$hashComputed = true;
         }
-        return h;
+        return this.lomka$hashCode;
     }
 }

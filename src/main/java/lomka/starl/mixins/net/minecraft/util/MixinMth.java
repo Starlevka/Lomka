@@ -16,6 +16,7 @@ public class MixinMth {
      */
     @Overwrite
     public static int smallestEncompassingPowerOfTwo(int i) {
+        if (i < 1) return 0;
         return i > 1 ? 1 << (32 - Integer.numberOfLeadingZeros(i - 1)) : i;
     }
 
@@ -34,7 +35,7 @@ public class MixinMth {
      */
     @Overwrite
     public static int log2(int i) {
-        return i > 0 ? 31 - Integer.numberOfLeadingZeros(i) : 0;
+        return i > 0 ? 31 - Integer.numberOfLeadingZeros(i) : -1;
     }
 
     /**
@@ -55,6 +56,42 @@ public class MixinMth {
             }
         }
         return i;
+    }
+
+    /**
+     * @author Starlev
+     * @reason Avoid slow Math.min float checks for NaN and signed zero, compiling to flat SSE comparisons.
+     */
+    @Overwrite
+    public static float clamp(float f, float f1, float f2) {
+        return f < f1 ? f1 : (f > f2 ? f2 : f);
+    }
+
+    /**
+     * @author Starlev
+     * @reason Avoid slow Math.min double checks for NaN and signed zero, compiling to flat SSE comparisons.
+     */
+    @Overwrite
+    public static double clamp(double d0, double d1, double d2) {
+        return d0 < d1 ? d1 : (d0 > d2 ? d2 : d0);
+    }
+
+    /**
+     * @author Starlev
+     * @reason Inline lerp formula directly to assist JIT compiler in register allocation.
+     */
+    @Overwrite
+    public static float clampedLerp(float f, float f1, float f2) {
+        return f < 0.0F ? f1 : (f > 1.0F ? f2 : f1 + f * (f2 - f1));
+    }
+
+    /**
+     * @author Starlev
+     * @reason Inline lerp formula directly to assist JIT compiler in register allocation.
+     */
+    @Overwrite
+    public static double clampedLerp(double d0, double d1, double d2) {
+        return d0 < 0.0D ? d1 : (d0 > 1.0D ? d2 : d1 + d0 * (d2 - d1));
     }
 
     /**
@@ -88,6 +125,65 @@ public class MixinMth {
         float v = alpha * (float) (p1 - p0);
         int i = (int) v;
         return p0 + (v < (float) i ? i - 1 : i);
+    }
+
+    /**
+     * @author Starlev
+     * @reason Optimize HSV to ARGB conversion by lazily evaluating sector-specific floats (f5/f6)
+     *         and bypassing modulo division on the normalized fast-path.
+     */
+    @Overwrite
+    public static int hsvToArgb(float f, float f1, float f2, int i) {
+        float val = f * 6.0F;
+        int j = (int) val;
+
+        if (j >= 6) {
+            j %= 6;
+        }
+
+        float f3 = val - (float) j;
+        float f4 = f2 * (1.0F - f1);
+        float f7;
+        float f8;
+        float f9;
+
+        if (j == 0) {
+            float f6 = f2 * (1.0F - (1.0F - f3) * f1);
+            f7 = f2;
+            f8 = f6;
+            f9 = f4;
+        } else if (j == 1) {
+            float f5 = f2 * (1.0F - f3 * f1);
+            f7 = f5;
+            f8 = f2;
+            f9 = f4;
+        } else if (j == 2) {
+            float f6 = f2 * (1.0F - (1.0F - f3) * f1);
+            f7 = f4;
+            f8 = f2;
+            f9 = f6;
+        } else if (j == 3) {
+            float f5 = f2 * (1.0F - f3 * f1);
+            f7 = f4;
+            f8 = f5;
+            f9 = f2;
+        } else if (j == 4) {
+            float f6 = f2 * (1.0F - (1.0F - f3) * f1);
+            f7 = f6;
+            f8 = f4;
+            f9 = f2;
+        } else {
+            float f5 = f2 * (1.0F - f3 * f1);
+            f7 = f2;
+            f8 = f4;
+            f9 = f5;
+        }
+
+        int r = (int) (f7 * 255.0F);
+        int g = (int) (f8 * 255.0F);
+        int b = (int) (f9 * 255.0F);
+        
+        return i << 24 | r << 16 | g << 8 | b;
     }
 
     /**

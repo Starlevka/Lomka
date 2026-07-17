@@ -3,13 +3,14 @@ package lomka.starl.mixins.com.mojang.blaze3d.platform;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
-import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 import java.util.Arrays;
+import lomka.starl.utils.TextureUtilState;
 import net.minecraft.util.ARGB;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(TextureUtil.class)
 public class MixinTextureUtil {
@@ -17,9 +18,18 @@ public class MixinTextureUtil {
     @Shadow @Final
     private static int[][] DIRECTIONS;
 
+    @Unique
+    private static final int lomka$MAX_POOLED_PIXELS = 8192 * 8192;
+
+    @Unique
+    private static final ThreadLocal<TextureUtilState> lomka$STATE = ThreadLocal.withInitial(TextureUtilState::new);
+
     /**
      * @author Starlev
-     * @reason Replace ArrayList-based BFS with IntArrayFIFOQueue and packed int coordinates to eliminate object allocations during texture solidification.
+     * @reason Replace ArrayList-based BFS with flat arrays and a bounded ThreadLocal pool to
+     * eliminate object allocations and GC pressure during texture solidification, without
+     * leaking stale color data between calls or letting one oversized texture permanently
+     * inflate every worker thread's memory footprint.
      */
     @Overwrite
     public static void solidify(NativeImage nativeimage) {
@@ -27,11 +37,26 @@ public class MixinTextureUtil {
         int height = nativeimage.getHeight();
         int totalPixels = width * height;
 
-        int[] colorBuffer = new int[totalPixels];
-        int[] distanceBuffer = new int[totalPixels];
+        int[] colorBuffer;
+        int[] distanceBuffer;
+        int[] queue;
 
-        Arrays.fill(distanceBuffer, Integer.MAX_VALUE);
-        IntArrayFIFOQueue queue = new IntArrayFIFOQueue();
+        if (totalPixels <= lomka$MAX_POOLED_PIXELS) {
+            TextureUtilState state = lomka$STATE.get();
+            state.ensureCapacity(totalPixels);
+            colorBuffer = state.colorBuffer;
+            distanceBuffer = state.distanceBuffer;
+            queue = state.queue;
+        } else {
+            colorBuffer = new int[totalPixels];
+            distanceBuffer = new int[totalPixels];
+            queue = new int[totalPixels];
+        }
+
+        Arrays.fill(distanceBuffer, 0, totalPixels, Integer.MAX_VALUE);
+
+        int head = 0;
+        int tail = 0;
 
         for (int x = 0; x < width; ++x) {
             for (int y = 0; y < height; ++y) {
@@ -41,17 +66,26 @@ public class MixinTextureUtil {
 
                     distanceBuffer[packedIndex] = 0;
                     colorBuffer[packedIndex] = color;
-                    
-                    queue.enqueue((y << 16) | x);
+
+                    queue[tail++] = (y << 16) | x;
                 }
             }
+        }
+
+        if (tail == 0) {
+            for (int x = 0; x < width; ++x) {
+                for (int y = 0; y < height; ++y) {
+                    nativeimage.setPixel(x, y, 0);
+                }
+            }
+            return;
         }
 
         int[][] directions = DIRECTIONS;
         int dirCount = directions.length;
 
-        while (!queue.isEmpty()) {
-            int val = queue.dequeueInt();
+        while (head < tail) {
+            int val = queue[head++];
             int x = val & 0xFFFF;
             int y = val >> 16;
             int packedIndex = x + y * width;
@@ -66,7 +100,7 @@ public class MixinTextureUtil {
                     if (distanceBuffer[nPackedIndex] > distanceBuffer[packedIndex] + 1) {
                         distanceBuffer[nPackedIndex] = distanceBuffer[packedIndex] + 1;
                         colorBuffer[nPackedIndex] = colorBuffer[packedIndex];
-                        queue.enqueue((ny << 16) | nx);
+                        queue[tail++] = (ny << 16) | nx;
                     }
                 }
             }

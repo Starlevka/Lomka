@@ -19,14 +19,4 @@ public abstract class MixinBlockableEventLoop {
     private CompletableFuture<Void> submitAsync(Runnable runnable) {
         return CompletableFuture.runAsync(runnable, (Executor) (Object) this);
     }
-
-    /**
-     * @author Starlev
-     * @reason Use LockSupport.parkNanos with a fixed 100us budget instead of
-     * Thread.yield() spin loop, reducing CPU waste when the event loop is idle.
-     */
-    @Overwrite
-    protected void waitForTasks() {
-        LockSupport.parkNanos("waiting for tasks", 100000L);
-    }
 }
