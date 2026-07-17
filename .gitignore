@@ -1,0 +1,24 @@
+# ── Build outputs ──
+build/
+*/build/
+
+# ── Gradle cache ──
+.gradle/
+*/.gradle/
+
+# ── Game run directories (excluded per requirement) ──
+versions/*/run/
+
+# ── IDE / Editor ──
+.kilo/
+.kilocode/
+.idea/
+*.iml
+.vscode/
+
+# ── OS ──
+Thumbs.db
+.DS_Store
+
+# ── Other project files not part of the mod source ──
+/SOURCE CODE/

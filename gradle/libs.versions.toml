@@ -1,0 +1,14 @@
+[versions]
+stonecutter = "0.9.4"
+fabric-loom = "1.16-SNAPSHOT"
+neoforge-moddev = "2.0.141"
+foojay = "1.0.0"
+
+[libraries]
+foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
+
+[plugins]
+stonecutter = { id = "dev.kikugie.stonecutter", version.ref = "stonecutter" }
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
+fabric-loom-remap = { id = "net.fabricmc.fabric-loom-remap", version.ref = "fabric-loom" }
+neoforge-moddev = { id = "net.neoforged.moddev", version.ref = "neoforge-moddev" }
