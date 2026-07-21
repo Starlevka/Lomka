@@ -9,7 +9,7 @@ build/
 # ── Game run directories (excluded per requirement) ──
 versions/*/run/
 
-# ── IDE / Editor ──
+# ── IDE / Editor / Vibe ──
 .kilo/
 .kilocode/
 .idea/

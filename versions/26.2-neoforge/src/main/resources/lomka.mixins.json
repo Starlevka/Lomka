@@ -1,4 +1,4 @@
-{
+﻿{
   "required": true,
   "package": "lomka.starl.mixins",
   "compatibilityLevel": "${java}",
@@ -13,7 +13,7 @@
     "com.mojang.blaze3d.buffers.MixinGpuBuffer",
     "com.mojang.blaze3d.platform.MixinKey",
     "com.mojang.blaze3d.platform.MixinNativeImage",
-    "com.mojang.blaze3d.platform.MixinTextureUtil",
+    "com.mojang.blaze3d.vertex.MixinVertexFormat",
     "com.mojang.math.MixinQuadrant",
     "net.minecraft.client.model.MixinModel",
     "net.minecraft.client.renderer.MixinDynamicUniformStorage",
@@ -22,7 +22,6 @@
     "net.minecraft.client.renderer.texture.MixinSpriteContents",
     "net.minecraft.client.renderer.texture.MixinMipmapGenerator",
     "net.minecraft.client.renderer.texture.atlas.sources.MixinPalettedPermutations",
-    "net.minecraft.client.resources.model.MixinMaterial",
     "net.minecraft.client.resources.model.MixinBuilder",
     "net.minecraft.client.sounds.MixinJOrbisAudioStream",
     "net.minecraft.client.sounds.MixinSoundEngine"
@@ -36,7 +35,6 @@
     "net.minecraft.util.MixinARGB",
     "net.minecraft.network.MixinCompressionDecoder",
     "net.minecraft.network.MixinFriendlyByteBuf",
-    "net.minecraft.resources.MixinResource",
     "net.minecraft.world.level.block.state.MixinBlockStateBaseCache",
     "net.minecraft.world.level.chunk.MixinDataLayer",
     "net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape"

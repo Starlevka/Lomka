@@ -58,23 +58,6 @@ public class MixinMth {
         return i;
     }
 
-    /**
-     * @author Starlev
-     * @reason Avoid slow Math.min float checks for NaN and signed zero, compiling to flat SSE comparisons.
-     */
-    @Overwrite
-    public static float clamp(float f, float f1, float f2) {
-        return f < f1 ? f1 : (f > f2 ? f2 : f);
-    }
-
-    /**
-     * @author Starlev
-     * @reason Avoid slow Math.min double checks for NaN and signed zero, compiling to flat SSE comparisons.
-     */
-    @Overwrite
-    public static double clamp(double d0, double d1, double d2) {
-        return d0 < d1 ? d1 : (d0 > d2 ? d2 : d0);
-    }
 
     /**
      * @author Starlev
@@ -136,10 +119,7 @@ public class MixinMth {
     public static int hsvToArgb(float f, float f1, float f2, int i) {
         float val = f * 6.0F;
         int j = (int) val;
-
-        if (j >= 6) {
-            j %= 6;
-        }
+        j %= 6;
 
         float f3 = val - (float) j;
         float f4 = f2 * (1.0F - f1);
@@ -182,7 +162,7 @@ public class MixinMth {
         int r = (int) (f7 * 255.0F);
         int g = (int) (f8 * 255.0F);
         int b = (int) (f9 * 255.0F);
-        
+
         return i << 24 | r << 16 | g << 8 | b;
     }
 
@@ -193,7 +173,9 @@ public class MixinMth {
     @Overwrite
     public static float positiveModulo(float input, float mod) {
         float r = input % mod;
-        return r < 0.0F ? r + mod : r;
+        if (r < 0.0F) return r + mod;
+        if (r == 0.0F) return 0.0F;
+        return r;
     }
 
     /**
@@ -203,7 +185,9 @@ public class MixinMth {
     @Overwrite
     public static double positiveModulo(double input, double mod) {
         double r = input % mod;
-        return r < 0.0D ? r + mod : r;
+        if (r < 0.0D) return r + mod;
+        if (r == 0.0D) return 0.0D;
+        return r;
     }
 
     /**
