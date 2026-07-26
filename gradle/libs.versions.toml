@@ -1,5 +1,5 @@
 [versions]
-stonecutter = "0.9.4"
+stonecutter = "0.9.7"
 fabric-loom = "1.16-SNAPSHOT"
 neoforge-moddev = "2.0.141"
 foojay = "1.0.0"

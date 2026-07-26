@@ -20,6 +20,6 @@ repositories {
 }
 
 dependencies {
-	implementation("dev.kikugie:stonecutter:0.9.4")
+	implementation("dev.kikugie:stonecutter:0.9.7")
 	implementation("org.gradle.toolchains:foojay-resolver:1.0.0")
 }

@@ -1,4 +1,4 @@
-{
+﻿{
   "required": true,
   "package": "lomka.starl.mixins",
   "compatibilityLevel": "${java}",
@@ -11,16 +11,19 @@
     "com.mojang.blaze3d.buffers.MixinGpuBuffer",
     "com.mojang.blaze3d.platform.MixinKey",
     "com.mojang.blaze3d.platform.MixinNativeImage",
-    "com.mojang.blaze3d.vertex.MixinMeshData",
     "com.mojang.blaze3d.vertex.MixinBufferBuilder",
+    "com.mojang.blaze3d.vertex.MixinPoseStack",
+    "com.mojang.blaze3d.vertex.MixinVertexFormat",
     "net.minecraft.client.MixinCamera",
     "net.minecraft.client.MixinMinecraft",
-    "net.minecraft.client.resources.model.MixinMaterial",
     "net.minecraft.client.renderer.MixinDynamicUniformStorage",
     "net.minecraft.client.renderer.texture.MixinMipmapGenerator",
     "net.minecraft.client.renderer.texture.MixinSpriteContents",
+    "net.minecraft.client.renderer.texture.MixinTextureAtlas",
     "net.minecraft.client.sounds.MixinSoundEngine",
-    "net.minecraft.client.sounds.MixinJOrbisAudioStream"
+    "net.minecraft.client.sounds.MixinSoundBufferLibrary",
+    "net.minecraft.client.sounds.MixinJOrbisAudioStream",
+    "net.minecraft.client.renderer.MixinLightTexture"
   ],
   "main": [
     "net.minecraft.core.MixinIdMapper",
@@ -31,7 +34,6 @@
     "net.minecraft.util.MixinARGB",
     "net.minecraft.network.MixinCompressionDecoder",
     "net.minecraft.network.MixinFriendlyByteBuf",
-    "net.minecraft.resources.MixinResource",
     "net.minecraft.world.level.block.state.MixinBlockStateBaseCache",
     "net.minecraft.world.level.chunk.MixinDataLayer",
     "net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape"

@@ -50,9 +50,10 @@ val mainSourceSet = the<org.gradle.api.plugins.JavaPluginExtension>().sourceSets
 
 mainSourceSet.java.exclude("lomka/neoforge/**")
 
-if (stonecutter.current.parsed >= "26.2") {
+// 26.1-26.2+
+if (stonecutter.current.version != "1.21.11") {
 	mainSourceSet.java.exclude(
-		"lomka/starl/mixins/net/minecraft/client/renderer/MixinMultiBufferSource.java"
+		"lomka/starl/mixins/net/minecraft/client/renderer/MixinLightTexture.java"
 	)
 }
 

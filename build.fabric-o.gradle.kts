@@ -55,6 +55,13 @@ configurations.all {
 val mainSourceSet = sourceSets["main"]
 
 mainSourceSet.java.exclude("lomka/neoforge/**")
+if (stonecutter.current.parsed < "26.1") {
+	mainSourceSet.java.exclude(
+		"lomka/starl/mixins/net/minecraft/client/renderer/MixinLightmapRenderStateExtractor.java",
+		"lomka/starl/mixins/net/minecraft/client/renderer/MixinLightmap.java",
+		"lomka/starl/mixins/net/minecraft/util/MixinLightCoordsUtil.java"
+	)
+}
 
 if (stonecutter.current.parsed < "1.21.6") {
 	mainSourceSet.java.exclude(
@@ -63,16 +70,21 @@ if (stonecutter.current.parsed < "1.21.6") {
 		"lomka/starl/mixins/com/mojang/blaze3d/buffers/MixinStd140Builder.java",
 		"lomka/starl/mixins/com/mojang/blaze3d/buffers/MixinStd140SizeCalculator.java",
 		"lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinSortState.java",
-		"lomka/starl/mixins/net/minecraft/client/animation/MixinKeyframeAnimation.java",
 		"lomka/starl/mixins/net/minecraft/client/renderer/MixinGameRenderer.java",
 		"lomka/starl/mixins/net/minecraft/client/model/MixinModel.java",
 		"lomka/starl/mixins/net/minecraft/client/model/geom/MixinModelPart.java",
-		"lomka/starl/mixins/net/minecraft/client/renderer/MixinItemInHandRenderer.java"
+		"lomka/starl/mixins/net/minecraft/client/renderer/MixinItemInHandRenderer.java",
+		"lomka/starl/mixins/net/minecraft/client/renderer/texture/MixinTextureAtlas.java"
 	)
-} else if (stonecutter.current.parsed < "1.21.9") {
+}
+
+if (stonecutter.current.parsed >= "1.21.4" && stonecutter.current.parsed < "1.21.6") {
+	mainSourceSet.java.exclude("lomka/starl/mixins/net/minecraft/client/renderer/MixinLightTexture.java")
+}
+
+if (stonecutter.current.parsed >= "1.21.6" && stonecutter.current.parsed < "1.21.9") {
 	mainSourceSet.java.exclude(
 		"lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinSortState.java",
-		"lomka/starl/mixins/net/minecraft/client/animation/MixinKeyframeAnimation.java",
 		"lomka/starl/mixins/net/minecraft/client/renderer/MixinGameRenderer.java",
 		"lomka/starl/mixins/net/minecraft/client/model/MixinModel.java",
 		"lomka/starl/mixins/net/minecraft/client/model/geom/MixinModelPart.java",
@@ -83,11 +95,14 @@ if (stonecutter.current.parsed < "1.21.6") {
 if (stonecutter.current.parsed < "1.21.11") {
 	mainSourceSet.java.exclude(
 		"lomka/starl/mixins/com/mojang/math/MixinQuadrant.java",
-		"lomka/starl/mixins/net/minecraft/client/renderer/texture/MixinTextureAtlas.java",
 		"lomka/starl/mixins/net/minecraft/client/resources/model/MixinBuilder.java",
 		"lomka/starl/mixins/accessor/InvokerBuilder.java",
 		"lomka/starl/mixins/accessor/AccessorQuadCollection.java"
 	)
+}
+
+if (stonecutter.current.parsed >= "26.2") {
+	mainSourceSet.java.exclude("lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinVertexFormat.java")
 }
 
 dependencies {

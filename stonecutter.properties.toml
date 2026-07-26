@@ -1,7 +1,7 @@
 mod.id = "lomka"
 mod.name = "Lomka"
 mod.group = "lomka.starl"
-mod.version = "0.3.1"
+mod.version = "0.3.2"
 mod.description = "Applies various, compatible optimizations to improve perfomance and stability. Ready for client, server or both uses!"
 mod.authors = ["Starlev"]
 mod.license.name = "MIT"
