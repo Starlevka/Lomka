@@ -58,7 +58,6 @@ public class MixinMth {
         return i;
     }
 
-
     /**
      * @author Starlev
      * @reason Inline lerp formula directly to assist JIT compiler in register allocation.
@@ -236,6 +235,24 @@ public class MixinMth {
         if (r >= 180.0F) return r - 360.0F;
         if (r < -180.0F) return r + 360.0F;
         return r;
+    }
+
+    /**
+     * @author Starlev
+     * @reason Replace the unbounded O(n) normalization loop (which can iterate millions
+     *         of times and cost multiple milliseconds if an unnormalized angle difference
+     *         ever reaches this function) with an O(1) single-remainder reduction.
+     */
+    @Overwrite
+    public static float rotLerpRad(float f, float f1, float f2) {
+        float diff = f2 - f1;
+        float r = diff % 6.2831855F;
+        if (r < -3.1415927F) {
+            r += 6.2831855F;
+        } else if (r >= 3.1415927F) {
+            r -= 6.2831855F;
+        }
+        return f1 + f * r;
     }
 
     /**

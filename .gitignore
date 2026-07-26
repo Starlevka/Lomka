@@ -8,8 +8,10 @@ build/
 
 # ── Game run directories (excluded per requirement) ──
 versions/*/run/
+versions/*/bin/
 
 # ── IDE / Editor / Vibe ──
+.eclipse
 .kilo/
 .kilocode/
 .idea/

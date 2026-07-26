@@ -147,7 +147,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Per-channel float lerp with truncation-based rounding,
-     * avoiding Math.floor() and Objects.hash() overhead.
+     * avoiding Math.floor() overhead.
      */
     @Overwrite
     public static int srgbLerp(float f, int i, int j) {
@@ -267,13 +267,20 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Replace per-channel float cost with fixed-point multiply by 65794 (2^24 / 255),
-     * eliminating division and float-to-int conversion overhead.
+     * eliminating division and float-to-int conversion overhead. Uses long arithmetic and a
+     * signed (arithmetic) shift, then clamps explicitly -- the original unsigned-shift version
+     * silently corrupted the result for j outside 0..255 (e.g. j=256 produced 0 instead of 255)
+     * because vanilla's Math.clamp was dropped without an equivalent replacement.
      */
     @Overwrite
     public static int scaleRGB(int i, int j) {
-        int r = (((i >> 16) & 255) * j * 65794) >>> 24;
-        int g = (((i >> 8) & 255) * j * 65794) >>> 24;
-        int b = ((i & 255) * j * 65794) >>> 24;
+        int r = (int) (((long) ((i >> 16) & 255) * j * 65794) >> 24);
+        int g = (int) (((long) ((i >> 8) & 255) * j * 65794) >> 24);
+        int b = (int) (((long) (i & 255) * j * 65794) >> 24);
+
+        r = r < 0 ? 0 : (r > 255 ? 255 : r);
+        g = g < 0 ? 0 : (g > 255 ? 255 : g);
+        b = b < 0 ? 0 : (b > 255 ? 255 : b);
 
         return (i & 0xFF000000) | (r << 16) | (g << 8) | b;
     }
