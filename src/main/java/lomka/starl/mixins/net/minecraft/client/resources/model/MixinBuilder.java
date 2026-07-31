@@ -119,7 +119,8 @@ public class MixinBuilder {
         );
     }
 
-    @Inject(method = "addAll", at = @At("HEAD"), cancellable = true, require = 0)
+    //? if >=26.1 {
+    /*@Inject(method = "addAll", at = @At("HEAD"), cancellable = true, require = 1)
     private void lomka$addAll(QuadCollection quadCollection, CallbackInfoReturnable<QuadCollection.Builder> cir) {
         for (BakedQuad quad : quadCollection.getQuads(null)) {
             this.unculledFaces.add(quad);
@@ -130,7 +131,8 @@ public class MixinBuilder {
             }
         }
         cir.setReturnValue((QuadCollection.Builder) (Object) this);
-    }
+    }*/
+    //?}
 
     @Unique
     private List<BakedQuad> lomka$getList(Direction dir) {
