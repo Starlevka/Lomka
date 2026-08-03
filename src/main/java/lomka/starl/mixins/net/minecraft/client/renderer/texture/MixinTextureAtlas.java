@@ -8,7 +8,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 //? }
-import lomka.starl.utils.SpriteContentsHelper;
 import net.minecraft.client.renderer.texture.SpriteContents;
 //? if < 1.21.11 {
 /*import net.minecraft.resources.ResourceLocation;*/
@@ -127,13 +126,6 @@ public abstract class MixinTextureAtlas {
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "uploadInitialContents")
-    private void lomka$releaseMipmaps(CallbackInfo ci) {
-        for (int i = 0, n = this.sprites.size(); i < n; i++) {
-            SpriteContents contents = this.sprites.get(i).contents();
-            ((SpriteContentsHelper) contents).lomka$releaseUselessMipmaps();
-        }
-    }
     //? }
     //? }
 }

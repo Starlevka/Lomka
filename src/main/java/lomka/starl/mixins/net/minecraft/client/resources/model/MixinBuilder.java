@@ -1,6 +1,5 @@
 package lomka.starl.mixins.net.minecraft.client.resources.model;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import lomka.starl.mixins.accessor.InvokerBuilder;
 //? if >=26.1 {
@@ -18,7 +17,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
@@ -31,21 +29,6 @@ public class MixinBuilder {
 
     @Unique
     private List<BakedQuad>[] lomka$fastCulledFaces;
-
-    /**
-     * @author Starlev
-     * @reason culledFaces is never read after addCulledFace/build are overwritten below —
-     * skip the eager HashMap allocation Guava performs inside ArrayListMultimap.create()
-     * on every Builder construction, which otherwise happens unconditionally regardless
-     * of the array-based fast path replacing it.
-     */
-    @Redirect(
-        method = "<init>()V",
-        at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ArrayListMultimap;create()Lcom/google/common/collect/ArrayListMultimap;")
-    )
-    private ArrayListMultimap<Direction, BakedQuad> lomka$skipDeadMultimapAlloc() {
-        return null;
-    }
 
     /**
      * @author Starlev
@@ -119,6 +102,12 @@ public class MixinBuilder {
         );
     }
 
+    /**
+     * @author Starlev
+     * @reason 26.1+ added Builder.addAll(QuadCollection), called by ItemModelGenerator
+     * during item model baking. Route it through the fast array to keep allocation-free
+     * addCulledFace semantics (getQuads returns direct field references, no copies).
+     */
     //? if >=26.1 {
     /*@Inject(method = "addAll", at = @At("HEAD"), cancellable = true, require = 1)
     private void lomka$addAll(QuadCollection quadCollection, CallbackInfoReturnable<QuadCollection.Builder> cir) {

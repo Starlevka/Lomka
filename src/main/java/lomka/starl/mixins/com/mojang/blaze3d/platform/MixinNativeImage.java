@@ -2,6 +2,7 @@
 package lomka.starl.mixins.com.mojang.blaze3d.platform;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.util.ARGB;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -35,12 +36,14 @@ public abstract class MixinNativeImage {
             return;
         }
 
+        int abgrColor = ARGB.toABGR(color);
+
         for (int currentY = startY; currentY < endY; currentY++) {
             long rowStart = this.pixels + (currentY * (long) this.width + startX) * 4L;
             int rowWidth = endX - startX;
 
             for (int currentX = 0; currentX < rowWidth; currentX++) {
-                MemoryUtil.memPutInt(rowStart + (currentX * 4L), color);
+                MemoryUtil.memPutInt(rowStart + (currentX * 4L), abgrColor);
             }
         }
     }

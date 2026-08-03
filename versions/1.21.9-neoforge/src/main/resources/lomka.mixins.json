@@ -23,7 +23,6 @@
     "net.minecraft.client.renderer.MixinGameRenderer",
     "net.minecraft.client.renderer.block.model.MixinItemTransform",
     "net.minecraft.client.renderer.texture.MixinMipmapGenerator",
-    "net.minecraft.client.renderer.texture.MixinSpriteContents",
     "net.minecraft.client.renderer.texture.MixinTextureAtlas",
     "net.minecraft.client.sounds.MixinSoundEngine",
     "net.minecraft.client.sounds.MixinSoundBufferLibrary",
@@ -31,12 +30,15 @@
     "net.minecraft.client.renderer.MixinLightTexture"
   ],
   "main": [
+    "net.minecraft.core.MixinCursor3D",
+    "net.minecraft.core.MixinDirect",
     "net.minecraft.core.MixinIdMapper",
     "net.minecraft.util.thread.MixinBlockableEventLoop",
     "net.minecraft.util.MixinArrayListDeque",
     "net.minecraft.util.MixinByIdMap",
     "net.minecraft.util.MixinMth",
     "net.minecraft.util.MixinARGB",
+    "net.minecraft.util.MixinLightCoordsUtil",
     "net.minecraft.network.MixinCompressionDecoder",
     "net.minecraft.network.MixinFriendlyByteBuf",
     "net.minecraft.world.level.block.state.MixinBlockStateBaseCache",

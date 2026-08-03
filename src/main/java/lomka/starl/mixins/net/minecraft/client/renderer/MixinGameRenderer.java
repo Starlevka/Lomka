@@ -3,11 +3,8 @@ package lomka.starl.mixins.net.minecraft.client.renderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-//? if <26.1 {
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.state.LevelRenderState;
-//?}
-import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -20,15 +17,14 @@ public abstract class MixinGameRenderer {
     @Shadow @Final private Minecraft minecraft;
     @Shadow @Final private Camera mainCamera;
 
-    //? if <26.1 {
     @Shadow @Final private LevelRenderState levelRenderState;
-    //?}
 
-    //? if <26.1 {
     /**
      * @author Starlev
-     * @reason Direct field assignment instead of per-frame Copies/extractCamera
-     * overhead. Avoids the builder/copier pattern used in vanilla for camera state sync.
+     * @reason Reuse the camera render state quaternion instead of allocating a
+     * new Quaternionf every frame (CameraRenderState initializes it in the
+     * constructor, and every consumer only copies its values, never retaining
+     * the reference).
      */
     @Overwrite
     private void extractCamera(float f) {
@@ -43,11 +39,6 @@ public abstract class MixinGameRenderer {
         state.entityPos = this.mainCamera.getEntity().getPosition(f);*/
         //?}
 
-        if (state.orientation == null) {
-            state.orientation = new Quaternionf(this.mainCamera.rotation());
-        } else {
-            state.orientation.set(this.mainCamera.rotation());
-        }
+        state.orientation.set(this.mainCamera.rotation());
     }
-    //?}
 }

@@ -89,11 +89,11 @@ if (stonecutter.current.parsed < "1.21.11") {
 	mainSourceSet.java.exclude(
 		"lomka/starl/mixins/com/mojang/math/MixinQuadrant.java",
 		"lomka/starl/mixins/net/minecraft/client/resources/model/MixinBuilder.java",
-		"lomka/starl/mixins/accessor/AccessorQuadCollection.java",
 		"lomka/starl/mixins/accessor/InvokerBuilder.java"
 	)
 } else if (stonecutter.current.parsed > "1.21.11") {
 	mainSourceSet.java.exclude(
+		"lomka/starl/mixins/net/minecraft/client/renderer/MixinGameRenderer.java",
 		"lomka/starl/mixins/net/minecraft/client/renderer/MixinLightTexture.java"
 	)
 }

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Lomka Wiki — Incompatibility list
+    url: https://github.com/Starlevka/Lomka/wiki/Incompabilities-with-mods
+    about: Check known mod incompatibilities before reporting a bug.

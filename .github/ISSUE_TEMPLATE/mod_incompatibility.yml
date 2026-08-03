@@ -1,0 +1,88 @@
+name: Mod incompatibility
+description: Report a conflict between Lomka and another mod (crash, broken rendering, wrong behavior).
+labels: ["incompatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lomka uses comprehensive mixins, even that it should be compatible with almost all mods.
+        If a conflict appears, tell us exactly which mod is involved.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What breaks?
+      description: Crash, broken textures, wrong behavior, huge FPS downfall and etc.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mc-version
+    attributes:
+      label: Minecraft version
+      options:
+        - 1.21-1.21.1
+        - 1.21.4
+        - 1.21.6-1.21.8
+        - 1.21.9-1.21.10
+        - 1.21.11
+        - 26.1-26.1.2
+        - 26.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Mod loader
+      options:
+        - Fabric/Quilt
+        - NeoForge
+    validations:
+      required: true
+
+  - type: input
+    id: lomka-version
+    attributes:
+      label: Lomka version
+    validations:
+      required: true
+
+  - type: input
+    id: conflicting-mod
+    attributes:
+      label: Conflicting mod
+      description: Name and exact version of the other mod.
+      placeholder: "Sodium 0.8.13"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include both mods installed, following the same steps.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        The full `logs/latest.log` and, if it crashed, the crash report file.
+        Mixin errors like `Overwrite conflict` or `Mixin apply failed` are especially useful.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I'm on the latest Lomka version
+          required: true
+        - label: The issue does NOT happen with only Lomka installed (without the other mod)
+          required: true
+        - label: The issue does NOT happen with only the other mod installed (without Lomka)
+          required: true

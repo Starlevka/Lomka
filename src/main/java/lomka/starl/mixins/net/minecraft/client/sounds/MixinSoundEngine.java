@@ -3,7 +3,9 @@ package lomka.starl.mixins.net.minecraft.client.sounds;
 import net.minecraft.client.Camera;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -11,6 +13,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SoundEngine.class)
 public abstract class MixinSoundEngine {
+
+    @Shadow private boolean loaded;
 
     @Unique private Vec3   lomka$lastPos  = Vec3.ZERO;
     @Unique private float  lomka$lastXRot = Float.NaN;
@@ -22,6 +26,8 @@ public abstract class MixinSoundEngine {
      */
     @Inject(method = "updateSource", at = @At("HEAD"), cancellable = true)
     private void lomka$skipRedundantCameraUpdates(Camera camera, CallbackInfo ci) {
+        if (!this.loaded) return;
+
         //? if >=1.21.11 {
         if (!camera.isInitialized()) return;
 

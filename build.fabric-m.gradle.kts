@@ -53,8 +53,13 @@ mainSourceSet.java.exclude("lomka/neoforge/**")
 // 26.1-26.2+
 if (stonecutter.current.version != "1.21.11") {
 	mainSourceSet.java.exclude(
+		"lomka/starl/mixins/net/minecraft/client/renderer/MixinGameRenderer.java",
 		"lomka/starl/mixins/net/minecraft/client/renderer/MixinLightTexture.java"
 	)
+}
+
+if (stonecutter.current.parsed >= "26.2") {
+	mainSourceSet.java.exclude("lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinVertexFormat.java")
 }
 
 dependencies {

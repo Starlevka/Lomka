@@ -13,15 +13,16 @@ public abstract class MixinKey {
     @Shadow @Final private InputConstants.Type type;
     @Shadow @Final private int value;
 
-    @Unique private boolean lomka$hashComputed;
     @Unique private int lomka$hashCode;
 
     @Overwrite
     public int hashCode() {
-        if (!this.lomka$hashComputed) {
-            this.lomka$hashCode = 31 * (31 + this.type.hashCode()) + this.value;
-            this.lomka$hashComputed = true;
+        int h = this.lomka$hashCode;
+        if (h == 0) {
+            h = 31 * (31 + this.type.hashCode()) + this.value;
+            if (h == 0) h = 1;
+            this.lomka$hashCode = h;
         }
-        return this.lomka$hashCode;
+        return h;
     }
 }
