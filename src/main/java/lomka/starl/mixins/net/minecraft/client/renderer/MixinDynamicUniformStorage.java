@@ -19,6 +19,11 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(DynamicUniformStorage.class)
 public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage.DynamicUniform> {
 
+    /*
+    * Actual work without Sodium or Embeddium mods. 
+    * No causes any conflicts with them, just a must-have.
+    */
+
     @Shadow private @Nullable T lastUniform;
     @Shadow private MappableRingBuffer ringBuffer;
     @Shadow private int nextBlock;

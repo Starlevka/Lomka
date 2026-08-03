@@ -1,0 +1,64 @@
+name: Performance / optimization request
+description: Suggest a new optimization, or report an area where Lomka underperforms.
+labels: ["performance"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lomka focuses on micro-stutters, FPS, RAM usage, and texture-load time.
+        Please describe what you want optimized and, if possible, how you measured it.
+
+  - type: textarea
+    id: area
+    attributes:
+      label: What should be optimized?
+      description: Which part of the game feels slow or allocates too much?
+      placeholder: "Chunk loading, texture upload, lightmap updates, sound preloading..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: measurements
+    attributes:
+      label: Measurements / evidence
+      description: |
+        Profiles, timings, allocation reports (e.g. from Spark), or before/after FPS.
+        Numbers and reproduction steps help a lot.
+      placeholder: "Spark profiler shows X% of time in TextureAtlas.uploadInitialContents..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: mc-version
+    attributes:
+      label: Minecraft version
+      multiple: true
+      options:
+        - 1.21-1.21.1
+        - 1.21.4
+        - 1.21.6-1.21.8
+        - 1.21.9-1.21.10
+        - 1.21.11
+        - 26.1-26.1.2
+        - 26.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Mod loader
+      options:
+        - Fabric/Quilt
+        - NeoForge
+        - Both / not relevant
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any extra info like screenshots and links to code
+    validations:
+      required: false

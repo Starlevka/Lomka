@@ -12,16 +12,6 @@ public class MixinMth {
 
     /**
      * @author Starlev
-     * @reason Use numberOfLeadingZeros instead of manual bit-shift chain.
-     */
-    @Overwrite
-    public static int smallestEncompassingPowerOfTwo(int i) {
-        if (i < 1) return 0;
-        return i > 1 ? 1 << (32 - Integer.numberOfLeadingZeros(i - 1)) : i;
-    }
-
-    /**
-     * @author Starlev
      * @reason Use numberOfLeadingZeros instead of De Bruijn lookup table.
      */
     @Overwrite

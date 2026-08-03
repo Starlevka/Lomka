@@ -3,22 +3,21 @@
 
 - Reduces micro-stutters
 - Improves FPS
+- Decreases RAM usage sometimes
 - Decreases resources load (feels diffrent on some systems)
-- Slightly changes network packet garbages (should not affect to ping)
-- Could decrease RAM usage sometimes
 
 ## What actually does the mod do?
 
-- Speeds up some calculations (colors engine, maths, stats, AABB intersection, resources loads)
+- Speeds up some calculations (colors engine, maths, AABB intersection, textures loads)
 - Fixes bugs in game code
-- Prevents unnecessary allocations (sounds, calcs, lightmap state and other rendering methods)
+- Prevents unnecessary allocations (sounds, calcs, lightmap state and other methods)
 - Improves game hashCode() caching (Input types and VertexFormats)
 - Slightly improves client threading system
 
 ## FAQ
 
 **Q: I'm having performance issues, and removing Lomka fixes them!**
-A: Make sure you are using the latest version. Lomka targets hot-paths across multiple Minecraft versions — if you encounter a compatibility issue, please report it. **At the moment the most perfomance friendly mod versions are 0.2.0 and 0.3.X.**
+A: Make sure you are using the latest version. Lomka targets hot-paths across multiple Minecraft versions — if you encounter a compatibility issue, please report it. **At the moment the most perfomance friendly mod versions are 0.2.0 and 0.3.x.**
 
 **Q: Can I run Lomka on the server-side?**
 
@@ -47,6 +46,12 @@ A: Yes. Lomka is absolutely free and open-source. :sunglasses:
 **Q: Does Lomka have a config file? (Lomka v0.3.0>=)**
 
 A: Soon as possible. Againly the maintained version is 1.21.11. Maybe with time will be added but currently mixins can be disabled by editing *lomka.mixins.json* inside the mod's archive.
+
+## Compability
+
+Mod should be compatible with almost all mods perfectly but not surely!
+
+Check [list of incompatibility](https://github.com/Starlevka/Lomka/wiki/Incompabilities-with-mods) with Lomka mod.
 
 ## Bug Reporting
 

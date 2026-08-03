@@ -1,0 +1,130 @@
+name: Bug report
+description: Report a crash, visual glitch, or wrong behavior caused by Lomka.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill in as much as you can.
+        Before submitting, make sure you are on the latest Lomka version.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect to happen instead?
+      placeholder: "When I join the server, the game freezes for 2 seconds..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, ordered list of steps that trigger the issue.
+      placeholder: |
+        1. Install Lomka 0.6.7 on 1.21.11 (Fabric)
+        2. Join the server
+        3. Observe the freeze
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mc-version
+    attributes:
+      label: Minecraft version
+      description: Which Minecraft version did this happen on?
+      multiple: true
+      options:
+        - 1.21-1.21.1
+        - 1.21.4
+        - 1.21.6-1.21.8
+        - 1.21.9-1.21.10
+        - 1.21.11
+        - 26.1-26.1.2
+        - 26.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Mod loader
+      options:
+        - Fabric/Quilt
+        - NeoForge
+    validations:
+      required: true
+
+  - type: input
+    id: loader-version
+    attributes:
+      label: Loader version
+      description: e.g. Fabric Loader 0.19.3 or NeoForge 21.1.242
+    validations:
+      required: true
+
+  - type: input
+    id: lomka-version
+    attributes:
+      label: Lomka version
+      description: Exact mod version, e.g. 0.6.7.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reproduces-without-lomka
+    attributes:
+      label: Does the issue happen WITHOUT Lomka?
+      description: Remove Lomka (or disable its mixins) and test the same steps.
+      options:
+        - "No, it only happens with Lomka"
+        - "Yes, it happens without Lomka too"
+        - "Not tested yet"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Attach or paste the full log. If it crashed, include the latest crash report file
+        from `crash-reports/` (e.g. `crash-2026-08-03_19.34.40-client.txt`) and the log
+        from `logs/latest.log`.
+      placeholder: "Drag and drop the crash report and latest.log files here."
+    validations:
+      required: false
+
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other mods
+      description: |
+        List all other mods installed. At mainly mention performance mods.
+      placeholder: |
+        - Sodium 0.8.x
+        - Fabric API (if installed)
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Java version, GPU. Can be skipped if attached the log files.
+      placeholder: "Windows 11, Java 21, GTX 1050 TI"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I'm on the latest Lomka version
+          required: true
+        - label: I checked the known incompatibility list
+          required: true
+        - label: I searched existing issues and this is not a duplicate
+          required: true

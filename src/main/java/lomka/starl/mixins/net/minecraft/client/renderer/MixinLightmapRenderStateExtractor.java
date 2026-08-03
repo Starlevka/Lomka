@@ -17,9 +17,11 @@ import net.minecraft.world.entity.LivingEntity;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = LightmapRenderStateExtractor.class, priority = 500)
 public abstract class MixinLightmapRenderStateExtractor {
@@ -38,12 +40,8 @@ public abstract class MixinLightmapRenderStateExtractor {
     @Unique
     private final Vector3f lomka$nightVisionColor = new Vector3f();
 
-    /**
-     * @author Starlev
-     * @reason Zero-allocation lightmap state extraction
-     */
-    @Overwrite
-    public void extract(LightmapRenderState renderState, float partialTicks) {
+    @Inject(method = "extract", at = @At("HEAD"), cancellable = true)
+    private void lomka$extract(LightmapRenderState renderState, float partialTicks, CallbackInfo ci) {
         renderState.needsUpdate = this.needsUpdate;
         if (this.needsUpdate) {
             ClientLevel level = this.minecraft.level;
@@ -123,6 +121,7 @@ public abstract class MixinLightmapRenderStateExtractor {
 
                 profiler.pop();
                 this.needsUpdate = false;
+                ci.cancel();
             }
         }
     }

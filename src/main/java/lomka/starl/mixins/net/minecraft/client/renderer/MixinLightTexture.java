@@ -35,9 +35,11 @@ import net.minecraft.world.entity.LivingEntity;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = LightTexture.class, priority = 500)
 public abstract class MixinLightTexture {
@@ -67,8 +69,8 @@ public abstract class MixinLightTexture {
     @Unique
     private final float[] blockB = new float[16];
 
-    @Overwrite
-    public void updateLightTexture(float partialTick) {
+    @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
+    private void lomka$updateLightTexture(float partialTick, CallbackInfo ci) {
         if (!this.updateLightTexture) {
             return;
         }
@@ -203,6 +205,7 @@ public abstract class MixinLightTexture {
 
             this.lightTexture.upload();
             this.minecraft.getProfiler().pop();
+            ci.cancel();
         }
     }*/
     //? } else {
@@ -232,8 +235,8 @@ public abstract class MixinLightTexture {
     @Unique
     private final Vector3f lomka$skyLightColorVec = new Vector3f();
 
-    @Overwrite
-    public void updateLightTexture(float f) {
+    @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
+    private void lomka$updateLightTexture(float f, CallbackInfo ci) {
         if (!this.updateLightTexture) {
             return;
         }
@@ -363,6 +366,7 @@ public abstract class MixinLightTexture {
 
         this.ubo.rotate();
         profilerfiller.pop();
+        ci.cancel();
     }
     //? }
 }
