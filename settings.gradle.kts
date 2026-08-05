@@ -23,6 +23,8 @@ stonecutter {
 			version(project, version).buildscript = getBuildscript(version, loader)
 		}
 
+		match("1.20.1", "fabric")
+		match("1.20.1", "forge")
 		match("1.21", "fabric")
 		match("1.21", "neoforge")
 		match("1.21.4", "fabric")
@@ -47,6 +49,7 @@ private fun getBuildscript(version: String, loader: String): String {
 		loader == "fabric" && version.startsWith("26.") -> "build.fabric-m.gradle.kts"
 		loader == "fabric" -> "build.fabric-o.gradle.kts"
 		loader == "neoforge" -> "build.neoforge.gradle.kts"
+		loader == "forge" -> "build.forge.gradle.kts"
 		else -> error("Unknown loader: '$loader'")
 	}
 }

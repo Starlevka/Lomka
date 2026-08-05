@@ -3,7 +3,7 @@ import org.gradle.language.jvm.tasks.ProcessResources
 
 plugins {
 	id("mod-platform")
-	alias(libs.plugins.neoforge.moddev)
+	alias(libs.plugins.neoforge.moddev.legacyforge)
 }
 
 stonecutter {
@@ -12,7 +12,7 @@ stonecutter {
 }
 
 platform {
-	loader = "neoforge"
+	loader = "forge"
 	dependencies {
 		required("minecraft") {
 			fabricLikeVersionRange = prop("deps.minecraft")
@@ -22,8 +22,8 @@ platform {
 
 val mainSourceSet = sourceSets["main"]
 
-neoForge {
-	version = prop("deps.neoforge")
+legacyForge {
+	version = prop("deps.forge")
 
 	val atFile = file("src/main/resources/META-INF/accesstransformer.cfg")
 	if (atFile.exists()) {
@@ -46,8 +46,34 @@ neoForge {
 	}
 }
 
+mixin {
+	add(mainSourceSet, "lomka.refmap.json")
+	config("lomka.mixins.json")
+}
+
 mainSourceSet.java.exclude("lomka/fabric/**")
-mainSourceSet.java.exclude("lomka/forge/**")
+mainSourceSet.java.exclude("lomka/neoforge/**")
+
+if (stonecutter.current.parsed < "1.20.2") {
+	mainSourceSet.java.exclude(
+		"lomka/starl/mixins/com/mojang/audio/MixinListener.java",
+		"lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinBufferBuilder.java",
+		"lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinVertexFormat.java",
+		"lomka/starl/mixins/net/minecraft/client/multiplayer/MixinClientCommonPacketListenerImpl.java",
+		"lomka/starl/mixins/net/minecraft/client/sounds/MixinJOrbisAudioStream.java",
+		"lomka/starl/mixins/net/minecraft/client/sounds/MixinSoundBufferLibrary.java",
+        "lomka/starl/mixins/net/minecraft/network/MixinCompressionDecoder.java",
+        "lomka/starl/mixins/net/minecraft/util/MixinArrayListDeque.java"
+	)
+}
+
+if (stonecutter.current.parsed < "1.20.2") {
+	afterEvaluate {
+		the<org.gradle.api.plugins.JavaPluginExtension>().toolchain {
+			languageVersion = JavaLanguageVersion.of(17)
+		}
+	}
+}
 
 if (stonecutter.current.parsed < "26.1") {
 	mainSourceSet.java.exclude(
@@ -72,47 +98,30 @@ if (stonecutter.current.parsed < "1.21.6") {
 	)
 }
 
-if (stonecutter.current.parsed >= "1.21.4" && stonecutter.current.parsed < "1.21.6") {
-	mainSourceSet.java.exclude("lomka/starl/mixins/net/minecraft/client/renderer/MixinLightTexture.java")
-}
-
-if (stonecutter.current.parsed >= "1.21.6" && stonecutter.current.parsed < "1.21.9") {
-	mainSourceSet.java.exclude(
-		"lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinSortState.java",
-		"lomka/starl/mixins/net/minecraft/client/renderer/MixinGameRenderer.java",
-		"lomka/starl/mixins/net/minecraft/client/model/MixinModel.java",
-		"lomka/starl/mixins/net/minecraft/client/model/geom/MixinModelPart.java",
-		"lomka/starl/mixins/net/minecraft/client/renderer/MixinItemInHandRenderer.java"
-	)
-}
-
 if (stonecutter.current.parsed < "1.21.11") {
 	mainSourceSet.java.exclude(
 		"lomka/starl/mixins/com/mojang/math/MixinQuadrant.java",
 		"lomka/starl/mixins/net/minecraft/client/resources/model/MixinBuilder.java",
 		"lomka/starl/mixins/accessor/InvokerBuilder.java"
 	)
-} else if (stonecutter.current.parsed > "1.21.11") {
-	mainSourceSet.java.exclude(
-		"lomka/starl/mixins/net/minecraft/client/renderer/MixinGameRenderer.java",
-		"lomka/starl/mixins/net/minecraft/client/renderer/MixinLightTexture.java"
-	)
-}
-
-if (stonecutter.current.parsed >= "26.2") {
-	mainSourceSet.java.exclude("lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinVertexFormat.java")
 }
 
 tasks.named<ProcessResources>("processResources") {
 	exclude("aw/**")
 }
 
+tasks.withType<Jar>().configureEach {
+	manifest {
+		attributes["MixinConfigs"] = "lomka.mixins.json"
+	}
+}
+
 repositories {
 	mavenCentral()
+	maven("https://maven.minecraftforge.net/") { name = "MinecraftForge" }
 }
 
 dependencies {
-	if (stonecutter.current.parsed < "1.21.11") {
-		compileOnly("org.jspecify:jspecify:1.0.0")
-	}
+	annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
+	compileOnly("org.jspecify:jspecify:1.0.0")
 }

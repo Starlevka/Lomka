@@ -36,8 +36,8 @@ public abstract class MixinGameRenderer {
         state.entityPos = this.mainCamera.entity().getPosition(f);
         //?} else {
         /*state.blockPos = this.mainCamera.getBlockPosition();
-        state.entityPos = this.mainCamera.getEntity().getPosition(f);*/
-        //?}
+        state.entityPos = this.mainCamera.getEntity().getPosition(f);
+        *///?}
 
         state.orientation.set(this.mainCamera.rotation());
     }

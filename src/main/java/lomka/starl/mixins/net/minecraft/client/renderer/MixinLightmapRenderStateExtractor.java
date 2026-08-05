@@ -52,9 +52,9 @@ public abstract class MixinLightmapRenderStateExtractor {
 
                 profiler.push("lightmap");
                 //? if >=26.2 {
-                Camera camera = this.renderer.mainCamera();
-                //?} else {
-                /*Camera camera = this.renderer.getMainCamera();*/
+                /*Camera camera = this.renderer.mainCamera();
+                *///?} else {
+                Camera camera = this.renderer.getMainCamera();
                 //?}
 
                 renderState.blockFactor = this.blockLightFlicker + 1.4F;
@@ -74,9 +74,9 @@ public abstract class MixinLightmapRenderStateExtractor {
                 if (endFlashState != null && !(Boolean) this.minecraft.options.hideLightningFlash().get()) {
                     float intensity = endFlashState.getIntensity(partialTicks);
                     //? if >=26.2 {
-                    if (this.minecraft.gui.hud.getBossOverlay().shouldCreateWorldFog()) {
-                    //?} else {
-                    /*if (this.minecraft.gui.getBossOverlay().shouldCreateWorldFog()) {*/
+                    /*if (this.minecraft.gui.hud.getBossOverlay().shouldCreateWorldFog()) {
+                    *///?} else {
+                    if (this.minecraft.gui.getBossOverlay().shouldCreateWorldFog()) {
                     //?}
                         renderState.skyFactor += intensity / 3.0F;
                     } else {
@@ -99,9 +99,9 @@ public abstract class MixinLightmapRenderStateExtractor {
 
                 if (player.hasEffect(MobEffects.NIGHT_VISION)) {
                     //? if >=26.2 {
-                    renderState.nightVisionEffectIntensity = GameRenderer.nightVisionScale(player, partialTicks);
-                    //?} else {
-                    /*renderState.nightVisionEffectIntensity = GameRenderer.getNightVisionScale(player, partialTicks);*/
+                    /*renderState.nightVisionEffectIntensity = GameRenderer.nightVisionScale(player, partialTicks);
+                    *///?} else {
+                    renderState.nightVisionEffectIntensity = GameRenderer.getNightVisionScale(player, partialTicks);
                     //?}
                 } else if (waterVision > 0.0F && player.hasEffect(MobEffects.CONDUIT_POWER)) {
                     renderState.nightVisionEffectIntensity = waterVision;
@@ -114,9 +114,9 @@ public abstract class MixinLightmapRenderStateExtractor {
                 renderState.nightVisionColor = this.lomka$nightVisionColor;
 
                 //? if >=26.2 {
-                renderState.bossOverlayWorldDarkening = this.renderer.bossOverlayWorldDarkening(partialTicks);
-                //?} else {
-                /*renderState.bossOverlayWorldDarkening = this.renderer.getBossOverlayWorldDarkening(partialTicks);*/
+                /*renderState.bossOverlayWorldDarkening = this.renderer.bossOverlayWorldDarkening(partialTicks);
+                *///?} else {
+                renderState.bossOverlayWorldDarkening = this.renderer.getBossOverlayWorldDarkening(partialTicks);
                 //?}
 
                 profiler.pop();

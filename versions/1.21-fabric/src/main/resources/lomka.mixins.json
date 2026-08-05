@@ -13,6 +13,7 @@
     "com.mojang.blaze3d.vertex.MixinVertexFormat",
     "net.minecraft.client.MixinCamera",
     "net.minecraft.client.MixinMinecraft",
+    "net.minecraft.client.multiplayer.MixinClientCommonPacketListenerImpl",
     "net.minecraft.client.renderer.block.model.MixinItemTransform",
     "net.minecraft.client.renderer.MixinLightTexture",
     "net.minecraft.client.renderer.texture.MixinMipmapGenerator",

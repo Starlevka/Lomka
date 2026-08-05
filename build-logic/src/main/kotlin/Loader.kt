@@ -58,7 +58,7 @@ sealed class Loader(val id: String) {
 		override val jarTask = "jar"
 		override val sourcesJarTask = "sourcesJar"
 		override val excludedResources = listOf(
-			"META-INF/mods.toml", "fabric.mod.json", ".cache", "pack.mcmeta"
+			"META-INF/mods.toml", "fabric.mod.json", ".cache"
 		)
 	}
 
@@ -127,6 +127,9 @@ sealed class Loader(val id: String) {
 
 	object Forge : NeoForgeLike("forge") {
 		override val modManifestPath = "META-INF/mods.toml"
+		override val excludedResources = listOf(
+			"META-INF/neoforge.mods.toml", "fabric.mod.json", ".cache"
+		)
 
 		override fun generateManifest(ctx: Context): String {
 			val mcVersionRange = if (ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion)) {

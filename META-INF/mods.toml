@@ -1,0 +1,25 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "MIT"
+
+[[mods]]
+modId = "lomka"
+version = "0.3.3"
+displayName = "Lomka"
+authors = "Starlev"
+description = """Applies various, compatible optimizations to improve perfomance and stability. Ready for client, server or both uses!"""
+logoFile = "assets/lomka/icon.png"
+
+[[dependencies.lomka]]
+modId = "forge"
+mandatory = true
+versionRange = "[1.20.1]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.lomka]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.1]"
+ordering = "NONE"
+side = "BOTH"

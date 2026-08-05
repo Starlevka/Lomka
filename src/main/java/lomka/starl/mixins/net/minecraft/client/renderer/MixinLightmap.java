@@ -1,12 +1,12 @@
 package lomka.starl.mixins.net.minecraft.client.renderer;
 
 //? if >=26.2 {
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+/*import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import java.util.Optional;
-//?} else {
-/*import com.mojang.blaze3d.buffers.GpuBuffer;
+*///?} else {
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import java.util.OptionalInt;
-*///?}
+//?}
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -45,10 +45,10 @@ public abstract class MixinLightmap {
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
 
         //? if >=26.2 {
-        GpuBufferSlice.MappedView view = this.ubo.currentBuffer().map(false, true);
-        //?} else {
-        /*GpuBuffer.MappedView view = commandEncoder.mapBuffer(this.ubo.currentBuffer(), false, true);
-        *///?}
+        /*GpuBufferSlice.MappedView view = this.ubo.currentBuffer().map(false, true);
+        *///?} else {
+        GpuBuffer.MappedView view = commandEncoder.mapBuffer(this.ubo.currentBuffer(), false, true);
+        //?}
 
         try {
             ByteBuffer buffer = view.data();
@@ -82,18 +82,18 @@ public abstract class MixinLightmap {
         }
 
         //? if >=26.2 {
-        RenderPass renderPass = commandEncoder.createRenderPass(
+        /*RenderPass renderPass = commandEncoder.createRenderPass(
                 RENDER_PASS_LABEL,
                 this.textureView,
                 Optional.empty()
         );
-        //?} else {
-        /*RenderPass renderPass = commandEncoder.createRenderPass(
+        *///?} else {
+        RenderPass renderPass = commandEncoder.createRenderPass(
                 RENDER_PASS_LABEL,
                 this.textureView,
                 OptionalInt.empty()
         );
-        *///?}
+        //?}
 
         try {
             renderPass.setPipeline(RenderPipelines.LIGHTMAP);
@@ -101,10 +101,10 @@ public abstract class MixinLightmap {
             renderPass.setUniform("LightmapInfo", this.ubo.currentBuffer());
 
             //? if >=26.2 {
-            renderPass.draw(3, 1, 0, 0);
-            //?} else {
-            /*renderPass.draw(0, 3);
-            *///?}
+            /*renderPass.draw(3, 1, 0, 0);
+            *///?} else {
+            renderPass.draw(0, 3);
+            //?}
         } finally {
             if (renderPass != null) {
                 renderPass.close();

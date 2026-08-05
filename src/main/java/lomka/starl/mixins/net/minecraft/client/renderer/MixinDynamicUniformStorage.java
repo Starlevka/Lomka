@@ -63,8 +63,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 .slice((long) ((this.nextBlock - 1) * this.blockSize), (long) this.blockSize);
             //?} else {
             /*return this.ringBuffer.currentBuffer()
-                .slice((this.nextBlock - 1) * this.blockSize, this.blockSize);*/
-            //?}
+                .slice((this.nextBlock - 1) * this.blockSize, this.blockSize);
+            *///?}
         }
 
         if (this.nextBlock >= this.capacity) {
@@ -85,8 +85,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 .mapBuffer(currentBuffer.slice((long) offset, (long) this.blockSize), false, true)) {
         //?} else {
         /*try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
-                .mapBuffer(currentBuffer.slice(offset, this.blockSize), false, true)) {*/
-        //?}
+                .mapBuffer(currentBuffer.slice(offset, this.blockSize), false, true)) {
+        *///?}
             t0.write(mappedView.data());
         }
 
@@ -95,8 +95,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
         //? if >=1.21.11 {
         return currentBuffer.slice((long) offset, (long) this.blockSize);
         //?} else {
-        /*return currentBuffer.slice(offset, this.blockSize);*/
-        //?}
+        /*return currentBuffer.slice(offset, this.blockSize);
+        *///?}
     }
 
     /**
@@ -132,8 +132,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 .mapBuffer(currentBuffer.slice((long) baseOffset, (long) (at.length * this.blockSize)), false, true)) {
         //?} else {
         /*try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
-                .mapBuffer(currentBuffer.slice(baseOffset, at.length * this.blockSize), false, true)) {*/
-        //?}
+                .mapBuffer(currentBuffer.slice(baseOffset, at.length * this.blockSize), false, true)) {
+        *///?}
             ByteBuffer byteBuffer = mappedView.data();
             for (int j = 0; j < at.length; ++j) {
                 T uniform = at[j];
@@ -141,8 +141,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 //? if >=1.21.11 {
                 slices[j] = currentBuffer.slice((long) (baseOffset + elementOffset), (long) this.blockSize);
                 //?} else {
-                /*slices[j] = currentBuffer.slice(baseOffset + elementOffset, this.blockSize);*/
-                //?}
+                /*slices[j] = currentBuffer.slice(baseOffset + elementOffset, this.blockSize);
+                *///?}
                 byteBuffer.position(elementOffset);
                 uniform.write(byteBuffer);
             }

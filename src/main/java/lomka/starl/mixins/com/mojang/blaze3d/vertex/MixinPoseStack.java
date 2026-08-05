@@ -5,8 +5,8 @@ import lomka.starl.utils.AxisPoseRotate;
 //? if >=1.21.6 {
 import org.joml.Quaternionfc;
 //?} else {
-/*import org.joml.Quaternionf;*/
-//?}
+/*import org.joml.Quaternionf;
+*///?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,8 +19,8 @@ public abstract class MixinPoseStack {
     public abstract PoseStack.Pose last();
     //?} else {
     /*@Shadow @org.spongepowered.asm.mixin.Final
-    private java.util.Deque<PoseStack.Pose> poseStack;*/
-    //?}
+    private java.util.Deque<PoseStack.Pose> poseStack;
+    *///?}
 
     /**
      * @author Starlev
@@ -39,6 +39,6 @@ public abstract class MixinPoseStack {
     public void mulPose(Quaternionf q) {
         PoseStack.Pose pose = this.poseStack.getLast();
         AxisPoseRotate.mulPose(pose.pose(), pose.normal(), q);
-    }*/
-    //?}
+    }
+    *///?}
 }

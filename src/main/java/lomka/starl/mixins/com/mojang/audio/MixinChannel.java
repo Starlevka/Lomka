@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(Channel.class)
+@Mixin(value = Channel.class, priority = 500)
 public abstract class MixinChannel {
 
     @Shadow @Final private int source;

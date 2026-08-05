@@ -55,6 +55,28 @@ configurations.all {
 val mainSourceSet = sourceSets["main"]
 
 mainSourceSet.java.exclude("lomka/neoforge/**")
+mainSourceSet.java.exclude("lomka/forge/**")
+if (stonecutter.current.parsed < "1.20.2") {
+	mainSourceSet.java.exclude(
+		"lomka/starl/mixins/com/mojang/audio/MixinListener.java",
+		"lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinBufferBuilder.java",
+		"lomka/starl/mixins/com/mojang/blaze3d/vertex/MixinVertexFormat.java",
+		"lomka/starl/mixins/net/minecraft/client/multiplayer/MixinClientCommonPacketListenerImpl.java",
+		"lomka/starl/mixins/net/minecraft/client/sounds/MixinJOrbisAudioStream.java",
+		"lomka/starl/mixins/net/minecraft/client/sounds/MixinSoundBufferLibrary.java",
+        "lomka/starl/mixins/net/minecraft/network/MixinCompressionDecoder.java",
+        "lomka/starl/mixins/net/minecraft/util/MixinArrayListDeque.java"
+	)
+}
+
+if (stonecutter.current.parsed < "1.20.2") {
+	afterEvaluate {
+		the<org.gradle.api.plugins.JavaPluginExtension>().toolchain {
+			languageVersion = JavaLanguageVersion.of(17)
+		}
+	}
+}
+
 if (stonecutter.current.parsed < "26.1") {
 	mainSourceSet.java.exclude(
 		"lomka/starl/mixins/net/minecraft/client/renderer/MixinLightmapRenderStateExtractor.java",

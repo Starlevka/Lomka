@@ -10,16 +10,16 @@ import com.mojang.blaze3d.textures.GpuTextureView;
 //? }
 import net.minecraft.client.renderer.texture.SpriteContents;
 //? if < 1.21.11 {
-/*import net.minecraft.resources.ResourceLocation;*/
-//? } else {
+/*import net.minecraft.resources.Identifier;
+*///? } else {
 import net.minecraft.resources.Identifier;
 //? }
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 //? if < 1.21.6 {
-/*import net.minecraft.client.renderer.texture.DynamicTexture;*/
-//? }
+/*import net.minecraft.client.renderer.texture.DynamicTexture;
+*///? }
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -49,8 +49,8 @@ public abstract class MixinTextureAtlas {
                 list.get(i).tickAndUpload(tex);
             }
         }
-    }*/
-    //? }
+    }
+    *///? }
 
     //? if >=1.21.6 {
     //? if < 1.21.11 {
@@ -110,8 +110,8 @@ public abstract class MixinTextureAtlas {
 
             try {
                 //? if >=26.2 {
-                RenderSystem.bindDefaultUniforms(renderpass);
-                //?}
+                /*RenderSystem.bindDefaultUniforms(renderpass);
+                *///?}
                 for (int i = 0; i < count; i++) {
                     SpriteContents.AnimationState state = states.get(i);
                     if (state.needsToDraw()) {

@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
@@ -92,6 +93,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	private fun Project.configureProcessResources(ctx: Context) {
 		tasks.named<ProcessResources>("processResources") {
 			dependsOn(tasks.named("stonecutterGenerate"))
+			duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 			filesMatching("*.mixins.json") {
 				expand("java" to "JAVA_${ctx.javaVersion.majorVersion}")
 			}
@@ -103,6 +105,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		val generateTask = tasks.named("generateModManifest")
 		tasks.withType<Jar>().configureEach {
 			archiveBaseName.set(ctx.modId)
+			duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 			dependsOn(generateTask)
 		}
 	}

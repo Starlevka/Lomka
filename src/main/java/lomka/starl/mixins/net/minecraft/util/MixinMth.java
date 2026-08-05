@@ -70,7 +70,7 @@ public class MixinMth {
      * @author Starlev
      * @reason Avoid Math.floor double conversion; precomputed exact float constant.
      */
-    //? if >=1.21.9 {
+    //? if >=1.21.4 {
     @Overwrite
     public static byte packDegrees(float f) {
         float val = f * (256.0F / 360.0F);
@@ -99,6 +99,7 @@ public class MixinMth {
         return p0 + (v < (float) i ? i - 1 : i);
     }
 
+    //? if >=1.21 {
     /**
      * @author Starlev
      * @reason Optimize HSV to ARGB conversion by lazily evaluating sector-specific floats (f5/f6)
@@ -154,6 +155,7 @@ public class MixinMth {
 
         return i << 24 | r << 16 | g << 8 | b;
     }
+    //?}
 
     /**
      * @author Starlev
@@ -215,6 +217,7 @@ public class MixinMth {
         return r;
     }
 
+    //? if >=1.21.4 {
     /**
      * @author Starlev
      * @reason if-else skips second comparison when first matched; early return avoids reassignment.
@@ -226,7 +229,9 @@ public class MixinMth {
         if (r < -180.0F) return r + 360.0F;
         return r;
     }
+    //?}
 
+    //? if >=1.21.4 {
     /**
      * @author Starlev
      * @reason Replace the unbounded O(n) normalization loop (which can iterate millions
@@ -244,6 +249,7 @@ public class MixinMth {
         }
         return f1 + f * r;
     }
+    //?}
 
     /**
      * @author Starlev

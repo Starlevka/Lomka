@@ -10,8 +10,8 @@ import org.joml.Quaternionf;
 //? if >=1.21.9 {
 import org.joml.Vector3fc;
 //?} else {
-/*import org.joml.Vector3f;*/
-//?}
+/*import org.joml.Vector3f;
+*///?}
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,8 +29,8 @@ public abstract class MixinItemTransform {
     //?} else {
     /*@Shadow @Final private Vector3f rotation;
     @Shadow @Final private Vector3f translation;
-    @Shadow @Final private Vector3f scale;*/
-    //?}
+    @Shadow @Final private Vector3f scale;
+    *///?}
 
     @Unique private @Nullable Quaternionf lomka$quatNormal;
     @Unique private @Nullable Quaternionf lomka$quatFlipped;
@@ -105,6 +105,6 @@ public abstract class MixinItemTransform {
         poseStack.mulPose(q);
 
         poseStack.scale(this.scale.x(), this.scale.y(), this.scale.z());
-    }*/
-    //?}
+    }
+    *///?}
 }

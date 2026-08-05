@@ -19,6 +19,7 @@
     "com.mojang.blaze3d.vertex.MixinVertexFormat",
     "com.mojang.math.MixinQuadrant",
     "net.minecraft.client.model.MixinModel",
+    "net.minecraft.client.multiplayer.MixinClientCommonPacketListenerImpl",
     "net.minecraft.client.renderer.MixinDynamicUniformStorage",
     "net.minecraft.client.renderer.MixinItemInHandRenderer",
     "net.minecraft.client.renderer.MixinLightmap",

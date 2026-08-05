@@ -355,10 +355,12 @@ public class MixinARGB {
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
+    //? if >=1.21 {
     @Overwrite
     public static int average(int a, int b) {
         return ((a & 0xFEFEFEFE) >>> 1) + ((b & 0xFEFEFEFE) >>> 1) + (a & b & 0x01010101);
     }
+    //?}
 
     @Overwrite
     public static int lerp(float f, int i, int j) {
@@ -372,5 +374,5 @@ public class MixinARGB {
         int b = ((i & 0xFF) * s + (j & 0xFF) * t) >>> 8;
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
-}*/
-//?}
+}
+*///?}

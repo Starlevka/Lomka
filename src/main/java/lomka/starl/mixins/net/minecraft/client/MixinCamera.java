@@ -38,8 +38,8 @@ public abstract class MixinCamera {
     //? if >=1.21.11 {
     @Shadow private Level level;
     //?} else {
-    /*@Shadow private BlockGetter level;*/
-    //?}
+    /*@Shadow private BlockGetter level;
+    *///?}
     @Shadow @Final private BlockPos.MutableBlockPos blockPosition;
     @Shadow private boolean initialized;
     @Shadow @Final private Vector3f left;
@@ -72,6 +72,7 @@ public abstract class MixinCamera {
     @Unique private float   lomka$lastRotY             = Float.NaN;
     @Unique private float   lomka$lastRotZ             = Float.NaN;
 
+    //? if >=1.21 {
     /**
      * @author Starlev
      * @reason Use JOML vector rotation to set the camera position in one go,
@@ -86,7 +87,9 @@ public abstract class MixinCamera {
                 this.position.z + (double) this.lomka$moveVector.z
         );
     }
+    //?}
 
+    //? if >=1.21 {
     /**
      * @author Starlev
      * @reason Use Mth.square/Mth.sqrt instead of distanceToSqr, and shadow the
@@ -128,6 +131,7 @@ public abstract class MixinCamera {
 
         return f;
     }
+    //?}
 
     //? if >=26.1 {
     /*@Overwrite
@@ -206,8 +210,8 @@ public abstract class MixinCamera {
         //? if >=1.21.11 {
         Level level = this.level;
         //?} else {
-        /*BlockGetter level = this.level;*/
-        //?}
+        /*BlockGetter level = this.level;
+        *///?}
 
         int bx = this.blockPosition.getX();
         int by = this.blockPosition.getY();

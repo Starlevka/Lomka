@@ -49,6 +49,7 @@ repositories {
 val mainSourceSet = the<org.gradle.api.plugins.JavaPluginExtension>().sourceSets["main"]
 
 mainSourceSet.java.exclude("lomka/neoforge/**")
+mainSourceSet.java.exclude("lomka/forge/**")
 
 // 26.1-26.2+
 if (stonecutter.current.version != "1.21.11") {

@@ -39,8 +39,8 @@ public abstract class MixinSoundEngine {
 
         Vec3  currentPos  = camera.getPosition();
         float currentXRot = camera.getXRot();
-        float currentYRot = camera.getYRot();*/
-        //?}
+        float currentYRot = camera.getYRot();
+        *///?}
 
         if (currentPos.equals(this.lomka$lastPos)
                 && currentXRot == this.lomka$lastXRot

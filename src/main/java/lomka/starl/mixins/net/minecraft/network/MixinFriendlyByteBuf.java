@@ -7,7 +7,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.network.FriendlyByteBuf;
+//? if >=1.21 {
 import net.minecraft.network.codec.StreamEncoder;
+//?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,7 +30,11 @@ public abstract class MixinFriendlyByteBuf {
      * back to the same iterator-based mechanism vanilla always uses.
      */
     @Overwrite
+    //? if >=1.21 {
     public <T> void writeCollection(Collection<T> collection, StreamEncoder<? super FriendlyByteBuf, T> streamencoder) {
+    //?} else {
+    /*public <T> void writeCollection(Collection<T> collection, FriendlyByteBuf.Writer<T> streamencoder) {*/
+    //?}
         this.writeVarInt(collection.size());
         if (collection instanceof List && collection instanceof java.util.RandomAccess) {
             List<?> list = (List<?>) collection;
@@ -36,11 +42,19 @@ public abstract class MixinFriendlyByteBuf {
             for (int i = 0; i < size; ++i) {
                 @SuppressWarnings("unchecked")
                 T element = (T) list.get(i);
+                //? if >=1.21 {
                 streamencoder.encode((FriendlyByteBuf) (Object) this, element);
+                //?} else {
+                /*streamencoder.accept((FriendlyByteBuf) (Object) this, element);*/
+                //?}
             }
         } else {
             for (T object : collection) {
+                //? if >=1.21 {
                 streamencoder.encode((FriendlyByteBuf) (Object) this, object);
+                //?} else {
+                /*streamencoder.accept((FriendlyByteBuf) (Object) this, object);*/
+                //?}
             }
         }
     }
@@ -53,11 +67,23 @@ public abstract class MixinFriendlyByteBuf {
      * allocation entirely.
      */
     @Overwrite
+    //? if >=1.21 {
     public <K, V> void writeMap(Map<K, V> map, StreamEncoder<? super FriendlyByteBuf, K> streamencoder, StreamEncoder<? super FriendlyByteBuf, V> streamencoder1) {
+    //?} else {
+    /*public <K, V> void writeMap(Map<K, V> map, FriendlyByteBuf.Writer<K> streamencoder, FriendlyByteBuf.Writer<V> streamencoder1) {*/
+    //?}
         this.writeVarInt(map.size());
         for (Map.Entry<K, V> entry : map.entrySet()) {
+            //? if >=1.21 {
             streamencoder.encode((FriendlyByteBuf) (Object) this, entry.getKey());
+            //?} else {
+            /*streamencoder.accept((FriendlyByteBuf) (Object) this, entry.getKey());*/
+            //?}
+            //? if >=1.21 {
             streamencoder1.encode((FriendlyByteBuf) (Object) this, entry.getValue());
+            //?} else {
+            /*streamencoder1.accept((FriendlyByteBuf) (Object) this, entry.getValue());*/
+            //?}
         }
     }
 

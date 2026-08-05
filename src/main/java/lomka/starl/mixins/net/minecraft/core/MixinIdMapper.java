@@ -18,7 +18,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinIdMapper<T> {
 
     @Shadow private int nextId;
+    //? if >=1.21 {
     @Shadow @Final private Reference2IntMap<T> tToId;
+    //?} else {
+    /*@Shadow @Final private it.unimi.dsi.fastutil.objects.Object2IntMap<T> tToId;
+    *///?}
     @Shadow @Final private List<T> idToT;
 
     @Unique
