@@ -21,8 +21,9 @@ public abstract class MixinSoundEngine {
     @Unique private float  lomka$lastYRot = Float.NaN;
 
     /**
-     * Skips Listener.setTransform() when the camera position/rotation has not
-     * changed since the last tick, saving native OpenAL calls.
+     * @author Starlev
+     * @reason Skips redundant listener updates when the camera state has not changed,
+     *         avoiding needless native OpenAL work on the sound update path.
      */
     @Inject(method = "updateSource", at = @At("HEAD"), cancellable = true)
     private void lomka$skipRedundantCameraUpdates(Camera camera, CallbackInfo ci) {
@@ -39,8 +40,8 @@ public abstract class MixinSoundEngine {
 
         Vec3  currentPos  = camera.getPosition();
         float currentXRot = camera.getXRot();
-        float currentYRot = camera.getYRot();*/
-        //?}
+        float currentYRot = camera.getYRot();
+        *///?}
 
         if (currentPos.equals(this.lomka$lastPos)
                 && currentXRot == this.lomka$lastXRot

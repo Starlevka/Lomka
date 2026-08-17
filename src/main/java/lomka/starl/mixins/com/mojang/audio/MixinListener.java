@@ -17,8 +17,9 @@ public abstract class MixinListener {
     @Unique private final float[] lomka$orientationCache = new float[6];
 
     /**
-     * Avoid allocating a float[6] array on every single frame.
-     * Caches the orientation array to achieve zero-allocation listener updates.
+     * @author Starlev
+     * @reason Avoids allocating a fresh orientation array each frame and reuses a cached
+     *         buffer so listener updates stay allocation-light on the audio hot path.
      */
     @Overwrite
     public void setTransform(ListenerTransform listenertransform) {

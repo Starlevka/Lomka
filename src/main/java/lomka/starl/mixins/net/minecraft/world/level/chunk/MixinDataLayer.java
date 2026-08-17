@@ -16,10 +16,10 @@ public abstract class MixinDataLayer {
     /**
      * @author Starlev
      * @reason Inlines the public->private->getByteIndex/getNibbleIndex
-     * delegation chain (4 method calls in vanilla) into a single flat
-     * expression. Called on every light/biome lookup during chunk meshing
-     * and lighting propagation, making this one of the hottest small
-     * methods in the chunk pipeline.
+     *         delegation chain (4 method calls in vanilla) into a single flat
+     *         expression. Called on every light/biome lookup during chunk meshing
+     *         and lighting propagation, making this one of the hottest small
+     *         methods in the chunk pipeline.
      */
     @Overwrite
     public int get(int i, int j, int k) {
@@ -46,8 +46,8 @@ public abstract class MixinDataLayer {
     /**
      * @author Starlev
      * @reason Inlines getByteIndex/getNibbleIndex directly. Kept as its own
-     * method (not merged into get(i,j,k)) because vanilla's toString() and
-     * layerToString() call this single-arg overload directly.
+     *         method (not merged into get(i,j,k)) because vanilla's toString() and
+     *         layerToString() call this single-arg overload directly.
      */
     @Overwrite
     private int get(int i) {
@@ -72,11 +72,11 @@ public abstract class MixinDataLayer {
     /**
      * @author Starlev
      * @reason Vanilla's loop (for j=4; j<8; j+=4) only ever executes once,
-     * making it dead code left over from a more general N-bit packing
-     * scheme. Collapsed to a single OR; verified equivalent to vanilla for
-     * every possible int input (not just the expected 0-15 nibble range),
-     * since OR-then-truncate-to-byte is invariant to extra high bits present
-     * in either operand before the final cast.
+     *         making it dead code left over from a more general N-bit packing
+     *         scheme. Collapsed to a single OR; verified equivalent to vanilla for
+     *         every possible int input (not just the expected 0-15 nibble range),
+     *         since OR-then-truncate-to-byte is invariant to extra high bits present
+     *         in either operand before the final cast.
      */
     @Overwrite
     private static byte packFilled(int i) {

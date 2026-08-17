@@ -40,3 +40,11 @@ stonecutter parameters {
 		replace("net.minecraft.client.resources.model.Material", "net.minecraft.client.resources.model.sprite.Material")
 	}
 }
+
+tasks.register("buildAllVariants") {
+	group = "build"
+	description = "Build all Stonecutter variants"
+	dependsOn(stonecutter.tasks.named("buildAndCollect"))
+}
+
+stonecutter.tasks.order("buildAndCollect")

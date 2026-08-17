@@ -13,8 +13,8 @@ public abstract class MixinGpuBuffer {
     //? if >=1.21.11 {
     @Shadow public abstract long size();
     //?} else {
-    /*@Shadow public abstract int size();*/
-    //?}
+    /*@Shadow public abstract int size();
+    *///?}
 
     @Unique private GpuBufferSlice lomka$fullSlice;
 
@@ -28,8 +28,8 @@ public abstract class MixinGpuBuffer {
             //? if >=1.21.11 {
             this.lomka$fullSlice = new GpuBufferSlice((GpuBuffer) (Object) this, 0L, this.size());
             //?} else {
-            /*this.lomka$fullSlice = new GpuBufferSlice((GpuBuffer) (Object) this, 0, (int) this.size());*/
-            //?}
+            /*this.lomka$fullSlice = new GpuBufferSlice((GpuBuffer) (Object) this, 0, (int) this.size());
+            *///?}
         }
         return this.lomka$fullSlice;
     }

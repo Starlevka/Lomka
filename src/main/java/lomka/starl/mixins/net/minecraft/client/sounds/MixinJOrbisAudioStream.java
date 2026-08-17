@@ -35,8 +35,8 @@ public abstract class MixinJOrbisAudioStream {
     /**
      * @author Starlev
      * @reason Eliminates two heap allocations per decoded audio chunk: float[1][][]
-     * and int[channels]. Both are output containers that JOrbis unconditionally
-     * overwrites before any field is read, making reuse across calls safe.
+     *         and int[channels]. Both are output containers that JOrbis unconditionally
+     *         overwrites before any field is read, making reuse across calls safe.
      */
     @Overwrite
     public boolean readChunk(FloatConsumer floatconsumer) throws IOException {

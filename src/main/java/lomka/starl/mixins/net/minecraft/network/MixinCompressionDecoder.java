@@ -17,8 +17,8 @@ public abstract class MixinCompressionDecoder {
     /**
      * @author Starlev
      * @reason Use internalNioBuffer (Netty's cached-wrapper accessor, already used by
-     * inflate() three lines below in this same class) instead of nioBuffer, which
-     * allocates a fresh ByteBuffer view via duplicate() on every compressed packet.
+     *         inflate() three lines below in this same class) instead of nioBuffer, which
+     *         allocates a fresh ByteBuffer view via duplicate() on every compressed packet.
      */
     @Overwrite
     private void setupInflaterInput(ByteBuf bytebuf) {

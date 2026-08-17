@@ -11,7 +11,7 @@
 - Speeds up some calculations (colors engine, maths, AABB intersection, textures loads)
 - Fixes bugs in game code
 - Prevents unnecessary allocations (sounds, calcs, lightmap state and other methods)
-- Improves game hashCode() caching (Input types and VertexFormats)
+- Improves game caching (Input types, VertexFormats, font width glyphs cache)
 - Slightly improves client threading system
 
 ## FAQ
@@ -25,9 +25,9 @@ A: Yes.
 
 **Q: Forge support?**
 
-A: No. Just no, please... (Only 1.20.1, maybe)
+A: No, except 1.20.1 Forge.
 
-**Q: Any backports? (<1.21 or <1.20.1)**
+**Q: Any backports? (<1.21 and <1.20.1)**
 
 A: No. The mod's current functionality largely follows Minecraft version 1.21.11 and its structure.
 

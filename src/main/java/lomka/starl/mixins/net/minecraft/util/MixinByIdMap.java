@@ -92,7 +92,7 @@ public class MixinByIdMap {
                 return (j) -> sorted[j < 0 ? 0 : (j > max ? max : j)];
                 
             default:
-                throw new MatchException((String) null, (Throwable) null);
+                throw new IllegalStateException("Unexpected out-of-bounds strategy: " + strategy);
         }
     }
 }

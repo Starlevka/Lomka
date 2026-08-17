@@ -7,7 +7,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.network.FriendlyByteBuf;
+//? if >=1.21 {
 import net.minecraft.network.codec.StreamEncoder;
+//?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,12 +25,16 @@ public abstract class MixinFriendlyByteBuf {
     /**
      * @author Starlev
      * @reason Avoids Iterator allocation for List+RandomAccess collections
-     * (the common case: ArrayList-backed item/entity lists in most packets)
-     * by using indexed access instead. Non-RandomAccess collections fall
-     * back to the same iterator-based mechanism vanilla always uses.
+     *         (the common case: ArrayList-backed item/entity lists in most packets)
+     *         by using indexed access instead. Non-RandomAccess collections fall
+     *         back to the same iterator-based mechanism vanilla always uses.
      */
     @Overwrite
+    //? if >=1.21 {
     public <T> void writeCollection(Collection<T> collection, StreamEncoder<? super FriendlyByteBuf, T> streamencoder) {
+    //?} else {
+    /*public <T> void writeCollection(Collection<T> collection, FriendlyByteBuf.Writer<T> streamencoder) {*/
+    //?}
         this.writeVarInt(collection.size());
         if (collection instanceof List && collection instanceof java.util.RandomAccess) {
             List<?> list = (List<?>) collection;
@@ -36,11 +42,19 @@ public abstract class MixinFriendlyByteBuf {
             for (int i = 0; i < size; ++i) {
                 @SuppressWarnings("unchecked")
                 T element = (T) list.get(i);
+                //? if >=1.21 {
                 streamencoder.encode((FriendlyByteBuf) (Object) this, element);
+                //?} else {
+                /*streamencoder.accept((FriendlyByteBuf) (Object) this, element);*/
+                //?}
             }
         } else {
             for (T object : collection) {
+                //? if >=1.21 {
                 streamencoder.encode((FriendlyByteBuf) (Object) this, object);
+                //?} else {
+                /*streamencoder.accept((FriendlyByteBuf) (Object) this, object);*/
+                //?}
             }
         }
     }
@@ -48,26 +62,38 @@ public abstract class MixinFriendlyByteBuf {
     /**
      * @author Starlev
      * @reason Replaces map.forEach(capturingLambda) with a direct entrySet
-     * loop. Vanilla's lambda captures `this` and both encoders, so a fresh
-     * instance is allocated on every writeMap call; this removes that
-     * allocation entirely.
+     *         loop. Vanilla's lambda captures `this` and both encoders, so a fresh
+     *         instance is allocated on every writeMap call; this removes that
+     *         allocation entirely.
      */
     @Overwrite
+    //? if >=1.21 {
     public <K, V> void writeMap(Map<K, V> map, StreamEncoder<? super FriendlyByteBuf, K> streamencoder, StreamEncoder<? super FriendlyByteBuf, V> streamencoder1) {
+    //?} else {
+    /*public <K, V> void writeMap(Map<K, V> map, FriendlyByteBuf.Writer<K> streamencoder, FriendlyByteBuf.Writer<V> streamencoder1) {*/
+    //?}
         this.writeVarInt(map.size());
         for (Map.Entry<K, V> entry : map.entrySet()) {
+            //? if >=1.21 {
             streamencoder.encode((FriendlyByteBuf) (Object) this, entry.getKey());
+            //?} else {
+            /*streamencoder.accept((FriendlyByteBuf) (Object) this, entry.getKey());*/
+            //?}
+            //? if >=1.21 {
             streamencoder1.encode((FriendlyByteBuf) (Object) this, entry.getValue());
+            //?} else {
+            /*streamencoder1.accept((FriendlyByteBuf) (Object) this, entry.getValue());*/
+            //?}
         }
     }
 
     /**
      * @author Starlev
      * @reason Replaces BitSet + toByteArray()/writeFixedBitSet with direct
-     * manual bit packing, avoiding the BitSet allocation and its
-     * intermediate byte[]. Uses the same LSB-first-within-byte convention as
-     * BitSet.toByteArray(); verified via round-trip testing against random
-     * enum sets at many lengths, including non-multiple-of-8 boundaries.
+     *         manual bit packing, avoiding the BitSet allocation and its
+     *         intermediate byte[]. Uses the same LSB-first-within-byte convention as
+     *         BitSet.toByteArray(); verified via round-trip testing against random
+     *         enum sets at many lengths, including non-multiple-of-8 boundaries.
      */
     @Overwrite
     public <E extends Enum<E>> void writeEnumSet(EnumSet<E> enumset, Class<E> oclass) {
@@ -90,7 +116,7 @@ public abstract class MixinFriendlyByteBuf {
     /**
      * @author Starlev
      * @reason Mirrors writeEnumSet's manual bit packing, avoiding
-     * readFixedBitSet's BitSet.valueOf() allocation on the read side.
+     *         readFixedBitSet's BitSet.valueOf() allocation on the read side.
      */
     @Overwrite
     public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> oclass) {
@@ -114,15 +140,15 @@ public abstract class MixinFriendlyByteBuf {
     /**
      * @author Starlev
      * @reason Pre-sizes the backing array to the declared element count to
-     * avoid geometric-growth reallocations. Capped at 65536 regardless of
-     * the declared count: that count comes straight from an unvalidated
-     * network VarInt, and a single 5-byte VarInt can claim up to
-     * Integer.MAX_VALUE elements independent of the packet's actual size.
-     * Without this cap, a malicious or corrupt packet could trigger an
-     * immediate multi-gigabyte allocation attempt before the read loop ever
-     * gets a chance to fail on insufficient remaining bytes. The list still
-     * grows incrementally past the cap if a legitimately large count is
-     * ever sent, so this only changes the up-front allocation, not behavior.
+     *         avoid geometric-growth reallocations. Capped at 65536 regardless of
+     *         the declared count: that count comes straight from an unvalidated
+     *         network VarInt, and a single 5-byte VarInt can claim up to
+     *         Integer.MAX_VALUE elements independent of the packet's actual size.
+     *         Without this cap, a malicious or corrupt packet could trigger an
+     *         immediate multi-gigabyte allocation attempt before the read loop ever
+     *         gets a chance to fail on insufficient remaining bytes. The list still
+     *         grows incrementally past the cap if a legitimately large count is
+     *         ever sent, so this only changes the up-front allocation, not behavior.
      */
     @Overwrite
     public IntList readIntIdList() {
@@ -137,8 +163,8 @@ public abstract class MixinFriendlyByteBuf {
     /**
      * @author Starlev
      * @reason Indexed getInt(i) instead of forEach(this::writeVarInt);
-     * IntArrayList.getInt is a direct array access, avoiding the method
-     * reference dispatch layer.
+     *         IntArrayList.getInt is a direct array access, avoiding the method
+     *         reference dispatch layer.
      */
     @Overwrite
     public void writeIntIdList(IntList intlist) {

@@ -16,14 +16,14 @@ import net.minecraft.client.sounds.SoundBufferLibrary;
 //? if >=1.21.11 {
 import net.minecraft.resources.Identifier;
 //?} else {
-/*import net.minecraft.resources.ResourceLocation;*/
-//?}
+/*import net.minecraft.resources.Identifier;
+*///?}
 import net.minecraft.server.packs.resources.ResourceProvider;
 //? if >=1.21.11 {
 import net.minecraft.util.Util;
 //?} else {
-/*import net.minecraft.Util;*/
-//?}
+/*import net.minecraft.Util;
+*///?}
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -45,13 +45,18 @@ public abstract class MixinSoundBufferLibrary {
     /*@Shadow
     @Final
     @Mutable
-    private Map<ResourceLocation, CompletableFuture<SoundBuffer>> cache;*/
-    //?}
+    private Map<Identifier, CompletableFuture<SoundBuffer>> cache;
+    *///?}
 
     @Shadow
     @Final
     private ResourceProvider resourceManager;
 
+    /**
+     * @author Starlev
+     * @reason Replaces the vanilla one-shot cache initialization with a concurrent map so
+     *         sound buffer fetches can reuse completed futures safely across threads.
+     */
     @Inject(
         method = "<init>",
         at = @At("RETURN")
@@ -63,7 +68,7 @@ public abstract class MixinSoundBufferLibrary {
     //? if >=1.21.11 {
     /**
      * @author Starlev
-     * @reason Safe async sound buffer loading with automatic failed future eviction
+     * @reason Safe async sound buffer loading with automatic failed future eviction.
      */
     @Overwrite
     public CompletableFuture<SoundBuffer> getCompleteBuffer(Identifier identifier) {
@@ -89,7 +94,7 @@ public abstract class MixinSoundBufferLibrary {
     }
     //?} else {
     /*@Overwrite
-    public CompletableFuture<SoundBuffer> getCompleteBuffer(ResourceLocation identifier) {
+    public CompletableFuture<SoundBuffer> getCompleteBuffer(Identifier identifier) {
         return this.cache.computeIfAbsent(identifier, id -> {
             CompletableFuture<SoundBuffer> future = CompletableFuture.supplyAsync(() -> {
                 try (InputStream inputStream = this.resourceManager.open(id);
@@ -109,12 +114,12 @@ public abstract class MixinSoundBufferLibrary {
 
             return future;
         });
-    }*/
-    //?}
+    }
+    *///?}
 
     /**
      * @author Starlev
-     * @reason Zero-allocation sound preloading bypassing Stream API
+     * @reason Zero-allocation sound preloading bypassing Stream API.
      */
     @Overwrite
     public CompletableFuture<?> preload(Collection<Sound> collection) {

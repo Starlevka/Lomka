@@ -33,7 +33,7 @@ public class MixinBuilder {
     /**
      * @author Starlev
      * @reason Replaces slow Guava ArrayListMultimap with a fast array-based bucket list.
-     * Drastically reduces garbage allocation and map lookups during block model baking.
+     *         Drastically reduces garbage allocation and map lookups during block model baking.
      */
     @SuppressWarnings("unchecked")
     @Overwrite
@@ -54,11 +54,11 @@ public class MixinBuilder {
     /**
      * @author Starlev
      * @reason Assembling the QuadCollection using the fast array instead of iterating
-     * over Multimap collections. Order strictly matches Mojang's switch format.
-     * Empty-culled branch mirrors vanilla's direct constructor call (unculled reused
-     * as both 'all' and 'unculled' by reference) instead of going through
-     * createFromSublists' subList(0, size) path, which happens to alias on current
-     * Guava internals but isn't a documented List.subList() guarantee.
+     *         over Multimap collections. Order strictly matches Mojang's switch format.
+     *         Empty-culled branch mirrors vanilla's direct constructor call (unculled reused
+     *         as both 'all' and 'unculled' by reference) instead of going through
+     *         createFromSublists' subList(0, size) path, which happens to alias on current
+     *         Guava internals but isn't a documented List.subList() guarantee.
      */
     @Overwrite
     public QuadCollection build() {
@@ -105,8 +105,8 @@ public class MixinBuilder {
     /**
      * @author Starlev
      * @reason 26.1+ added Builder.addAll(QuadCollection), called by ItemModelGenerator
-     * during item model baking. Route it through the fast array to keep allocation-free
-     * addCulledFace semantics (getQuads returns direct field references, no copies).
+     *         during item model baking. Route it through the fast array to keep allocation-free
+     *         addCulledFace semantics (getQuads returns direct field references, no copies).
      */
     //? if >=26.1 {
     /*@Inject(method = "addAll", at = @At("HEAD"), cancellable = true, require = 1)

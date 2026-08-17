@@ -12,3 +12,4 @@ stonecutter = { id = "dev.kikugie.stonecutter", version.ref = "stonecutter" }
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 fabric-loom-remap = { id = "net.fabricmc.fabric-loom-remap", version.ref = "fabric-loom" }
 neoforge-moddev = { id = "net.neoforged.moddev", version.ref = "neoforge-moddev" }
+neoforge-moddev-legacyforge = { id = "net.neoforged.moddev.legacyforge", version.ref = "neoforge-moddev" }

@@ -38,8 +38,8 @@ public abstract class MixinCamera {
     //? if >=1.21.11 {
     @Shadow private Level level;
     //?} else {
-    /*@Shadow private BlockGetter level;*/
-    //?}
+    /*@Shadow private BlockGetter level;
+    *///?}
     @Shadow @Final private BlockPos.MutableBlockPos blockPosition;
     @Shadow private boolean initialized;
     @Shadow @Final private Vector3f left;
@@ -72,6 +72,7 @@ public abstract class MixinCamera {
     @Unique private float   lomka$lastRotY             = Float.NaN;
     @Unique private float   lomka$lastRotZ             = Float.NaN;
 
+    //? if >=1.21 {
     /**
      * @author Starlev
      * @reason Use JOML vector rotation to set the camera position in one go,
@@ -86,7 +87,9 @@ public abstract class MixinCamera {
                 this.position.z + (double) this.lomka$moveVector.z
         );
     }
+    //?}
 
+    //? if >=1.21 {
     /**
      * @author Starlev
      * @reason Use Mth.square/Mth.sqrt instead of distanceToSqr, and shadow the
@@ -128,7 +131,13 @@ public abstract class MixinCamera {
 
         return f;
     }
+    //?}
 
+    /**
+     * @author Starlev
+     * @reason Keeps the 26.1+ near-plane path on the same lightweight custom structure as
+     *         the older versions and avoids the heavier vanilla object setup.
+     */
     //? if >=26.1 {
     /*@Overwrite
     public Camera.NearPlane getNearPlane(float fov) {
@@ -189,13 +198,13 @@ public abstract class MixinCamera {
     /**
      * @author Starlev
      * @reason Cache fluid-in-camera results to skip block lookups when the camera
-     * has not moved. Also reuses pre-allocated arrays and MutableBlockPos to
-     * eliminate per-frame allocation of Vec3/Vec3i objects. FIX vs previous
-     * revision: dx[1] (top-left corner, forward+up+left) used up.y (uy) in the
-     * X-component instead of up.x (ux) — at pitch~0, up.x~0 while up.y~1, so the
-     * bug injected an error of roughly the full near-plane half-height into the
-     * X-coordinate of that corner for nearly any camera orientation. Uses the
-     * shadowed level field instead of Minecraft.getInstance().level.
+     *         has not moved. Also reuses pre-allocated arrays and MutableBlockPos to
+     *         eliminate per-frame allocation of Vec3/Vec3i objects. FIX vs previous
+     *         revision: dx[1] (top-left corner, forward+up+left) used up.y (uy) in the
+     *         X-component instead of up.x (ux) — at pitch~0, up.x~0 while up.y~1, so the
+     *         bug injected an error of roughly the full near-plane half-height into the
+     *         X-coordinate of that corner for nearly any camera orientation. Uses the
+     *         shadowed level field instead of Minecraft.getInstance().level.
      */
     @Overwrite
     public FogType getFluidInCamera() {
@@ -206,8 +215,8 @@ public abstract class MixinCamera {
         //? if >=1.21.11 {
         Level level = this.level;
         //?} else {
-        /*BlockGetter level = this.level;*/
-        //?}
+        /*BlockGetter level = this.level;
+        *///?}
 
         int bx = this.blockPosition.getX();
         int by = this.blockPosition.getY();

@@ -40,20 +40,20 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
     /**
      * @author Starlev
      * @reason Adds a reference-equality short-circuit before the value-based
-     * equals() check. Note: if T is a record, its generated equals() already
-     * performs this exact check internally for free (verified empirically:
-     * a record's auto-generated equals() invokes zero field-level equals()
-     * calls when compared against itself), so this mainly guards the case
-     * where T is a hand-written class without that same fast path, at
-     * negligible cost either way.
+     *         equals() check. Note: if T is a record, its generated equals() already
+     *         performs this exact check internally for free (verified empirically:
+     *         a record's auto-generated equals() invokes zero field-level equals()
+     *         calls when compared against itself), so this mainly guards the case
+     *         where T is a hand-written class without that same fast path, at
+     *         negligible cost either way.
      *
-     * The actual win here is caching ringBuffer.currentBuffer(): vanilla
-     * calls this getter twice per writeUniform() invocation even though
-     * nothing between those calls can change which buffer is "current"
-     * (rotation only happens in endFrame(), never mid-write). Cached once,
-     * strictly AFTER the resize check, since resizeBuffers() reassigns the
-     * ringBuffer field — caching before that point would return a slice
-     * into a buffer that's about to be replaced.
+     *         The actual win here is caching ringBuffer.currentBuffer(): vanilla
+     *         calls this getter twice per writeUniform() invocation even though
+     *         nothing between those calls can change which buffer is "current"
+     *         (rotation only happens in endFrame(), never mid-write). Cached once,
+     *         strictly AFTER the resize check, since resizeBuffers() reassigns the
+     *         ringBuffer field — caching before that point would return a slice
+     *         into a buffer that's about to be replaced.
      */
     @Overwrite
     public GpuBufferSlice writeUniform(T t0) {
@@ -63,8 +63,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 .slice((long) ((this.nextBlock - 1) * this.blockSize), (long) this.blockSize);
             //?} else {
             /*return this.ringBuffer.currentBuffer()
-                .slice((this.nextBlock - 1) * this.blockSize, this.blockSize);*/
-            //?}
+                .slice((this.nextBlock - 1) * this.blockSize, this.blockSize);
+            *///?}
         }
 
         if (this.nextBlock >= this.capacity) {
@@ -85,8 +85,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 .mapBuffer(currentBuffer.slice((long) offset, (long) this.blockSize), false, true)) {
         //?} else {
         /*try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
-                .mapBuffer(currentBuffer.slice(offset, this.blockSize), false, true)) {*/
-        //?}
+                .mapBuffer(currentBuffer.slice(offset, this.blockSize), false, true)) {
+        *///?}
             t0.write(mappedView.data());
         }
 
@@ -95,17 +95,17 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
         //? if >=1.21.11 {
         return currentBuffer.slice((long) offset, (long) this.blockSize);
         //?} else {
-        /*return currentBuffer.slice(offset, this.blockSize);*/
-        //?}
+        /*return currentBuffer.slice(offset, this.blockSize);
+        *///?}
     }
 
     /**
      * @author Starlev
      * @reason Same currentBuffer() caching as writeUniform, scaled to matter
-     * much more here: vanilla re-fetches currentBuffer() once per element in
-     * the batch (N calls for N uniforms) purely to build each slice, even
-     * though every one of those calls returns the identical object for the
-     * whole duration of this method. Cached once, after the resize check.
+     *         much more here: vanilla re-fetches currentBuffer() once per element in
+     *         the batch (N calls for N uniforms) purely to build each slice, even
+     *         though every one of those calls returns the identical object for the
+     *         whole duration of this method. Cached once, after the resize check.
      */
     @Overwrite
     public GpuBufferSlice[] writeUniforms(T[] at) {
@@ -132,8 +132,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 .mapBuffer(currentBuffer.slice((long) baseOffset, (long) (at.length * this.blockSize)), false, true)) {
         //?} else {
         /*try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
-                .mapBuffer(currentBuffer.slice(baseOffset, at.length * this.blockSize), false, true)) {*/
-        //?}
+                .mapBuffer(currentBuffer.slice(baseOffset, at.length * this.blockSize), false, true)) {
+        *///?}
             ByteBuffer byteBuffer = mappedView.data();
             for (int j = 0; j < at.length; ++j) {
                 T uniform = at[j];
@@ -141,8 +141,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
                 //? if >=1.21.11 {
                 slices[j] = currentBuffer.slice((long) (baseOffset + elementOffset), (long) this.blockSize);
                 //?} else {
-                /*slices[j] = currentBuffer.slice(baseOffset + elementOffset, this.blockSize);*/
-                //?}
+                /*slices[j] = currentBuffer.slice(baseOffset + elementOffset, this.blockSize);
+                *///?}
                 byteBuffer.position(elementOffset);
                 uniform.write(byteBuffer);
             }

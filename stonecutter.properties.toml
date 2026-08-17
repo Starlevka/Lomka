@@ -1,7 +1,7 @@
 mod.id = "lomka"
 mod.name = "Lomka"
 mod.group = "lomka.starl"
-mod.version = "0.3.3"
+mod.version = "0.4.0"
 mod.description = "Applies various, compatible optimizations to improve perfomance and stability. Ready for client, server or both uses!"
 mod.authors = ["Starlev"]
 mod.license.name = "MIT"
@@ -12,8 +12,9 @@ mod.issues_url = "https://github.com/Starlevka/Lomka/issues"
 [fabric]
 deps.fabric-loader = "0.19.0"
 
-[neoforge]
-deps.fabric-loader = "0.19.0"
+[fabric."1.20.1"]
+deps.minecraft = "1.20.1"
+deps.minecraft_max = "1.20.1"
 
 [fabric."1.21"]
 deps.minecraft = "1.21"
@@ -41,6 +42,13 @@ deps.minecraft_max = "26.2"
 
 [fabric."26.2"]
 deps.minecraft = "26.2"
+
+[forge]
+deps.forge = "1.20.1-47.4.10"
+
+[forge."1.20.1"]
+deps.minecraft = "1.20.1"
+deps.minecraft_max = "1.20.1"
 
 [neoforge."1.21"]
 deps.minecraft = "1.21"

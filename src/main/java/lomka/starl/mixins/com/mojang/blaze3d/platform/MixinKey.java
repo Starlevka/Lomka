@@ -15,6 +15,11 @@ public abstract class MixinKey {
 
     @Unique private int lomka$hashCode;
 
+    /**
+     * @author Starlev
+     * @reason Caches the computed key hash so repeated lookups avoid reconstructing the
+     *         same value on every call while keeping the original identity semantics intact.
+     */
     @Overwrite
     public int hashCode() {
         int h = this.lomka$hashCode;

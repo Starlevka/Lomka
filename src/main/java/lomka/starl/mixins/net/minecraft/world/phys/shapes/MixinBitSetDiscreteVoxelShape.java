@@ -1,7 +1,7 @@
 package lomka.starl.mixins.net.minecraft.world.phys.shapes;
 
 import java.util.BitSet;
-import lomka.starl.utils.DiscreteVoxelShapeHelper;
+import lomka.starl.duck.IBitSetDiscreteVoxelShape;
 import net.minecraft.world.phys.shapes.BitSetDiscreteVoxelShape;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.DiscreteVoxelShape;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BitSetDiscreteVoxelShape.class)
-public abstract class MixinBitSetDiscreteVoxelShape implements DiscreteVoxelShapeHelper {
+public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVoxelShape {
 
     @Shadow @Final private BitSet storage;
     @Shadow private int xMin;
@@ -36,18 +36,18 @@ public abstract class MixinBitSetDiscreteVoxelShape implements DiscreteVoxelShap
     /**
      * @author Starlev
      * @reason Hoist the boolean[] mutable-capture wrappers outside the nested
-     * forMergedIndexes loops and reset their [0] slot per iteration instead of
-     * allocating a fresh boolean[1] on every X iteration and every (X,Y) pair.
-     * Vanilla already hoists the int[] bounds accumulator (aint) the exact same
-     * way, and its own correctness already relies on forMergedIndexes running
-     * strictly sequentially (its shared-array min/max mutation would be racy
-     * otherwise) — this extends that same pre-existing assumption to the boolean
-     * flags rather than introducing a new one.
+     *         forMergedIndexes loops and reset their [0] slot per iteration instead of
+     *         allocating a fresh boolean[1] on every X iteration and every (X,Y) pair.
+     *         Vanilla already hoists the int[] bounds accumulator (aint) the exact same
+     *         way, and its own correctness already relies on forMergedIndexes running
+     *         strictly sequentially (its shared-array min/max mutation would be racy
+     *         otherwise) — this extends that same pre-existing assumption to the boolean
+     *         flags rather than introducing a new one.
      */
     @Overwrite
     static BitSetDiscreteVoxelShape join(DiscreteVoxelShape discretevoxelshape, DiscreteVoxelShape discretevoxelshape1, IndexMerger indexmerger, IndexMerger indexmerger1, IndexMerger indexmerger2, BooleanOp booleanop) {
         BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(indexmerger.size() - 1, indexmerger1.size() - 1, indexmerger2.size() - 1);
-        DiscreteVoxelShapeHelper helper = (DiscreteVoxelShapeHelper) (Object) bitsetdiscretevoxelshape;
+        IBitSetDiscreteVoxelShape IBit = (IBitSetDiscreteVoxelShape) (Object) bitsetdiscretevoxelshape;
         int[] aint = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
         boolean[] aboolean = new boolean[1];
         boolean[] aboolean1 = new boolean[1];
@@ -60,7 +60,7 @@ public abstract class MixinBitSetDiscreteVoxelShape implements DiscreteVoxelShap
 
                 indexmerger2.forMergedIndexes((k1, l1, i2) -> {
                     if (booleanop.apply(discretevoxelshape.isFullWide(i, l, k1), discretevoxelshape1.isFullWide(j, i1, l1))) {
-                        helper.lomka$storage().set(helper.lomka$index(k, j1, i2));
+                        IBit.lomka$storage().set(IBit.lomka$index(k, j1, i2));
                         aint[2] = Math.min(aint[2], i2);
                         aint[5] = Math.max(aint[5], i2);
                         aboolean1[0] = true;
@@ -81,7 +81,7 @@ public abstract class MixinBitSetDiscreteVoxelShape implements DiscreteVoxelShap
             return true;
         });
 
-        helper.lomka$setBounds(aint[0], aint[1], aint[2], aint[3] + 1, aint[4] + 1, aint[5] + 1);
+        IBit.lomka$setBounds(aint[0], aint[1], aint[2], aint[3] + 1, aint[4] + 1, aint[5] + 1);
         return bitsetdiscretevoxelshape;
     }
 }

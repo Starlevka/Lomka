@@ -155,6 +155,12 @@ public class MixinArrayListDeque<T> {
             this.head = (this.head + 1) & (this.contents.length - 1);
         } else if (i == this.size - 1) {
             this.contents[j] = null;
+        } else if (i < (this.size - 1) >> 1) {
+            for (int k = i; k > 0; --k) {
+                this.contents[this.getIndex(k)] = this.contents[this.getIndex(k - 1)];
+            }
+            this.contents[this.head] = null;
+            this.head = (this.head + 1) & (this.contents.length - 1);
         } else {
             for (int k = i + 1; k < this.size; ++k) {
                 this.contents[this.getIndex(k - 1)] = this.contents[this.getIndex(k)];

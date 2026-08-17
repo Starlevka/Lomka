@@ -11,8 +11,8 @@ import net.minecraft.client.renderer.MappableRingBuffer;
 //? }
 //? if < 1.21.6 {
 /*import com.mojang.blaze3d.platform.NativeImage;
-import net.minecraft.client.renderer.texture.DynamicTexture;*/
-//? }
+import net.minecraft.client.renderer.texture.DynamicTexture;
+*///? }
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -207,8 +207,8 @@ public abstract class MixinLightTexture {
             this.minecraft.getProfiler().pop();
             ci.cancel();
         }
-    }*/
-    //? } else {
+    }
+    *///? } else {
     @Shadow private boolean updateLightTexture;
     @Shadow @Final private Minecraft minecraft;
     @Shadow private float blockLightRedFlicker;
@@ -217,8 +217,8 @@ public abstract class MixinLightTexture {
     //? if >=1.21.9 {
     @Shadow @Final private GpuTextureView textureView;
     //?} else {
-    /*@Shadow @Final private GpuTextureView textureView;*/
-    //?}
+    /*@Shadow @Final private GpuTextureView textureView;
+    *///?}
 
     @Shadow
     private float calculateDarknessScale(LivingEntity livingentity, float f, float f1) {
@@ -291,8 +291,8 @@ public abstract class MixinLightTexture {
         float ambientLight = clientlevel.dimensionType().ambientLight();
         Vector3f flashOrDefaultColor = LOMKA$DEFAULT_COLOR;
         this.lomka$skyLightColorVec.set(f1, f1, 1.0F);
-        this.lomka$skyLightColorVec.lerp(LOMKA$DEFAULT_COLOR, 0.35F);*/
-        //?}
+        this.lomka$skyLightColorVec.lerp(LOMKA$DEFAULT_COLOR, 0.35F);
+        *///?}
 
         float darknessEffectScale = ((Double) this.minecraft.options.darknessEffectScale().get()).floatValue();
         float darknessFactor = player.getEffectBlendFactor(MobEffects.DARKNESS, f) * darknessEffectScale;
@@ -361,8 +361,8 @@ public abstract class MixinLightTexture {
             renderpass.setVertexBuffer(0, RenderSystem.getQuadVertexBuffer());
             renderpass.setIndexBuffer(indexGpuBuffer, indexBuffer.type());
             renderpass.drawIndexed(0, 0, 6, 1);
-        }*/
-        //?}
+        }
+        *///?}
 
         this.ubo.rotate();
         profilerfiller.pop();

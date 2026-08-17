@@ -15,6 +15,11 @@ public abstract class MixinVertexFormat {
 
     @Unique private int lomka$hashCode;
 
+    /**
+     * @author Starlev
+     * @reason Caches VertexFormat hash values so repeated hash lookups avoid recomputing
+     *         the same mask and offset array data on the hot path.
+     */
     @Overwrite
     public int hashCode() {
         int h = this.lomka$hashCode;

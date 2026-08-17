@@ -26,13 +26,7 @@ public class MixinARGB {
         }
         lomka$RECIPROCALS[0] = 0;
         for (int i = 1; i < 256; i++) {
-            int min_m = 0;
-            for (int rSum = 1; rSum <= 65025; rSum++) {
-                int target = rSum / i;
-                int lower_bound = ((target << 24) + rSum - 1) / rSum;
-                min_m = Math.max(min_m, lower_bound);
-            }
-            lomka$RECIPROCALS[i] = min_m;
+            lomka$RECIPROCALS[i] = (int) ((16777216L + i - 1) / i);
         }
     }
 
@@ -75,7 +69,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Use a single multiplication by 32897 (2^23 / 255) with right-shift
-     * instead of division by 255 for each channel, eliminating 4 integer divisions.
+     *         instead of division by 255 for each channel, eliminating 4 integer divisions.
      */
     @Overwrite
     public static int multiply(int i, int j) {
@@ -93,7 +87,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Optimize the blend with early-outs for fully opaque/transparent,
-     * integer-only arithmetic, and a precomputed reciprocal LUT for non-opaque results.
+     *         integer-only arithmetic, and a precomputed reciprocal LUT for non-opaque results.
      */
     @Overwrite
     public static int alphaBlend(int bottomColor, int topColor) {
@@ -131,7 +125,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Use fixed-point luminance weights instead of floating-point math,
-     * avoiding float-to-int conversions and rounding overhead.
+     *         avoiding float-to-int conversions and rounding overhead.
      */
     @Overwrite
     public static int greyscale(int i) {
@@ -147,7 +141,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Per-channel float lerp with truncation-based rounding,
-     * avoiding Math.floor() overhead.
+     *         avoiding Math.floor() overhead.
      */
     @Overwrite
     public static int srgbLerp(float f, int i, int j) {
@@ -182,7 +176,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Unrolled channel averaging in linear space using SRGB_TO_LINEAR/LINEAR_TO_SRGB tables,
-     * eliminating per-channel method calls and temporary objects.
+     *         eliminating per-channel method calls and temporary objects.
      */
     @Overwrite
     public static int meanLinear(int i, int j, int k, int l) {
@@ -207,7 +201,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Per-channel linear-space interpolation with early SRGB_TO_LINEAR lookup,
-     * avoiding ColorHelper method call overhead and temporary int/float arrays.
+     *         avoiding ColorHelper method call overhead and temporary int/float arrays.
      */
     @Overwrite
     public static int linearLerp(float f, int i, int j) {
@@ -249,7 +243,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Direct channel multiply with manual clamping, avoiding
-     * float-based ColorHelper utilities and per-channel method dispatch.
+     *         float-based ColorHelper utilities and per-channel method dispatch.
      */
     @Overwrite
     public static int scaleRGB(int i, float f, float f1, float f2) {
@@ -267,10 +261,10 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Replace per-channel float cost with fixed-point multiply by 65794 (2^24 / 255),
-     * eliminating division and float-to-int conversion overhead. Uses long arithmetic and a
-     * signed (arithmetic) shift, then clamps explicitly -- the original unsigned-shift version
-     * silently corrupted the result for j outside 0..255 (e.g. j=256 produced 0 instead of 255)
-     * because vanilla's Math.clamp was dropped without an equivalent replacement.
+     *         eliminating division and float-to-int conversion overhead. Uses long arithmetic and a
+     *         signed (arithmetic) shift, then clamps explicitly -- the original unsigned-shift version
+     *         silently corrupted the result for j outside 0..255 (e.g. j=256 produced 0 instead of 255)
+     *         because vanilla's Math.clamp was dropped without an equivalent replacement.
      */
     @Overwrite
     public static int scaleRGB(int i, int j) {
@@ -288,7 +282,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Early-outs for zero/fully-opaque, single channel multiply instead of
-     * full ARGB decomposition.
+     *         full ARGB decomposition.
      */
     @Overwrite
     public static int multiplyAlpha(int color, float alphaMultiplier) {
@@ -301,7 +295,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Bitwise average of two ARGB colors without channel decomposition,
-     * using the standard (a&b) + ((a^b)>>1) technique for simultaneous channel averaging.
+     *         using the standard (a&b) + ((a^b)>>1) technique for simultaneous channel averaging.
      */
     @Overwrite
     public static int average(int a, int b) {
@@ -319,7 +313,7 @@ public class MixinARGB {
     /**
      * @author Starlev
      * @reason Per-channel saturated subtract without full ARGB decomposition,
-     * using bitmask extraction and Math.max for clamping.
+     *         using bitmask extraction and Math.max for clamping.
      */
     @Overwrite
     public static int subtractRgb(int a, int b) {
@@ -355,10 +349,12 @@ public class MixinARGB {
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
+    //? if >=1.21 {
     @Overwrite
     public static int average(int a, int b) {
         return ((a & 0xFEFEFEFE) >>> 1) + ((b & 0xFEFEFEFE) >>> 1) + (a & b & 0x01010101);
     }
+    //?}
 
     @Overwrite
     public static int lerp(float f, int i, int j) {
@@ -372,5 +368,5 @@ public class MixinARGB {
         int b = ((i & 0xFF) * s + (j & 0xFF) * t) >>> 8;
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
-}*/
-//?}
+}
+*///?}
