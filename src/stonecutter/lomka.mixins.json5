@@ -20,7 +20,9 @@
     ,"com.mojang.blaze3d.buffers.MixinStd140SizeCalculator"
     ,"com.mojang.blaze3d.buffers.MixinStd140Builder"
     ,"com.mojang.blaze3d.buffers.MixinGpuBuffer"
+    ,"com.mojang.blaze3d.opengl.MixinBufferStorage"
     ,"com.mojang.blaze3d.opengl.MixinGlProgram"
+    ,"com.mojang.blaze3d.opengl.MixinImmutable"
     ,"com.mojang.blaze3d.platform.MixinLighting"
     ,"net.minecraft.client.renderer.MixinDynamicUniformStorage"
     ,"net.minecraft.client.renderer.texture.MixinTextureAtlas"
@@ -47,6 +49,10 @@
     /*? if >=26.1 { */
     ,"net.minecraft.client.renderer.MixinLightmap"
     ,"net.minecraft.client.renderer.MixinLightmapRenderStateExtractor"
+    /*?} */
+    /*? if >=26.2 { */
+    ,"net.minecraft.client.renderer.MixinGpuBufferPool"
+    ,"com.mojang.blaze3d.vulkan.MixinDirect"
     /*?} */
     /*? if >=1.20.2 && <26.2 { */
     ,"com.mojang.blaze3d.vertex.MixinVertexFormat"

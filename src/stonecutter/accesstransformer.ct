@@ -11,6 +11,20 @@ public net.minecraft.util.ARGB LINEAR_TO_SRGB # [B
 
 #? if >=1.21.6 {
 private-f com.mojang.blaze3d.opengl.GlProgram uniformsByName # Ljava/util/Map;
+public com.mojang.blaze3d.opengl.GlBuffer$GlMappedView
+public com.mojang.blaze3d.opengl.GlBuffer$GlMappedView <init>(Ljava/lang/Runnable;Lcom/mojang/blaze3d/opengl/GlBuffer;Ljava/nio/ByteBuffer;)V
+public com.mojang.blaze3d.opengl.GlBuffer persistentBuffer
+public com.mojang.blaze3d.opengl.GlBuffer handle
+#?}
+
+#? if >=1.21.11 {
+public-f com.mojang.blaze3d.opengl.DirectStateAccess flushMappedBufferRange(IJJI)V
+public-f com.mojang.blaze3d.opengl.DirectStateAccess$Core flushMappedBufferRange(IJJI)V
+public-f com.mojang.blaze3d.opengl.DirectStateAccess$Emulated flushMappedBufferRange(IJJI)V
+#?} else if >=1.21.6 {
+public-f com.mojang.blaze3d.opengl.DirectStateAccess flushMappedBufferRange(III)V
+public-f com.mojang.blaze3d.opengl.DirectStateAccess$Core flushMappedBufferRange(III)V
+public-f com.mojang.blaze3d.opengl.DirectStateAccess$Emulated flushMappedBufferRange(III)V
 #?}
 
 public net.minecraft.world.phys.shapes.IndexMerger

@@ -17,6 +17,16 @@ accessible field net/minecraft/util/ARGB LINEAR_TO_SRGB [B
 
 #? if >=1.21.6 {
 mutable field com/mojang/blaze3d/opengl/GlProgram uniformsByName Ljava/util/Map;
+accessible class com/mojang/blaze3d/opengl/GlBuffer$GlMappedView
+accessible method com/mojang/blaze3d/opengl/GlBuffer$GlMappedView <init> (Ljava/lang/Runnable;Lcom/mojang/blaze3d/opengl/GlBuffer;Ljava/nio/ByteBuffer;)V
+accessible field com/mojang/blaze3d/opengl/GlBuffer	persistentBuffer Ljava/nio/ByteBuffer;
+accessible field com/mojang/blaze3d/opengl/GlBuffer	handle I
+#?}
+
+#? if >=1.21.11 {
+accessible method com/mojang/blaze3d/opengl/DirectStateAccess flushMappedBufferRange (IJJI)V
+#?} else if >=1.21.6 {
+accessible method com/mojang/blaze3d/opengl/DirectStateAccess flushMappedBufferRange (III)V
 #?}
 
 accessible class net/minecraft/world/phys/shapes/IndexMerger
