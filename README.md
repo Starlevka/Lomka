@@ -27,13 +27,13 @@ A: Yes.
 
 A: No, except 1.20.1 Forge.
 
-**Q: Any backports? (<1.21 and <1.20.1)**
+**Q: Any backports? (<1.20.1)**
 
 A: No. The mod's current functionality largely follows Minecraft version 1.21.11 and its structure.
 
 **Q: Does Lomka require Fabric API or any other dependencies?**
 
-A: No. Lomka depends only on Fabric Loader or NeoForge Loader, without any dependencies.
+A: No. Lomka depends only on Fabric Loader or (Neo)Forge Loader, without any dependencies.
 
 **Q: Mobile devices support?**
 
