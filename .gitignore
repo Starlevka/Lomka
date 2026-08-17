@@ -12,8 +12,6 @@ versions/*/bin/
 
 # ── IDE / Editor / Vibe ──
 .eclipse
-.kilo/
-.kilocode/
 .idea/
 *.iml
 .vscode/
@@ -21,6 +19,17 @@ versions/*/bin/
 # ── OS ──
 Thumbs.db
 .DS_Store
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.python-version
+
+# ── Local secrets ──
+.env
 
 # ── Other project files not part of the mod source ──
 /SOURCE CODE/

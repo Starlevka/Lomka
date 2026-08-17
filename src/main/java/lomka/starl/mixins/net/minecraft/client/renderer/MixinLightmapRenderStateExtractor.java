@@ -40,6 +40,11 @@ public abstract class MixinLightmapRenderStateExtractor {
     @Unique
     private final Vector3f lomka$nightVisionColor = new Vector3f();
 
+    /**
+     * @author Starlev
+     * @reason Short-circuits the vanilla extractor and keeps the lightmap render-state
+     *         refresh on the custom fast path instead of falling back to the heavier pipeline.
+     */
     @Inject(method = "extract", at = @At("HEAD"), cancellable = true)
     private void lomka$extract(LightmapRenderState renderState, float partialTicks, CallbackInfo ci) {
         renderState.needsUpdate = this.needsUpdate;

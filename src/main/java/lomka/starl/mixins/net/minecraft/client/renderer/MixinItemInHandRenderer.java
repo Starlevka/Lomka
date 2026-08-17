@@ -30,15 +30,17 @@ public abstract class MixinItemInHandRenderer {
     /**
      * @author Starlev
      * @reason Reuses one ItemStackRenderState per on-screen hand slot instead of allocating
-     * a fresh one every call. renderItem() runs every frame for every visible hand, so vanilla's
-     * "new ItemStackRenderState()" here is a guaranteed per-frame allocation in a method that runs
-     * up to twice a frame. Modeled directly on vanilla's own mapRenderState field in this same
-     * class, which already holds a single reusable RenderState instance across calls instead of
-     * allocating fresh -- same family of object, same reuse contract.
-     * Assumes renderItem() is only ever called from this class's own FIRST_PERSON_LEFT_HAND /
-     * FIRST_PERSON_RIGHT_HAND render paths; a third-party caller passing some other
-     * ItemDisplayContext would fall through to the right-hand slot rather than crash, but could
-     * clobber an in-flight render if it overlaps with a real hand render in the same frame.
+     *         a fresh one every call. renderItem() runs every frame for every visible hand, so vanilla's
+     *         "new ItemStackRenderState()" here is a guaranteed per-frame allocation in a method that runs
+     *         up to twice a frame. Modeled directly on vanilla's own mapRenderState field in this same
+     *         class, which already holds a single reusable RenderState instance across calls instead of
+     *         allocating fresh -- same family of object, same reuse contract.
+     * 
+     *         Assumes renderItem() is only ever called from this class's own FIRST_PERSON_LEFT_HAND /
+     *         FIRST_PERSON_RIGHT_HAND render paths; a third-party caller passing some other
+     *         ItemDisplayContext would fall through to the right-hand slot rather than crash, but could
+     *         clobber an in-flight render if it overlaps with a real hand render in the same frame.
+     *         Not seen in practice.
      */
     @Overwrite
     public void renderItem(LivingEntity livingentity, ItemStack itemstack, ItemDisplayContext itemdisplaycontext, PoseStack posestack, SubmitNodeCollector submitnodecollector, int i) {

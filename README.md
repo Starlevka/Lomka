@@ -11,7 +11,7 @@
 - Speeds up some calculations (colors engine, maths, AABB intersection, textures loads)
 - Fixes bugs in game code
 - Prevents unnecessary allocations (sounds, calcs, lightmap state and other methods)
-- Improves game hashCode() caching (Input types and VertexFormats)
+- Improves game caching (Input types, VertexFormats, font width glyphs cache)
 - Slightly improves client threading system
 
 ## FAQ

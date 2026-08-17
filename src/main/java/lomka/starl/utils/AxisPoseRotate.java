@@ -4,6 +4,11 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionfc;
 
+/**
+ * Fast quaternion-based pose rotation helper used by the custom pose stack path.
+ * The implementation keeps the single-axis branches lightweight while still
+ * falling back to JOML's generic rotation for arbitrary quaternions.
+ */
 public final class AxisPoseRotate {
 
     private AxisPoseRotate() {}

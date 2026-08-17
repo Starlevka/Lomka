@@ -52,19 +52,33 @@ public class MixinMth {
      * @author Starlev
      * @reason Inline lerp formula directly to assist JIT compiler in register allocation.
      */
+    //? if >=1.21.11 {
     @Overwrite
     public static float clampedLerp(float f, float f1, float f2) {
         return f < 0.0F ? f1 : (f > 1.0F ? f2 : f1 + f * (f2 - f1));
     }
+    //?} else {
+    /*@Overwrite
+    public static float clampedLerp(float f, float f1, float f2) {
+        return f2 < 0.0F ? f : (f2 > 1.0F ? f1 : f + f2 * (f1 - f));
+    }*/
+    //?}
 
     /**
      * @author Starlev
      * @reason Inline lerp formula directly to assist JIT compiler in register allocation.
      */
+    //? if >=1.21.11 {
     @Overwrite
     public static double clampedLerp(double d0, double d1, double d2) {
         return d0 < 0.0D ? d1 : (d0 > 1.0D ? d2 : d1 + d0 * (d2 - d1));
     }
+    //?} else {
+    /*@Overwrite
+    public static double clampedLerp(double d0, double d1, double d2) {
+        return d2 < 0.0D ? d0 : (d2 > 1.0D ? d1 : d0 + d2 * (d1 - d0));
+    }*/
+    //?}
 
     /**
      * @author Starlev
@@ -183,7 +197,7 @@ public class MixinMth {
 
     /**
      * @author Starlev
-     * @reason if-else skips second comparison when first matched; early return avoids reassignment.
+     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
      */
     @Overwrite
     public static int wrapDegrees(int angle) {
@@ -195,7 +209,7 @@ public class MixinMth {
 
     /**
      * @author Starlev
-     * @reason if-else skips second comparison when first matched; early return avoids reassignment.
+     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
      */
     @Overwrite
     public static float wrapDegrees(float angle) {
@@ -207,7 +221,7 @@ public class MixinMth {
 
     /**
      * @author Starlev
-     * @reason if-else skips second comparison when first matched; early return avoids reassignment.
+     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
      */
     @Overwrite
     public static double wrapDegrees(double angle) {
@@ -220,7 +234,7 @@ public class MixinMth {
     //? if >=1.21.4 {
     /**
      * @author Starlev
-     * @reason if-else skips second comparison when first matched; early return avoids reassignment.
+     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
      */
     @Overwrite
     public static float wrapDegrees(long angle) {

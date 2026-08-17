@@ -25,8 +25,8 @@ public abstract class MixinPoseStack {
     /**
      * @author Starlev
      * @reason Pure X/Y/Z quaternions (Axis.XP/YP/ZP path) recover sin/cos via double-angle identities
-     * sin(θ)=2xw, cos(θ)=w²-x² and apply sparse column updates matching JOML rotateX/Y/Z, avoiding full
-     * 3D quaternion matrix multiply. General quaternions fall back to JOML rotate.
+     *         sin(θ)=2xw, cos(θ)=w²-x² and apply sparse column updates matching JOML rotateX/Y/Z, avoiding full
+     *         3D quaternion matrix multiply. General quaternions fall back to JOML rotate.
      */
     //? if >=1.21.6 {
     @Overwrite

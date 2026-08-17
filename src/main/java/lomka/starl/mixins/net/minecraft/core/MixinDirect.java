@@ -19,8 +19,8 @@ public abstract class MixinDirect<T> {
 	/**
 	 * @author Starlev
 	 * @reason Avoids materialising a Set.copyOf for tiny direct holder sets.
-	 * Linear scans of 1..4 elements beat hashing (allocation + hash lookup)
-	 * on the hot tag-membership path; larger sets keep the lazy Set cache.
+	 * 		   Linear scans of 1..4 elements beat hashing (allocation + hash lookup)
+	 * 		   on the hot tag-membership path; larger sets keep the lazy Set cache.
 	 */
 	@Overwrite
 	public boolean contains(Holder<T> holder) {

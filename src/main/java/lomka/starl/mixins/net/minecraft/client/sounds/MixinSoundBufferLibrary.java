@@ -52,6 +52,11 @@ public abstract class MixinSoundBufferLibrary {
     @Final
     private ResourceProvider resourceManager;
 
+    /**
+     * @author Starlev
+     * @reason Replaces the vanilla one-shot cache initialization with a concurrent map so
+     *         sound buffer fetches can reuse completed futures safely across threads.
+     */
     @Inject(
         method = "<init>",
         at = @At("RETURN")
@@ -63,7 +68,7 @@ public abstract class MixinSoundBufferLibrary {
     //? if >=1.21.11 {
     /**
      * @author Starlev
-     * @reason Safe async sound buffer loading with automatic failed future eviction
+     * @reason Safe async sound buffer loading with automatic failed future eviction.
      */
     @Overwrite
     public CompletableFuture<SoundBuffer> getCompleteBuffer(Identifier identifier) {
@@ -114,7 +119,7 @@ public abstract class MixinSoundBufferLibrary {
 
     /**
      * @author Starlev
-     * @reason Zero-allocation sound preloading bypassing Stream API
+     * @reason Zero-allocation sound preloading bypassing Stream API.
      */
     @Overwrite
     public CompletableFuture<?> preload(Collection<Sound> collection) {

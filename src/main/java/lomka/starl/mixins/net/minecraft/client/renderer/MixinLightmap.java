@@ -33,8 +33,8 @@ public abstract class MixinLightmap {
     @Shadow @Final private GpuTextureView textureView;
 
     /**
-     * @author Lomka
-     * @reason Zero-allocation direct UBO writing for Lightmap update
+     * @author Starlev
+     * @reason Zero-allocation direct UBO writing for Lightmap update.
      */
     @Overwrite
     public void render(final LightmapRenderState renderState) {

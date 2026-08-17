@@ -40,20 +40,20 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
     /**
      * @author Starlev
      * @reason Adds a reference-equality short-circuit before the value-based
-     * equals() check. Note: if T is a record, its generated equals() already
-     * performs this exact check internally for free (verified empirically:
-     * a record's auto-generated equals() invokes zero field-level equals()
-     * calls when compared against itself), so this mainly guards the case
-     * where T is a hand-written class without that same fast path, at
-     * negligible cost either way.
+     *         equals() check. Note: if T is a record, its generated equals() already
+     *         performs this exact check internally for free (verified empirically:
+     *         a record's auto-generated equals() invokes zero field-level equals()
+     *         calls when compared against itself), so this mainly guards the case
+     *         where T is a hand-written class without that same fast path, at
+     *         negligible cost either way.
      *
-     * The actual win here is caching ringBuffer.currentBuffer(): vanilla
-     * calls this getter twice per writeUniform() invocation even though
-     * nothing between those calls can change which buffer is "current"
-     * (rotation only happens in endFrame(), never mid-write). Cached once,
-     * strictly AFTER the resize check, since resizeBuffers() reassigns the
-     * ringBuffer field — caching before that point would return a slice
-     * into a buffer that's about to be replaced.
+     *         The actual win here is caching ringBuffer.currentBuffer(): vanilla
+     *         calls this getter twice per writeUniform() invocation even though
+     *         nothing between those calls can change which buffer is "current"
+     *         (rotation only happens in endFrame(), never mid-write). Cached once,
+     *         strictly AFTER the resize check, since resizeBuffers() reassigns the
+     *         ringBuffer field — caching before that point would return a slice
+     *         into a buffer that's about to be replaced.
      */
     @Overwrite
     public GpuBufferSlice writeUniform(T t0) {
@@ -102,10 +102,10 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
     /**
      * @author Starlev
      * @reason Same currentBuffer() caching as writeUniform, scaled to matter
-     * much more here: vanilla re-fetches currentBuffer() once per element in
-     * the batch (N calls for N uniforms) purely to build each slice, even
-     * though every one of those calls returns the identical object for the
-     * whole duration of this method. Cached once, after the resize check.
+     *         much more here: vanilla re-fetches currentBuffer() once per element in
+     *         the batch (N calls for N uniforms) purely to build each slice, even
+     *         though every one of those calls returns the identical object for the
+     *         whole duration of this method. Cached once, after the resize check.
      */
     @Overwrite
     public GpuBufferSlice[] writeUniforms(T[] at) {

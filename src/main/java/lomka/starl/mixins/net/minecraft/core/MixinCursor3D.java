@@ -19,9 +19,9 @@ public abstract class MixinCursor3D {
 	/**
 	 * @author Starlev
 	 * @reason Replaces two integer divisions (and two modulos) per voxel in
-	 * vanilla's index decode with incremental counter stepping. Iteration order
-	 * and nextX/Y/Z/getNextType outputs are byte-identical; the (0,0,0) first
-	 * cell is preserved via the index>0 guard (fresh cursors start at index 0).
+	 * 		   vanilla's index decode with incremental counter stepping. Iteration order
+	 * 		   and nextX/Y/Z/getNextType outputs are byte-identical; the (0,0,0) first
+	 * 		   cell is preserved via the index>0 guard (fresh cursors start at index 0).
 	 */
 	@Overwrite
 	public boolean advance() {

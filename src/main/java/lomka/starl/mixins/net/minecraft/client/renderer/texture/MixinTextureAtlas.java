@@ -78,6 +78,11 @@ public abstract class MixinTextureAtlas {
         this.uploadAnimationFrames();
     }
 
+    /**
+     * @author Starlev
+     * @reason Keeps the atlas upload work on the custom render-pass path so animation
+     *         draws stay fast and avoid unnecessary intermediate state churn.
+     */
     @Overwrite
     private void uploadAnimationFrames() {
         List<SpriteContents.AnimationState> states = this.animatedTexturesStates;

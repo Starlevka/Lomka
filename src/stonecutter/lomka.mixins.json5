@@ -1,0 +1,91 @@
+{
+  "required": true,
+  "package": "lomka.starl.mixins",
+  "compatibilityLevel": "${java}",
+  "client": [
+    "accessor.AccessorNearPlane"
+    ,"com.mojang.blaze3d.audio.MixinChannel"
+    ,"com.mojang.blaze3d.platform.MixinKey"
+    ,"com.mojang.blaze3d.platform.MixinNativeImage"
+    ,"com.mojang.blaze3d.vertex.MixinPoseStack"
+    ,"net.minecraft.client.sounds.MixinSoundEngine"
+    /*? if >=1.20.2 { */
+    ,"com.mojang.blaze3d.audio.MixinListener"
+    ,"com.mojang.blaze3d.vertex.MixinBufferBuilder"
+    ,"net.minecraft.client.sounds.MixinSoundBufferLibrary"
+    ,"net.minecraft.client.sounds.MixinJOrbisAudioStream"
+    ,"net.minecraft.client.sounds.MixinChunkedSampleByteBuf"
+    /*?} */
+    /*? if >=1.21.6 { */
+    ,"com.mojang.blaze3d.buffers.MixinStd140SizeCalculator"
+    ,"com.mojang.blaze3d.buffers.MixinStd140Builder"
+    ,"com.mojang.blaze3d.buffers.MixinGpuBuffer"
+    ,"com.mojang.blaze3d.opengl.MixinGlProgram"
+    ,"com.mojang.blaze3d.platform.MixinLighting"
+    ,"net.minecraft.client.renderer.MixinDynamicUniformStorage"
+    ,"net.minecraft.client.renderer.texture.MixinTextureAtlas"
+    /*?} */
+    /*? if >=1.21.9 { */
+    ,"net.minecraft.client.model.MixinModel"
+    /*?} */
+    /*? if >=1.21.9 && <26.1 { */
+    ,"net.minecraft.client.renderer.MixinGameRenderer"
+    /*?} */
+    /*? if >=1.21.11 { */
+    ,    "accessor.InvokerBuilder"
+    ,"net.minecraft.client.gui.MixinFont"
+    ,"net.minecraft.client.gui.MixinGlyphSource"
+    ,"net.minecraft.client.gui.font.MixinFontSet"
+    ,"net.minecraft.client.gui.font.MixinSource"
+    ,"net.minecraft.client.resources.model.MixinBuilder"
+    ,"net.minecraft.client.renderer.MixinItemInHandRenderer"
+    /*?} */
+    /*? if <26.1 { */
+    ,"net.minecraft.client.MixinMinecraft"
+    ,"net.minecraft.client.MixinCamera"
+    /*?} */
+    /*? if >=26.1 { */
+    ,"net.minecraft.client.renderer.MixinLightmap"
+    ,"net.minecraft.client.renderer.MixinLightmapRenderStateExtractor"
+    /*?} */
+    /*? if >=1.20.2 && <26.2 { */
+    ,"com.mojang.blaze3d.vertex.MixinVertexFormat"
+    /*?} */
+    /*? if (>=1.20.1 && <1.21.4) || (>=1.21.6 && <26.1) { */
+    ,"net.minecraft.client.renderer.MixinLightTexture"
+    /*?} */
+  ],
+  "main": [
+    "net.minecraft.core.MixinCursor3D"
+    ,"net.minecraft.core.MixinDirect"
+    ,"net.minecraft.core.MixinIdMapper"
+    ,"net.minecraft.util.thread.MixinBlockableEventLoop"
+    ,"net.minecraft.util.MixinByIdMap"
+    ,"net.minecraft.util.MixinMth"
+    ,"net.minecraft.util.MixinARGB"
+    ,"net.minecraft.network.MixinFriendlyByteBuf"
+    ,"accessor.AccessorCache"
+    ,"accessor.InvokerBlockBehaviour"
+    ,"net.minecraft.world.level.block.state.MixinBlockStateBase"
+    ,"net.minecraft.world.level.block.state.MixinBlockStateBaseCache"
+    ,"net.minecraft.world.level.chunk.MixinDataLayer"
+    ,"net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape"
+    ,"net.minecraft.world.level.lighting.MixinLeveledPriorityQueue"
+    ,"net.minecraft.server.packs.resources.MixinFallbackResourceManager"
+    ,"net.minecraft.server.packs.resources.MixinMultiPackResourceManager"
+    ,"net.minecraft.server.packs.MixinVanillaPackResources"
+    /*? if >=1.20.2 { */
+    ,"net.minecraft.util.MixinArrayListDeque"
+    ,"net.minecraft.network.MixinCompressionDecoder"
+    /*?} */
+    /*? if >=26.1 { */
+    ,"net.minecraft.util.MixinLightCoordsUtil"
+    /*?} */
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

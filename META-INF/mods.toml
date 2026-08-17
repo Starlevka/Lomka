@@ -4,7 +4,7 @@ license = "MIT"
 
 [[mods]]
 modId = "lomka"
-version = "0.3.3"
+version = "0.4.0"
 displayName = "Lomka"
 authors = "Starlev"
 description = """Applies various, compatible optimizations to improve perfomance and stability. Ready for client, server or both uses!"""
