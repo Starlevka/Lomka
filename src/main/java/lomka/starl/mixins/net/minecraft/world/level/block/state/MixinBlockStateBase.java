@@ -1,6 +1,5 @@
 package lomka.starl.mixins.net.minecraft.world.level.block.state;
 
-import lomka.starl.mixins.accessor.AccessorCache;
 import lomka.starl.mixins.accessor.InvokerBlockBehaviour;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
@@ -22,7 +21,7 @@ public abstract class MixinBlockStateBase {
 
     @Shadow private @Nullable FluidState fluidState;
 
-    @Shadow public abstract Block getBlock();
+    @Shadow public    abstract Block      getBlock();
     @Shadow protected abstract BlockState asState();
 
     /**
@@ -39,7 +38,7 @@ public abstract class MixinBlockStateBase {
     @Overwrite
     public VoxelShape getCollisionShape(BlockGetter level, BlockPos pos, CollisionContext context) {
         return this.cache != null && this.fluidState.isEmpty()
-                ? ((AccessorCache) (Object) this.cache).getCollisionShape()
+                ? this.cache.collisionShape
                 : ((InvokerBlockBehaviour) (Object) this.getBlock()).invokeGetCollisionShape(this.asState(), level, pos, context);
     }
 }

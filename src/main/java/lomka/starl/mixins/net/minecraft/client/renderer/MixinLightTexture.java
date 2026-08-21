@@ -57,18 +57,17 @@ public abstract class MixinLightTexture {
         throw new AssertionError();
     }
 
-    @Shadow
-    protected abstract float getDarknessGamma(float partialTick);
+    @Shadow protected abstract float getDarknessGamma(float partialTick);
 
-    @Unique
-    private final float[] skyLight = new float[16];
-    @Unique
-    private final float[] blockR = new float[16];
-    @Unique
-    private final float[] blockG = new float[16];
-    @Unique
-    private final float[] blockB = new float[16];
+    @Unique private final float[] skyLight = new float[16];
+    @Unique private final float[] blockR   = new float[16];
+    @Unique private final float[] blockG   = new float[16];
+    @Unique private final float[] blockB   = new float[16];
 
+    /**
+     * Zero-allocation GPU lightmap update: bakes the sky/block light curves straight into
+     * the shared texture without the vanilla per-column object/array churn.
+     *\/
     @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
     private void lomka$updateLightTexture(float partialTick, CallbackInfo ci) {
         if (!this.updateLightTexture) {
@@ -225,16 +224,17 @@ public abstract class MixinLightTexture {
         throw new AssertionError();
     }
 
-    @Unique
-    private static final Vector3f LOMKA$FLASH_COLOR = new Vector3f(0.99F, 1.12F, 1.0F);
-    @Unique
-    private static final Vector3f LOMKA$DEFAULT_COLOR = new Vector3f(1.0F, 1.0F, 1.0F);
-    @Unique
-    private static final Supplier<String> LOMKA$RENDER_PASS_LABEL = () -> "Update light";
+    @Unique private static final Vector3f LOMKA$FLASH_COLOR   = new Vector3f(0.99F, 1.12F, 1.0F);
+    @Unique private static final Vector3f LOMKA$DEFAULT_COLOR = new Vector3f(1.0F, 1.0F, 1.0F);
+    @Unique private static final Supplier<String> LOMKA$RENDER_PASS_LABEL = () -> "Update light";
 
-    @Unique
-    private final Vector3f lomka$skyLightColorVec = new Vector3f();
+    @Unique private final Vector3f lomka$skyLightColorVec = new Vector3f();
 
+    /**
+     * Zero-allocation GPU lightmap update for 1.21.6+: bakes the sky/block light curves
+     * straight into the shared texture view, skipping the vanilla per-column allocations
+     * and CPU round-trip through a staging image.
+     */
     @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
     private void lomka$updateLightTexture(float f, CallbackInfo ci) {
         if (!this.updateLightTexture) {

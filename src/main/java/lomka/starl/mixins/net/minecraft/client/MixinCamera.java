@@ -15,7 +15,6 @@ import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import lomka.starl.mixins.accessor.AccessorNearPlane;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
@@ -113,7 +112,7 @@ public abstract class MixinCamera {
             double startX = this.position.x + (double) (f2 * 0.1F);
             double startY = this.position.y + (double) (f3 * 0.1F);
             double startZ = this.position.z + (double) (f4 * 0.1F);
-            double negF = (double) (-f);
+            double negF   = (double) (-f);
 
             Vec3 vec3  = new Vec3(startX, startY, startZ);
             Vec3 vec31 = new Vec3(startX + fux * negF, startY + fuy * negF, startZ + fuz * negF);
@@ -147,7 +146,7 @@ public abstract class MixinCamera {
         Vec3 vec31 = new Vec3(lomka$npLftX, lomka$npLftY, lomka$npLftZ);
         Vec3 vec32 = new Vec3(lomka$npUpX,  lomka$npUpY,  lomka$npUpZ);
 
-        return AccessorNearPlane.create(vec3, vec31, vec32);
+        return new Camera.NearPlane(vec3, vec31, vec32);
     }*/
     //?} else {
     @Overwrite
@@ -158,7 +157,7 @@ public abstract class MixinCamera {
         Vec3 vec31 = new Vec3(lomka$npLftX, lomka$npLftY, lomka$npLftZ);
         Vec3 vec32 = new Vec3(lomka$npUpX,  lomka$npUpY,  lomka$npUpZ);
 
-        return AccessorNearPlane.create(vec3, vec31, vec32);
+        return new Camera.NearPlane(vec3, vec31, vec32);
     }
     //?}
 
@@ -223,9 +222,9 @@ public abstract class MixinCamera {
         int bz = this.blockPosition.getZ();
 
         if (bx == lomka$lastWaterPosX
-                && by == lomka$lastWaterPosY
-                && bz == lomka$lastWaterPosZ
-                && Double.compare(this.position.y, lomka$lastWaterPosYFloat) == 0) {
+         && by == lomka$lastWaterPosY
+         && bz == lomka$lastWaterPosZ
+         && Double.compare(this.position.y, lomka$lastWaterPosYFloat) == 0) {
             if (lomka$cachedWaterResult == FogType.WATER) {
                 return FogType.WATER;
             }
@@ -242,14 +241,14 @@ public abstract class MixinCamera {
                 return FogType.WATER;
             } else {
                 lomka$cachedWaterResult = FogType.NONE;
-                lomka$lastLSPosX = Double.NaN;
+                lomka$lastLSPosX        = Double.NaN;
             }
         }
 
-        float rw = this.rotation.w();
-        float rx = this.rotation.x();
-        float ry = this.rotation.y();
-        float rz = this.rotation.z();
+        float rw  = this.rotation.w();
+        float rx  = this.rotation.x();
+        float ry  = this.rotation.y();
+        float rz  = this.rotation.z();
         double px = this.position.x;
         double py = this.position.y;
         double pz = this.position.z;
@@ -257,10 +256,10 @@ public abstract class MixinCamera {
         boolean lsHit = (Double.compare(px, lomka$lastLSPosX) == 0
                       && Double.compare(py, lomka$lastLSPosY) == 0
                       && Double.compare(pz, lomka$lastLSPosZ) == 0
-                      && Float.compare(rw, lomka$lastRotW) == 0
-                      && Float.compare(rx, lomka$lastRotX) == 0
-                      && Float.compare(ry, lomka$lastRotY) == 0
-                      && Float.compare(rz, lomka$lastRotZ) == 0);
+                      &&  Float.compare(rw, lomka$lastRotW) == 0
+                      &&  Float.compare(rx, lomka$lastRotX) == 0
+                      &&  Float.compare(ry, lomka$lastRotY) == 0
+                      &&  Float.compare(rz, lomka$lastRotZ) == 0);
 
         if (lsHit) {
             return lomka$cachedLavaSnowResult;
@@ -320,14 +319,18 @@ public abstract class MixinCamera {
         return result;
     }
 
+    /**
+     * Invalidates the cached water/LS fog inputs on camera reset so a freshly re-created
+     * camera never reuses stale positions for underwater/biome fog lookup.
+     */
     @Inject(method = "reset()V", at = @At("TAIL"))
     private void onReset(CallbackInfo ci) {
-        this.lomka$lastWaterPosX      = Integer.MIN_VALUE;
-        this.lomka$lastWaterPosY      = Integer.MIN_VALUE;
-        this.lomka$lastWaterPosZ      = Integer.MIN_VALUE;
-        this.lomka$lastWaterPosYFloat = Double.NaN;
-        this.lomka$cachedWaterResult  = FogType.NONE;
-        this.lomka$lastLSPosX         = Double.NaN;
+        this.lomka$lastWaterPosX        = Integer.MIN_VALUE;
+        this.lomka$lastWaterPosY        = Integer.MIN_VALUE;
+        this.lomka$lastWaterPosZ        = Integer.MIN_VALUE;
+        this.lomka$lastWaterPosYFloat   = Double.NaN;
+        this.lomka$cachedWaterResult    = FogType.NONE;
+        this.lomka$lastLSPosX           = Double.NaN;
         this.lomka$cachedLavaSnowResult = FogType.NONE;
     }
 }

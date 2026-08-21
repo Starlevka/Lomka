@@ -1,10 +1,10 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
-license = "MIT"
+license = "GPL-3.0"
 
 [[mods]]
 modId = "lomka"
-version = "0.4.0"
+version = "0.4.1"
 displayName = "Lomka"
 authors = "Starlev"
 description = """Applies various, compatible optimizations to improve perfomance and stability. Ready for client, server or both uses!"""

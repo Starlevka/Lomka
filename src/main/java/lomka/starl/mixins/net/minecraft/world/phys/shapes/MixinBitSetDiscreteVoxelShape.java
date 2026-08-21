@@ -49,7 +49,7 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
         BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(indexmerger.size() - 1, indexmerger1.size() - 1, indexmerger2.size() - 1);
         IBitSetDiscreteVoxelShape IBit = (IBitSetDiscreteVoxelShape) (Object) bitsetdiscretevoxelshape;
         int[] aint = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
-        boolean[] aboolean = new boolean[1];
+        boolean[] aboolean  = new boolean[1];
         boolean[] aboolean1 = new boolean[1];
 
         indexmerger.forMergedIndexes((i, j, k) -> {

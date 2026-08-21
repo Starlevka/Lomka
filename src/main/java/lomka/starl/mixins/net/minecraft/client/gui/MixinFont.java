@@ -18,6 +18,11 @@ public abstract class MixinFont {
         throw new AssertionError();
     }
 
+    /**
+     * Routes every StringSplitter width lookup through the font's glyph source advance
+     * (with bold scaling) instead of the vanilla lambda that re-walks glyph resolution,
+     * cutting a per-codepoint lookup layer on the text layout hot path.
+     */
     @ModifyArg(
         method = "<init>",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/StringSplitter;<init>(Lnet/minecraft/client/StringSplitter$WidthProvider;)V"),

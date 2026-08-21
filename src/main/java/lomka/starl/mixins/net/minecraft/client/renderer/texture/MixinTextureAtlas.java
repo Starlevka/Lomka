@@ -40,6 +40,11 @@ public abstract class MixinTextureAtlas {
     /*@Shadow private List<TextureAtlasSprite.Ticker> animatedTextures;
     @Shadow @Nullable private DynamicTexture texture;
 
+    /**
+     * @author Starlev
+     * @reason Ticks animation frames with a plain indexed loop, avoiding the vanilla iterator
+     *         allocation on the per-frame atlas animation path.
+     *\/
     @Overwrite
     public void cycleAnimationFrames() {
         DynamicTexture tex = this.texture;
@@ -64,11 +69,20 @@ public abstract class MixinTextureAtlas {
     @Unique private GpuDevice lomka$device;
     @Unique private @Nullable Supplier<String> lomka$animateLabelSupplier;
 
+    /**
+     * Captures the GPU device once at construction so animation uploads avoid the
+     * RenderSystem.getDevice() lookup on every frame.
+     */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void lomka$initDevice(Identifier location, CallbackInfo ci) {
         this.lomka$device = RenderSystem.getDevice();
     }
 
+    /**
+     * @author Starlev
+     * @reason Ticks every animation state once and hands the upload off to the batched
+     *         render-pass path, avoiding per-frame draw-pass setup for the atlas.
+     */
     @Overwrite
     public void cycleAnimationFrames() {
         List<SpriteContents.AnimationState> states = this.animatedTexturesStates;

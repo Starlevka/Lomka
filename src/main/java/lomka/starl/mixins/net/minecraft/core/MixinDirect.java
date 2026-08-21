@@ -9,12 +9,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.List;
 import java.util.Set;
 
-@Mixin(targets = "net.minecraft.core.HolderSet$Direct")
+@Mixin(HolderSet.Direct.class)
 public abstract class MixinDirect<T> {
 
 	@Shadow private List<Holder<T>> contents;
-
-	@Shadow private Set<Holder<T>> contentsSet;
+	@Shadow private Set <Holder<T>> contentsSet;
 
 	/**
 	 * @author Starlev

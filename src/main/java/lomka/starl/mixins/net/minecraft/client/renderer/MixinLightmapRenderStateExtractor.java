@@ -31,19 +31,14 @@ public abstract class MixinLightmapRenderStateExtractor {
     @Shadow private boolean needsUpdate;
     @Shadow private float blockLightFlicker;
 
-    @Unique
-    private final Vector3f lomka$blockLightTint = new Vector3f();
-    @Unique
-    private final Vector3f lomka$skyLightColor = new Vector3f();
-    @Unique
-    private final Vector3f lomka$ambientColor = new Vector3f();
-    @Unique
-    private final Vector3f lomka$nightVisionColor = new Vector3f();
+    @Unique private final Vector3f lomka$blockLightTint   = new Vector3f();
+    @Unique private final Vector3f lomka$skyLightColor    = new Vector3f();
+    @Unique private final Vector3f lomka$ambientColor     = new Vector3f();
+    @Unique private final Vector3f lomka$nightVisionColor = new Vector3f();
 
     /**
-     * @author Starlev
-     * @reason Short-circuits the vanilla extractor and keeps the lightmap render-state
-     *         refresh on the custom fast path instead of falling back to the heavier pipeline.
+     * Short-circuits the vanilla extractor and keeps the lightmap render-state
+     * refresh on the custom fast path instead of falling back to the heavier pipeline.
      */
     @Inject(method = "extract", at = @At("HEAD"), cancellable = true)
     private void lomka$extract(LightmapRenderState renderState, float partialTicks, CallbackInfo ci) {

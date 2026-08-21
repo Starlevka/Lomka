@@ -1,10 +1,10 @@
 mod.id = "lomka"
 mod.name = "Lomka"
 mod.group = "lomka.starl"
-mod.version = "0.4.0"
+mod.version = "0.4.1"
 mod.description = "Applies various, compatible optimizations to improve perfomance and stability. Ready for client, server or both uses!"
-mod.authors = ["Starlev"]
-mod.license.name = "MIT"
+mod.authors = "Starlev"
+mod.license.name = "GPL-3.0"
 mod.sources_url = "https://github.com/Starlevka/Lomka"
 mod.homepage_url = "https://modrinth.com/mod/lomka"
 mod.issues_url = "https://github.com/Starlevka/Lomka/issues"

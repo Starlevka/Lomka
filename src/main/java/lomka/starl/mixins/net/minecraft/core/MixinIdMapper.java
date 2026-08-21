@@ -1,6 +1,5 @@
 package lomka.starl.mixins.net.minecraft.core;
 
-import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.core.IdMapper;
@@ -19,15 +18,19 @@ public abstract class MixinIdMapper<T> {
 
     @Shadow private int nextId;
     //? if >=1.21 {
-    @Shadow @Final private Reference2IntMap<T> tToId;
+    @Shadow @Final private it.unimi.dsi.fastutil.objects.Reference2IntMap<T> tToId;
     //?} else {
     /*@Shadow @Final private it.unimi.dsi.fastutil.objects.Object2IntMap<T> tToId;
     *///?}
     @Shadow @Final private List<T> idToT;
 
-    @Unique
-    private T[] lomka$byId;
+    @Unique private T[] lomka$byId;
 
+    /**
+     * @author Starlev
+     * @reason Pre-allocates the raw by-id mirror once at construction so later addMapping()
+     *         calls only grow it, keeping the byId() fast path free of list plumbing.
+     */
     @SuppressWarnings("unchecked")
     @Inject(method = "<init>(I)V", at = @At("TAIL"))
     private void lomka$initArray(int i, CallbackInfo ci) {

@@ -1,7 +1,9 @@
 #? if >=26.1 {
 public net.minecraft.client.resources.model.geometry.QuadCollection <init>(Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+public net.minecraft.client.resources.model.geometry.QuadCollection$Builder createFromSublists(Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/geometry/QuadCollection;
 #?} else if >=1.21.11 {
 public net.minecraft.client.resources.model.QuadCollection <init>(Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+public net.minecraft.client.resources.model.QuadCollection$Builder createFromSublists(Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/QuadCollection;
 #?}
 
 #? if >=1.21.11 {
@@ -11,20 +13,6 @@ public net.minecraft.util.ARGB LINEAR_TO_SRGB # [B
 
 #? if >=1.21.6 {
 private-f com.mojang.blaze3d.opengl.GlProgram uniformsByName # Ljava/util/Map;
-public com.mojang.blaze3d.opengl.GlBuffer$GlMappedView
-public com.mojang.blaze3d.opengl.GlBuffer$GlMappedView <init>(Ljava/lang/Runnable;Lcom/mojang/blaze3d/opengl/GlBuffer;Ljava/nio/ByteBuffer;)V
-public com.mojang.blaze3d.opengl.GlBuffer persistentBuffer
-public com.mojang.blaze3d.opengl.GlBuffer handle
-#?}
-
-#? if >=1.21.11 {
-public-f com.mojang.blaze3d.opengl.DirectStateAccess flushMappedBufferRange(IJJI)V
-public-f com.mojang.blaze3d.opengl.DirectStateAccess$Core flushMappedBufferRange(IJJI)V
-public-f com.mojang.blaze3d.opengl.DirectStateAccess$Emulated flushMappedBufferRange(IJJI)V
-#?} else if >=1.21.6 {
-public-f com.mojang.blaze3d.opengl.DirectStateAccess flushMappedBufferRange(III)V
-public-f com.mojang.blaze3d.opengl.DirectStateAccess$Core flushMappedBufferRange(III)V
-public-f com.mojang.blaze3d.opengl.DirectStateAccess$Emulated flushMappedBufferRange(III)V
 #?}
 
 public net.minecraft.world.phys.shapes.IndexMerger
@@ -32,10 +20,32 @@ public net.minecraft.world.phys.shapes.IndexMerger$IndexConsumer
 public net.minecraft.world.phys.shapes.IndexMerger size()I
 public net.minecraft.world.phys.shapes.IndexMerger forMergedIndexes(Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
+#? if <1.21 {
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase f_60593_ # cache
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache f_60842_ # collisionShape
+
+public net.minecraft.client.Camera$NearPlane
+public net.minecraft.client.Camera$NearPlane <init>(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
+#?} else {
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase cache # Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache collisionShape # Lnet/minecraft/world/phys/shapes/VoxelShape;
+
+public net.minecraft.client.Camera$NearPlane
+public net.minecraft.client.Camera$NearPlane <init>(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
+#?}
 
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry filterAll(Ljava/util/Collection;)V
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry resources()Lnet/minecraft/server/packs/PackResources;
+
+public net.minecraft.stats.Stat <init>(Lnet/minecraft/stats/StatType;Ljava/lang/Object;Lnet/minecraft/stats/StatFormatter;)V
+
+#? if <1.21.5 {
+public com.mojang.blaze3d.vertex.PoseStack$Pose <init>(Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
+#?}
+#? if >=1.21 <1.21.5 {
+public com.mojang.blaze3d.vertex.PoseStack$Pose trustedNormals # Z
+#?}
 

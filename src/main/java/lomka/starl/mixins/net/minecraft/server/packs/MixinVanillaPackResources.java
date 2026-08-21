@@ -57,17 +57,13 @@ public abstract class MixinVanillaPackResources implements PackResources {
         throw new AssertionError();
     }
 
-    @Unique
-    private static final LinkOption[] NO_OPTIONS = new LinkOption[0];
+    @Unique private static final LinkOption[] NO_OPTIONS = new LinkOption[0];
 
     //? if <26.1 {
     @Shadow @Final private BuiltInMetadata metadata;
 
-    @Unique
-    private JsonObject lomka$cachedMetadata;
-
-    @Unique
-    private boolean lomka$parsed;
+    @Unique private JsonObject lomka$cachedMetadata;
+    @Unique private boolean    lomka$parsed;
     //?}
 
     /**
@@ -179,13 +175,12 @@ public abstract class MixinVanillaPackResources implements PackResources {
             consumer.accept(path);
         }
     }
-
-    //? if <26.1 {
-    //? if >=1.21.4 {
     /**
      * @author Starlev
      * @reason Cache parsed pack.mcmeta to avoid re-reading and re-parsing JSON for every metadata query.
      */
+    //? if <26.1 {
+    //? if >=1.21.4 {
     @Overwrite
     public <T> @Nullable T getMetadataSection(MetadataSectionType<T> type) {
         if (!this.lomka$parsed) {

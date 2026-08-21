@@ -69,6 +69,10 @@ public abstract class MixinLighting {
     private Boolean lomka$currentNether;*/
     //?}
 
+    /**
+     * Precomputes one GpuBufferSlice per Lighting.Entry at construction so setupFor()
+     * never has to allocate or slice the shared buffer on the hot render path.
+     */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void lomka$initSlices(CallbackInfo ci) {
         Lighting.Entry[] entries = Lighting.Entry.values();
@@ -109,6 +113,11 @@ public abstract class MixinLighting {
         }
     }
     *///?} else if >=1.21.11 {
+    
+    /** 
+     * @author Starlev
+     * @reason Skips redundant GPU UBO writes when the nether flag has not changed.
+     */
     @Overwrite
     public void updateLevel(DimensionType.CardinalLightType type) {
         if (this.lomka$currentLightType == type) {

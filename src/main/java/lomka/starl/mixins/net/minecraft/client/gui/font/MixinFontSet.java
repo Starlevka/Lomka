@@ -15,6 +15,10 @@ public abstract class MixinFontSet {
     @Shadow private GlyphSource anyGlyphs;
     @Shadow private GlyphSource nonFishyGlyphs;
 
+    /**
+     * Clears the cached glyph advances when the font set is rebuilt
+     * so stale width data never outlives a resource reload.
+     */
     @Inject(method = "resetTextures", at = @At("HEAD"))
     private void lomka$clearAdvanceCaches(CallbackInfo ci) {
         ((IGlyphSource) (Object) this.anyGlyphs).lomka$clear();

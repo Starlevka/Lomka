@@ -22,8 +22,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinDirect extends VulkanGpuBuffer {
 
     @Shadow @Final protected VulkanDevice device;
-    @Shadow private long vmaAllocation;
-    @Shadow private int mappingRefCount;
+    @Shadow private long    vmaAllocation;
+    @Shadow private int     mappingRefCount;
     @Shadow private boolean closed;
 
     @Unique private static final Runnable lomka$NO_OP = () -> {};

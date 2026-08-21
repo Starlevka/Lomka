@@ -11,11 +11,9 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(FontSet.Source.class)
 public abstract class MixinSource implements IGlyphSource {
 
-    @Unique 
-    private final Int2FloatOpenHashMap lomka$advanceCache = new Int2FloatOpenHashMap(16, 0.75F);
+    @Unique private final Int2FloatOpenHashMap lomka$advanceCache = new Int2FloatOpenHashMap(16, 0.75F);
 
-    @Shadow
-    protected abstract BakedGlyph getGlyph(int codepoint);
+    @Shadow protected abstract BakedGlyph getGlyph(int codepoint);
 
     @Override
     public void lomka$clear() {

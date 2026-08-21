@@ -36,7 +36,7 @@ sealed class Loader(val id: String) {
 				appendLine("  },")
 				appendLine("  \"description\": ${jsonStr(ctx.description)},")
 				appendLine("  \"icon\": ${jsonStr("assets/${ctx.modId}/icon.png")},")
-				appendLine("  \"license\": \"MIT\",")
+				appendLine("  \"license\": \"GPL-3.0\",")
 				appendLine("  \"environment\": \"*\",")
 				appendLine("  \"accessWidener\": ${jsonStr("${ctx.stonecutterVersion}.accesswidener")},")
 				appendLine("  \"entrypoints\": {")
@@ -97,7 +97,7 @@ sealed class Loader(val id: String) {
 			return buildString {
 				appendLine("modLoader = \"javafml\"")
 				appendLine("loaderVersion = \"[4,)\"")
-				appendLine("license = \"MIT\"")
+				appendLine("license = \"GPL-3.0\"")
 				appendLine()
 				appendLine("[[mods]]")
 				appendLine("modId = \"${ctx.modId}\"")
@@ -147,7 +147,7 @@ sealed class Loader(val id: String) {
 			return buildString {
 				appendLine("modLoader = \"javafml\"")
 				appendLine("loaderVersion = \"[47,)\"")
-				appendLine("license = \"MIT\"")
+				appendLine("license = \"GPL-3.0\"")
 				appendLine()
 				appendLine("[[mods]]")
 				appendLine("modId = \"${ctx.modId}\"")

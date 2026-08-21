@@ -9,8 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(GlyphSource.class)
 public interface MixinGlyphSource extends IGlyphSource {
 
-    @Shadow
-    BakedGlyph getGlyph(int codepoint);
+    @Shadow BakedGlyph getGlyph(int codepoint);
 
     @Override
     default float getAdvance(int codepoint, boolean bold) {

@@ -54,8 +54,7 @@ public abstract class MixinFallbackResourceManager {
         return () -> parseMetadata(supplier);
     }
 
-    @Unique
-    private record Entry(PackResources source, IoSupplier<InputStream> resource, int packIndex) {}
+    @Unique private record Entry(PackResources source, IoSupplier<InputStream> resource, int packIndex) {}
 
     /**
      * @author Starlev

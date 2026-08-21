@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(VertexFormat.class)
 public abstract class MixinVertexFormat {
 
-    @Shadow @Final private int elementsMask;
+    @Shadow @Final private int   elementsMask;
     @Shadow @Final private int[] offsetsByElement;
 
     @Unique private int lomka$hashCode;

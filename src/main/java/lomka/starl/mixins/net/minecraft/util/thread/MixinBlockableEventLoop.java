@@ -10,11 +10,10 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(BlockableEventLoop.class)
 public abstract class MixinBlockableEventLoop {
 
+    @Shadow protected abstract boolean scheduleExecutables();
+
     private static final CompletableFuture<Void> COMPLETED_FUTURE =
             CompletableFuture.completedFuture(null);
-
-    @Shadow
-    protected abstract boolean scheduleExecutables();
 
     /**
      * @author Starlev
