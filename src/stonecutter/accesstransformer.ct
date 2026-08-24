@@ -20,6 +20,8 @@ public net.minecraft.world.phys.shapes.IndexMerger$IndexConsumer
 public net.minecraft.world.phys.shapes.IndexMerger size()I
 public net.minecraft.world.phys.shapes.IndexMerger forMergedIndexes(Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
+public net.minecraft.core.SectionPos <init>(III)V
+
 #? if <1.21 {
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase f_60593_ # cache
@@ -45,7 +47,7 @@ public net.minecraft.stats.Stat <init>(Lnet/minecraft/stats/StatType;Ljava/lang/
 #? if <1.21.5 {
 public com.mojang.blaze3d.vertex.PoseStack$Pose <init>(Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
 #?}
-#? if >=1.21 <1.21.5 {
+#? if >=1.21 {
 public com.mojang.blaze3d.vertex.PoseStack$Pose trustedNormals # Z
 #?}
 

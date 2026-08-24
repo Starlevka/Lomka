@@ -1,3 +1,41 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.server.packs;
 
 import com.google.gson.JsonObject;
@@ -26,14 +64,14 @@ import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.util.GsonHelper;
 //? if >=1.21.11 {
 import net.minecraft.util.FileUtil;
-//? } else {
+//?} else {
 /*import net.minecraft.FileUtil;
-*///? }
+*///?}
 //? if >=1.21.4 {
 import net.minecraft.server.packs.metadata.MetadataSectionType;
-//? } else {
+//?} else {
 /*import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
-*///? }
+*///?}
 //? if <26.1 {
 import net.minecraft.server.packs.BuiltInMetadata;
 //?}
@@ -68,7 +106,8 @@ public abstract class MixinVanillaPackResources implements PackResources {
 
     /**
      * @author Starlev
-     * @reason Fast-path namespace check, zero-allocation path resolution, and eliminated lambda closures
+     * @reason Fast-path namespace check; validated path segments are re-joined into a single
+     *         relative string so each root costs one Path resolution instead of one per segment.
      */
     @Overwrite
     public @Nullable IoSupplier<InputStream> getResource(PackType packType, Identifier identifier) {
@@ -88,13 +127,9 @@ public abstract class MixinVanillaPackResources implements PackResources {
             return null;
         }
 
-        int pathSize = paths.size();
-        int segmentCount = segments.size();
-        for (int i = 0; i < pathSize; i++) {
-            Path path = paths.get(i).resolve(identifier.getNamespace());
-            for (int j = 0; j < segmentCount; j++) {
-                path = path.resolve(segments.get(j));
-            }
+        String relative = identifier.getNamespace() + "/" + String.join("/", segments);
+        for (int i = 0; i < paths.size(); i++) {
+            Path path = paths.get(i).resolve(relative);
             if (Files.exists(path, NO_OPTIONS) && PathPackResources.validatePath(path)) {
                 return IoSupplier.create(path);
             }
@@ -145,7 +180,7 @@ public abstract class MixinVanillaPackResources implements PackResources {
 
     /**
      * @author Starlev
-     * @reason Fast-path namespace check, eliminated Iterator, and eliminated lambda closures
+     * @reason Fast-path namespace check and single-resolve per root (see getResource).
      */
     @Overwrite
     public void listRawPaths(PackType packType, Identifier identifier, Consumer<Path> consumer) {
@@ -165,14 +200,9 @@ public abstract class MixinVanillaPackResources implements PackResources {
             return;
         }
 
-        int pathSize = paths.size();
-        int segmentCount = segments.size();
-        for (int i = 0; i < pathSize; i++) {
-            Path path = paths.get(i).resolve(identifier.getNamespace());
-            for (int j = 0; j < segmentCount; j++) {
-                path = path.resolve(segments.get(j));
-            }
-            consumer.accept(path);
+        String relative = identifier.getNamespace() + "/" + String.join("/", segments);
+        for (int i = 0; i < paths.size(); i++) {
+            consumer.accept(paths.get(i).resolve(relative));
         }
     }
     /**
@@ -200,7 +230,7 @@ public abstract class MixinVanillaPackResources implements PackResources {
                 : null;
         return section != null ? section : this.metadata.get(type);
     }
-    //? } else {
+    //?} else {
     /*@Overwrite
     public <T> @Nullable T getMetadataSection(MetadataSectionSerializer<T> serializer) {
         if (!this.lomka$parsed) {
@@ -220,6 +250,6 @@ public abstract class MixinVanillaPackResources implements PackResources {
                 : null;
         return section != null ? section : this.metadata.get(serializer);
     }
-    *///? }
+    *///?}
     //?}
 }

@@ -26,6 +26,8 @@ accessible class net/minecraft/world/phys/shapes/IndexMerger$IndexConsumer
 accessible method net/minecraft/world/phys/shapes/IndexMerger size ()I
 accessible method net/minecraft/world/phys/shapes/IndexMerger forMergedIndexes (Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
+accessible method net/minecraft/core/SectionPos <init> (III)V
+
 accessible class net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache
 accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase cache Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
 accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache collisionShape Lnet/minecraft/world/phys/shapes/VoxelShape;
@@ -42,7 +44,7 @@ accessible method net/minecraft/stats/Stat <init> (Lnet/minecraft/stats/StatType
 #? if <1.21.5 {
 accessible method com/mojang/blaze3d/vertex/PoseStack$Pose <init> (Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
 #?}
-#? if >=1.21 <1.21.5 {
+#? if >=1.21 {
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
 #?}
 
