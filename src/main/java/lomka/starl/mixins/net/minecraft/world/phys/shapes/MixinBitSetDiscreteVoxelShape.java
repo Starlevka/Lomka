@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.world.phys.shapes;
 
 import java.util.BitSet;
@@ -49,7 +68,7 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
         BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(indexmerger.size() - 1, indexmerger1.size() - 1, indexmerger2.size() - 1);
         IBitSetDiscreteVoxelShape IBit = (IBitSetDiscreteVoxelShape) (Object) bitsetdiscretevoxelshape;
         int[] aint = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
-        boolean[] aboolean = new boolean[1];
+        boolean[] aboolean  = new boolean[1];
         boolean[] aboolean1 = new boolean[1];
 
         indexmerger.forMergedIndexes((i, j, k) -> {

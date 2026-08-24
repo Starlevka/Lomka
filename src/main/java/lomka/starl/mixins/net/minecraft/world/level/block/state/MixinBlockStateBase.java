@@ -1,6 +1,24 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.world.level.block.state;
 
-import lomka.starl.mixins.accessor.AccessorCache;
 import lomka.starl.mixins.accessor.InvokerBlockBehaviour;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
@@ -22,7 +40,7 @@ public abstract class MixinBlockStateBase {
 
     @Shadow private @Nullable FluidState fluidState;
 
-    @Shadow public abstract Block getBlock();
+    @Shadow public    abstract Block      getBlock();
     @Shadow protected abstract BlockState asState();
 
     /**
@@ -39,7 +57,7 @@ public abstract class MixinBlockStateBase {
     @Overwrite
     public VoxelShape getCollisionShape(BlockGetter level, BlockPos pos, CollisionContext context) {
         return this.cache != null && this.fluidState.isEmpty()
-                ? ((AccessorCache) (Object) this.cache).getCollisionShape()
+                ? this.cache.collisionShape
                 : ((InvokerBlockBehaviour) (Object) this.getBlock()).invokeGetCollisionShape(this.asState(), level, pos, context);
     }
 }

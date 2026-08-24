@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.com.mojang.blaze3d.buffers;
 
 import com.mojang.blaze3d.buffers.Std140Builder;
@@ -14,16 +33,17 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+/**
+ * Optimizes std140 uniform buffer serialization by replacing division-based
+ * alignments with single-cycle power-of-two bitwise masks and batching multiple
+ * relative position mutations into single absolute-indexed direct writes.
+ */
 @Mixin(Std140Builder.class)
 public abstract class MixinStd140Builder {
 
     @Shadow @Final private ByteBuffer buffer;
     @Shadow @Final private int start;
 
-    /**
-     * @author Starlev
-     * @reason Bitwise power-of-two alignment avoiding redundant position mutations.
-     */
     @Overwrite
     public Std140Builder align(int align) {
         int currentPos = this.buffer.position();
@@ -36,10 +56,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putFloat(float f) {
         int pos = this.buffer.position();
@@ -50,10 +66,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putInt(int i) {
         int pos = this.buffer.position();
@@ -64,10 +76,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putVec2(float f, float f1) {
         int pos = this.buffer.position();
@@ -79,10 +87,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute JOML indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putVec2(Vector2fc vec) {
         int pos = this.buffer.position();
@@ -93,10 +97,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putIVec2(int i, int j) {
         int pos = this.buffer.position();
@@ -108,10 +108,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute JOML indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putIVec2(Vector2ic vec) {
         int pos = this.buffer.position();
@@ -122,10 +118,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write eliminating 4 redundant position updates + std140 16-byte padding.
-     */
     @Overwrite
     public Std140Builder putVec3(float f, float f1, float f2) {
         int pos = this.buffer.position();
@@ -138,10 +130,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute JOML indexed write with a single buffer position update + std140 16-byte padding.
-     */
     @Overwrite
     public Std140Builder putVec3(Vector3fc vec) {
         int pos = this.buffer.position();
@@ -152,10 +140,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write eliminating 4 redundant position updates + std140 16-byte padding.
-     */
     @Overwrite
     public Std140Builder putIVec3(int i, int j, int k) {
         int pos = this.buffer.position();
@@ -168,10 +152,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute JOML indexed write with a single buffer position update + std140 16-byte padding.
-     */
     @Overwrite
     public Std140Builder putIVec3(Vector3ic vec) {
         int pos = this.buffer.position();
@@ -182,10 +162,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putVec4(float f, float f1, float f2, float f3) {
         int pos = this.buffer.position();
@@ -199,10 +175,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute JOML indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putVec4(Vector4fc vec) {
         int pos = this.buffer.position();
@@ -213,10 +185,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putIVec4(int i, int j, int k, int l) {
         int pos = this.buffer.position();
@@ -230,10 +198,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Absolute JOML indexed write with a single buffer position update.
-     */
     @Overwrite
     public Std140Builder putIVec4(Vector4ic vec) {
         int pos = this.buffer.position();
@@ -244,10 +208,6 @@ public abstract class MixinStd140Builder {
         return (Std140Builder) (Object) this;
     }
 
-    /**
-     * @author Starlev
-     * @reason Direct matrix write at calculated aligned index without intermediate position calls.
-     */
     @Overwrite
     public Std140Builder putMat4f(Matrix4fc mat) {
         int pos = this.buffer.position();

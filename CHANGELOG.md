@@ -1,6 +1,39 @@
 # Changelog
 
-## [Unreleased]
+## [0.5.0] - 2026-08-24
+
+### Performance
+- Shared sequential index buffer grows x4 instead of x2, with an 8192-index warmup floor — no more mid-frame regen hitches on chunk/GUI/cloud spikes. (all versions) **NEW**
+- GlStateManager skips redundant viewport/scissor/polygonMode driver calls, cache resets on resize. (1.21.6+) **NEW from OLD**
+- Frustum setup uses branchless integer floor/ceil instead of Math calls. (all versions) **NEW**
+- PoseStack push/pop pooled and mulPose runs through a scratch matrix. Zero allocations per entity part. (mulPose scratch: 1.21.6–1.21.11)
+- VertexBuffer caches its GL primitive mode, format check by reference. (<1.21.6) **NEW**
+- VertexFormatElement caches hashCode and drops Usage lambdas in attribute setup. (<1.21) **NEW**
+- Multi-consumer fan-out walks delegates with direct indexed loops instead of per-vertex lambdas. (1.20.1–26.1) **NEW**
+- VertexConsumer gains an affine fast path for applying pose matrices. (1.21+) **NEW**
+- Material hash cached instead of allocating an Object[] per sprite lookup. (1.20.1–1.21.11) **NEW from OLD**
+- SectionPos cheaper packed math with allocation-free stream traversal. (all versions) **NEW**
+- StatType registration is a lambda-free get-then-put. (all versions) **NEW**
+- ChunkStatus progression list cached instead of rebuilt per chunk layer. (1.21+) **NEW**
+- Light storage reuses one consumer instead of allocating a lambda per block change. (all versions) **NEW**
+- CompressionEncoder reuses its input buffer between packets. (all versions) **NEW**
+- Entity tick profiler names cached per entity type, removing vanilla's capturing lambda. (<26.1) **NEW**
+- Vulkan host-visible buffers map through a persistent address, no driver round-trip per frame. (26.2) **NEW**
+
+### New
+- Mixin configuration is REAL in `config/lomka-mixins.properties`.
+- Mixin configs now declare minVersion: 0.8.
+
+### Removed
+- Removed low-value mixins: MixinKey, MixinNativeImage, MixinSoundBufferLibrary, MixinIdMapper.
+- Removed accessors: AccessorCache, AccessorNearPlane, InvokerBuilder. (changed by aw/at)
+
+### Changed
+- License changed from **MIT** to **LGPL-3.0-only**.
+- Mod icon, mod description.
+- LomkaFabric, LomkaNeoForge and LomkaForge all-in-one in just Lomka with conditionals.
+- GpuBuffer patch disabled on 26.2, vanilla caches the full-buffer slice natively.
+- Numerous existing mixins received further tweaks and version-condition adjustments.
 
 ## [0.4.0] - 2026-08-17
 

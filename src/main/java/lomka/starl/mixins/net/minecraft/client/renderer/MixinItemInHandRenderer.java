@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -18,14 +37,10 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(value = ItemInHandRenderer.class, priority = 500)
 public abstract class MixinItemInHandRenderer {
 
-    @Shadow
-    @Final
-    private ItemModelResolver itemModelResolver;
+    @Shadow @Final private ItemModelResolver itemModelResolver;
 
-    @Unique
-    private final ItemStackRenderState lomka$rightHandState = new ItemStackRenderState();
-    @Unique
-    private final ItemStackRenderState lomka$leftHandState = new ItemStackRenderState();
+    @Unique private final ItemStackRenderState lomka$rightHandState = new ItemStackRenderState();
+    @Unique private final ItemStackRenderState lomka$leftHandState = new ItemStackRenderState();
 
     /**
      * @author Starlev

@@ -1,7 +1,25 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.client.resources.model;
 
 import com.google.common.collect.ImmutableList;
-import lomka.starl.mixins.accessor.InvokerBuilder;
 //? if >=26.1 {
 /*import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.resources.model.geometry.QuadCollection;*/
@@ -15,9 +33,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +42,12 @@ public class MixinBuilder {
 
     @Shadow @Final private ImmutableList.Builder<BakedQuad> unculledFaces;
 
-    @Unique
-    private List<BakedQuad>[] lomka$fastCulledFaces;
+    @Shadow
+    private static QuadCollection createFromSublists(List<BakedQuad> all, int unculledCount, int northCount, int southCount, int eastCount, int westCount, int upCount, int downCount) {
+        throw new AssertionError();
+    }
+
+    @Unique private List<BakedQuad>[] lomka$fastCulledFaces;
 
     /**
      * @author Starlev
@@ -43,22 +62,19 @@ public class MixinBuilder {
         }
 
         int idx = direction.get3DDataValue();
-        if (this.lomka$fastCulledFaces[idx] == null) {
-            this.lomka$fastCulledFaces[idx] = new ArrayList<>(4);
+        List<BakedQuad> list = this.lomka$fastCulledFaces[idx];
+        if (list == null) {
+            this.lomka$fastCulledFaces[idx] = list = new ArrayList<>(4);
         }
 
-        this.lomka$fastCulledFaces[idx].add(bakedquad);
+        list.add(bakedquad);
         return (QuadCollection.Builder) (Object) this;
     }
 
     /**
      * @author Starlev
      * @reason Assembling the QuadCollection using the fast array instead of iterating
-     *         over Multimap collections. Order strictly matches Mojang's switch format.
-     *         Empty-culled branch mirrors vanilla's direct constructor call (unculled reused
-     *         as both 'all' and 'unculled' by reference) instead of going through
-     *         createFromSublists' subList(0, size) path, which happens to alias on current
-     *         Guava internals but isn't a documented List.subList() guarantee.
+     *         over Multimap collections. Order strictly matches Mojang's internal switch layout.
      */
     @Overwrite
     public QuadCollection build() {
@@ -66,31 +82,26 @@ public class MixinBuilder {
 
         if (this.lomka$fastCulledFaces == null) {
             return unculled.isEmpty() ? QuadCollection.EMPTY
-                : InvokerBuilder.invokeCreateFromSublists(unculled, unculled.size(), 0, 0, 0, 0, 0, 0);
+                : createFromSublists(unculled, unculled.size(), 0, 0, 0, 0, 0, 0);
         }
+
+        List<BakedQuad> north = lomka$getList(Direction.NORTH);
+        List<BakedQuad> south = lomka$getList(Direction.SOUTH);
+        List<BakedQuad> east  = lomka$getList(Direction.EAST);
+        List<BakedQuad> west  = lomka$getList(Direction.WEST);
+        List<BakedQuad> up    = lomka$getList(Direction.UP);
+        List<BakedQuad> down  = lomka$getList(Direction.DOWN);
 
         ImmutableList.Builder<BakedQuad> allQuads = ImmutableList.builder();
         allQuads.addAll(unculled);
-
-        List<BakedQuad> north = lomka$getList(Direction.NORTH);
         allQuads.addAll(north);
-
-        List<BakedQuad> south = lomka$getList(Direction.SOUTH);
         allQuads.addAll(south);
-
-        List<BakedQuad> east = lomka$getList(Direction.EAST);
         allQuads.addAll(east);
-
-        List<BakedQuad> west = lomka$getList(Direction.WEST);
         allQuads.addAll(west);
-
-        List<BakedQuad> up = lomka$getList(Direction.UP);
         allQuads.addAll(up);
-
-        List<BakedQuad> down = lomka$getList(Direction.DOWN);
         allQuads.addAll(down);
 
-        return InvokerBuilder.invokeCreateFromSublists(
+        return createFromSublists(
             allQuads.build(),
             unculled.size(),
             north.size(),
@@ -101,30 +112,47 @@ public class MixinBuilder {
             down.size()
         );
     }
-
     /**
      * @author Starlev
-     * @reason 26.1+ added Builder.addAll(QuadCollection), called by ItemModelGenerator
-     *         during item model baking. Route it through the fast array to keep allocation-free
-     *         addCulledFace semantics (getQuads returns direct field references, no copies).
+     * @reason Bulk transfers quads directly into bucketed lists without Multimap allocation or intermediate collections.
      */
+
     //? if >=26.1 {
-    /*@Inject(method = "addAll", at = @At("HEAD"), cancellable = true, require = 1)
-    private void lomka$addAll(QuadCollection quadCollection, CallbackInfoReturnable<QuadCollection.Builder> cir) {
-        for (BakedQuad quad : quadCollection.getQuads(null)) {
-            this.unculledFaces.add(quad);
+    /*@SuppressWarnings("unchecked")
+    @Overwrite
+    public QuadCollection.Builder addAll(QuadCollection quadCollection) {
+        this.unculledFaces.addAll(quadCollection.getQuads(null));
+
+        lomka$addFaceList(Direction.NORTH, quadCollection.getQuads(Direction.NORTH));
+        lomka$addFaceList(Direction.SOUTH, quadCollection.getQuads(Direction.SOUTH));
+        lomka$addFaceList(Direction.EAST,  quadCollection.getQuads(Direction.EAST));
+        lomka$addFaceList(Direction.WEST,  quadCollection.getQuads(Direction.WEST));
+        lomka$addFaceList(Direction.UP,    quadCollection.getQuads(Direction.UP));
+        lomka$addFaceList(Direction.DOWN,  quadCollection.getQuads(Direction.DOWN));
+
+        return (QuadCollection.Builder) (Object) this;
+    }
+
+    @Unique
+    private void lomka$addFaceList(Direction dir, List<BakedQuad> incoming) {
+        if (incoming == null || incoming.isEmpty()) return;
+
+        if (this.lomka$fastCulledFaces == null) {
+            this.lomka$fastCulledFaces = new List[6];
         }
-        for (Direction dir : Direction.values()) {
-            for (BakedQuad quad : quadCollection.getQuads(dir)) {
-                this.addCulledFace(dir, quad);
-            }
+
+        int idx = dir.get3DDataValue();
+        List<BakedQuad> list = this.lomka$fastCulledFaces[idx];
+        if (list == null) {
+            this.lomka$fastCulledFaces[idx] = list = new ArrayList<>(incoming.size());
         }
-        cir.setReturnValue((QuadCollection.Builder) (Object) this);
+        list.addAll(incoming);
     }*/
     //?}
 
     @Unique
     private List<BakedQuad> lomka$getList(Direction dir) {
+        if (this.lomka$fastCulledFaces == null) return List.of();
         List<BakedQuad> list = this.lomka$fastCulledFaces[dir.get3DDataValue()];
         return list != null ? list : List.of();
     }

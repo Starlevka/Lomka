@@ -1,7 +1,9 @@
 #? if >=26.1 {
 public net.minecraft.client.resources.model.geometry.QuadCollection <init>(Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+public net.minecraft.client.resources.model.geometry.QuadCollection$Builder createFromSublists(Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/geometry/QuadCollection;
 #?} else if >=1.21.11 {
 public net.minecraft.client.resources.model.QuadCollection <init>(Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+public net.minecraft.client.resources.model.QuadCollection$Builder createFromSublists(Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/QuadCollection;
 #?}
 
 #? if >=1.21.11 {
@@ -18,10 +20,34 @@ public net.minecraft.world.phys.shapes.IndexMerger$IndexConsumer
 public net.minecraft.world.phys.shapes.IndexMerger size()I
 public net.minecraft.world.phys.shapes.IndexMerger forMergedIndexes(Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
+public net.minecraft.core.SectionPos <init>(III)V
+
+#? if <1.21 {
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase f_60593_ # cache
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache f_60842_ # collisionShape
+
+public net.minecraft.client.Camera$NearPlane
+public net.minecraft.client.Camera$NearPlane <init>(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
+#?} else {
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase cache # Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache collisionShape # Lnet/minecraft/world/phys/shapes/VoxelShape;
+
+public net.minecraft.client.Camera$NearPlane
+public net.minecraft.client.Camera$NearPlane <init>(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
+#?}
 
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry filterAll(Ljava/util/Collection;)V
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry resources()Lnet/minecraft/server/packs/PackResources;
+
+public net.minecraft.stats.Stat <init>(Lnet/minecraft/stats/StatType;Ljava/lang/Object;Lnet/minecraft/stats/StatFormatter;)V
+
+#? if <1.21.5 {
+public com.mojang.blaze3d.vertex.PoseStack$Pose <init>(Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
+#?}
+#? if >=1.21 {
+public com.mojang.blaze3d.vertex.PoseStack$Pose trustedNormals # Z
+#?}
 

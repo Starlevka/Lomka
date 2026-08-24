@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.client.renderer;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -15,14 +34,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(DynamicUniformStorage.class)
 public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage.DynamicUniform> {
-
-    /*
-    * Actual work without Sodium or Embeddium mods. 
-    * No causes any conflicts with them, just a must-have.
-    */
 
     @Shadow private @Nullable T lastUniform;
     @Shadow private MappableRingBuffer ringBuffer;
@@ -31,6 +46,33 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
     @Shadow @Final private int blockSize;
     @Shadow @Final private String label;
     @Shadow @Final private static Logger LOGGER;
+
+    @Unique private GpuBufferSlice lomka$lastSlice;
+
+    /**
+     * Returns a {@link GpuBufferSlice} for {@code (buffer, offset, blockSize)},
+     * re-emitting the previously returned instance when every component matches.
+     * GpuBufferSlice is an immutable record, so aliasing a repeated request is
+     * observably identical to handing out a fresh copy; ring rotation and
+     * resizeBuffers invalidate the cache implicitly through buffer identity.
+     */
+    @Unique
+    private GpuBufferSlice lomka$sliceFor(GpuBuffer gpubuffer, int i) {
+        GpuBufferSlice gpubufferslice = this.lomka$lastSlice;
+
+        if (gpubufferslice != null && gpubufferslice.buffer() == gpubuffer
+                && gpubufferslice.offset() == (long) i && gpubufferslice.length() == (long) this.blockSize) {
+            return gpubufferslice;
+        } else {
+            //? if >=1.21.11 {
+            gpubufferslice = gpubuffer.slice((long) i, (long) this.blockSize);
+            //?} else {
+            /*gpubufferslice = gpubuffer.slice(i, this.blockSize);
+            *///?}
+            this.lomka$lastSlice = gpubufferslice;
+            return gpubufferslice;
+        }
+    }
 
     @Shadow
     private void resizeBuffers(int i) {
@@ -54,17 +96,15 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
      *         strictly AFTER the resize check, since resizeBuffers() reassigns the
      *         ringBuffer field — caching before that point would return a slice
      *         into a buffer that's about to be replaced.
+     *
+     *         Returned slices are additionally deduplicated through lomka$lastSlice:
+     *         repeated fast-path hits re-emit the same immutable record instead of
+     *         allocating a fresh one per call.
      */
     @Overwrite
     public GpuBufferSlice writeUniform(T t0) {
         if (this.lastUniform != null && (t0 == this.lastUniform || this.lastUniform.equals(t0))) {
-            //? if >=1.21.11 {
-            return this.ringBuffer.currentBuffer()
-                .slice((long) ((this.nextBlock - 1) * this.blockSize), (long) this.blockSize);
-            //?} else {
-            /*return this.ringBuffer.currentBuffer()
-                .slice((this.nextBlock - 1) * this.blockSize, this.blockSize);
-            *///?}
+            return this.lomka$sliceFor(this.ringBuffer.currentBuffer(), (this.nextBlock - 1) * this.blockSize);
         }
 
         if (this.nextBlock >= this.capacity) {
@@ -92,11 +132,7 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
 
         ++this.nextBlock;
         this.lastUniform = t0;
-        //? if >=1.21.11 {
-        return currentBuffer.slice((long) offset, (long) this.blockSize);
-        //?} else {
-        /*return currentBuffer.slice(offset, this.blockSize);
-        *///?}
+        return this.lomka$sliceFor(currentBuffer, offset);
     }
 
     /**
@@ -106,6 +142,8 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
      *         the batch (N calls for N uniforms) purely to build each slice, even
      *         though every one of those calls returns the identical object for the
      *         whole duration of this method. Cached once, after the resize check.
+     *         The tail element's slice primes lomka$lastSlice so an immediately
+     *         following writeUniform() fast-path hit re-emits it allocation-free.
      */
     @Overwrite
     public GpuBufferSlice[] writeUniforms(T[] at) {
@@ -121,7 +159,7 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
             this.resizeBuffers(newCapacity);
         }
 
-        int baseOffset = this.nextBlock * this.blockSize;
+        int baseOffset          = this.nextBlock * this.blockSize;
         GpuBuffer currentBuffer = this.ringBuffer.currentBuffer();
         GpuBufferSlice[] slices = new GpuBufferSlice[at.length];
 
@@ -150,6 +188,7 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
 
         this.nextBlock += at.length;
         this.lastUniform = at[at.length - 1];
+        this.lomka$lastSlice = slices[at.length - 1];
         return slices;
     }
 }

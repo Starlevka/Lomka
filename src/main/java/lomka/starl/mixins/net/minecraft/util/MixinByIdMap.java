@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.util;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -65,7 +84,7 @@ public class MixinByIdMap {
     /**
      * @author Starlev
      * @reason Optimizes hot-path lookups by inlining math, avoiding method calls, 
-     * and using bitwise AND for WRAP strategy when length is a power of 2.
+     *         and using bitwise AND for WRAP strategy when length is a power of 2.
      */
     @Overwrite
     public static <T> IntFunction<T> continuous(ToIntFunction<T> tointfunction, T[] at, ByIdMap.OutOfBoundsStrategy strategy) {

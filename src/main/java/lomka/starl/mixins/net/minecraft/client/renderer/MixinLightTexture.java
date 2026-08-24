@@ -1,3 +1,41 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.client.renderer;
 
 //? if >=1.21.6 {
@@ -8,11 +46,11 @@ import com.mojang.blaze3d.systems.RenderPass;
 import net.minecraft.client.renderer.RenderPipelines;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.renderer.MappableRingBuffer;
-//? }
-//? if < 1.21.6 {
+//?}
+//? if <1.21.6 {
 /*import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-*///? }
+*///?}
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -44,7 +82,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = LightTexture.class, priority = 500)
 public abstract class MixinLightTexture {
 
-    //? if < 1.21.6 {
+    //? if <1.21.6 {
     /*@Shadow @Final private Minecraft minecraft;
     @Shadow @Final private GameRenderer renderer;
     @Shadow @Final private DynamicTexture lightTexture;
@@ -57,18 +95,17 @@ public abstract class MixinLightTexture {
         throw new AssertionError();
     }
 
-    @Shadow
-    protected abstract float getDarknessGamma(float partialTick);
+    @Shadow protected abstract float getDarknessGamma(float partialTick);
 
-    @Unique
-    private final float[] skyLight = new float[16];
-    @Unique
-    private final float[] blockR = new float[16];
-    @Unique
-    private final float[] blockG = new float[16];
-    @Unique
-    private final float[] blockB = new float[16];
+    @Unique private final float[] skyLight = new float[16];
+    @Unique private final float[] blockR   = new float[16];
+    @Unique private final float[] blockG   = new float[16];
+    @Unique private final float[] blockB   = new float[16];
 
+    /**
+     * Zero-allocation GPU lightmap update: bakes the sky/block light curves straight into
+     * the shared texture without the vanilla per-column object/array churn.
+     *\/
     @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
     private void lomka$updateLightTexture(float partialTick, CallbackInfo ci) {
         if (!this.updateLightTexture) {
@@ -208,7 +245,7 @@ public abstract class MixinLightTexture {
             ci.cancel();
         }
     }
-    *///? } else {
+    *///?} else {
     @Shadow private boolean updateLightTexture;
     @Shadow @Final private Minecraft minecraft;
     @Shadow private float blockLightRedFlicker;
@@ -225,16 +262,17 @@ public abstract class MixinLightTexture {
         throw new AssertionError();
     }
 
-    @Unique
-    private static final Vector3f LOMKA$FLASH_COLOR = new Vector3f(0.99F, 1.12F, 1.0F);
-    @Unique
-    private static final Vector3f LOMKA$DEFAULT_COLOR = new Vector3f(1.0F, 1.0F, 1.0F);
-    @Unique
-    private static final Supplier<String> LOMKA$RENDER_PASS_LABEL = () -> "Update light";
+    @Unique private static final Vector3f LOMKA$FLASH_COLOR   = new Vector3f(0.99F, 1.12F, 1.0F);
+    @Unique private static final Vector3f LOMKA$DEFAULT_COLOR = new Vector3f(1.0F, 1.0F, 1.0F);
+    @Unique private static final Supplier<String> LOMKA$RENDER_PASS_LABEL = () -> "Update light";
 
-    @Unique
-    private final Vector3f lomka$skyLightColorVec = new Vector3f();
+    @Unique private final Vector3f lomka$skyLightColorVec = new Vector3f();
 
+    /**
+     * Zero-allocation GPU lightmap update for 1.21.6+: bakes the sky/block light curves
+     * straight into the shared texture view, skipping the vanilla per-column allocations
+     * and CPU round-trip through a staging image.
+     */
     @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
     private void lomka$updateLightTexture(float f, CallbackInfo ci) {
         if (!this.updateLightTexture) {
@@ -368,5 +406,5 @@ public abstract class MixinLightTexture {
         profilerfiller.pop();
         ci.cancel();
     }
-    //? }
+    //?}
 }

@@ -20,16 +20,8 @@ versions/*/bin/
 Thumbs.db
 .DS_Store
 
-# ── Python ──
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-.python-version
-
 # ── Local secrets ──
 .env
 
 # ── Other project files not part of the mod source ──
-/SOURCE CODE/
+/scripts/

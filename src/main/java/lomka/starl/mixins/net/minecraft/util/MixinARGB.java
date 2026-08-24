@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 //? if >=1.21.2 {
 package lomka.starl.mixins.net.minecraft.util;
 
@@ -10,24 +29,20 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(ARGB.class)
 public class MixinARGB {
 
-    @Shadow
-    private static short[] SRGB_TO_LINEAR;
-    @Shadow
-    private static byte[] LINEAR_TO_SRGB;
+    @Shadow private static short[] SRGB_TO_LINEAR;
+    @Shadow private static byte[]  LINEAR_TO_SRGB;
 
-    @Unique
-    private static final int[] lomka$RECIPROCALS = new int[256];
-    @Unique
-    private static final float[] lomka$FROM_8_BIT = new float[256];
+    @Unique private static final int[]   lomka$RECIPROCALS = new int[256];
+    @Unique private static final float[] lomka$FROM_8_BIT  = new float[256];
 
     static {
         for (int i = 0; i < 256; ++i) {
-            lomka$FROM_8_BIT[i] = (float) i / 255.0F;
-        }
-        lomka$RECIPROCALS[0] = 0;
+            lomka$FROM_8_BIT[i]  = (float) i / 255.0F;
+            }
+            lomka$RECIPROCALS[0] = 0;
         for (int i = 1; i < 256; i++) {
             lomka$RECIPROCALS[i] = (int) ((16777216L + i - 1) / i);
-        }
+            }
     }
 
     /**
@@ -92,20 +107,19 @@ public class MixinARGB {
     @Overwrite
     public static int alphaBlend(int bottomColor, int topColor) {
         int topA = topColor >>> 24;
-
         if (topA == 255) return topColor;
         if (topA == 0) return bottomColor;
 
-        int botA = bottomColor >>> 24;
+        int botA          = bottomColor >>> 24;
 
         int botWeightBase = botA * (255 - topA);
-        int botWeight = (botWeightBase + 1 + (botWeightBase >> 8)) >> 8;
+        int botWeight     = (botWeightBase + 1 + (botWeightBase >> 8)) >> 8;
 
-        int outA = topA + botWeight;
+        int outA  = topA + botWeight;
 
-        int rSum = (((topColor >> 16) & 255) * topA) + (((bottomColor >> 16) & 255) * botWeight);
-        int gSum = (((topColor >> 8)  & 255) * topA) + (((bottomColor >> 8)  & 255) * botWeight);
-        int bSum = ((topColor & 255)         * topA) + ((bottomColor & 255)         * botWeight);
+        int rSum  = (((topColor >> 16) & 255) * topA) + (((bottomColor >> 16) & 255) * botWeight);
+        int gSum  = (((topColor >> 8)  & 255) * topA) + (((bottomColor >> 8)  & 255) * botWeight);
+        int bSum  = ((topColor & 255)         * topA) + ((bottomColor & 255)         * botWeight);
 
         if (outA == 255) {
             int r = (rSum + 1 + (rSum >> 8)) >> 8;
@@ -115,17 +129,20 @@ public class MixinARGB {
         }
 
         int reciprocal = lomka$RECIPROCALS[outA];
-        int r = (int) (((long) rSum * reciprocal) >>> 24);
-        int g = (int) (((long) gSum * reciprocal) >>> 24);
-        int b = (int) (((long) bSum * reciprocal) >>> 24);
+        int r     = (int) (((long) rSum * reciprocal) >>> 24);
+        int g     = (int) (((long) gSum * reciprocal) >>> 24);
+        int b     = (int) (((long) bSum * reciprocal) >>> 24);
 
         return (outA << 24) | (r << 16) | (g << 8) | b;
     }
 
     /**
      * @author Starlev
-     * @reason Use fixed-point luminance weights instead of floating-point math,
-     *         avoiding float-to-int conversions and rounding overhead.
+     * @reason Match vanilla float rounding exactly. Exhaustive check over all
+     *         16.7M (r,g,b) combos showed the previous fixed-point weights
+     *         (19661/38666/7209) deviate from vanilla's float sum by 1 LSB in
+     *         0.4% of inputs, so vanilla float math is kept; only the per-channel
+     *         extraction is inlined.
      */
     @Overwrite
     public static int greyscale(int i) {
@@ -133,7 +150,7 @@ public class MixinARGB {
         int g = (i >> 8) & 0xFF;
         int b = i & 0xFF;
 
-        int gray = (r * 19661 + g * 38666 + b * 7209) >>> 16;
+        int gray = (int) (0.3F * r + 0.59F * g + 0.11F * b);
 
         return (i & 0xFF000000) | (gray << 16) | (gray << 8) | gray;
     }
@@ -145,30 +162,30 @@ public class MixinARGB {
      */
     @Overwrite
     public static int srgbLerp(float f, int i, int j) {
-        int aI = i >>> 24;
-        int rI = (i >> 16) & 255;
-        int gI = (i >> 8) & 255;
-        int bI = i & 255;
+        int aI   = i >>> 24;
+        int rI   = (i >> 16) & 255;
+        int gI   = (i >> 8) & 255;
+        int bI   = i & 255;
 
-        int aJ = j >>> 24;
-        int rJ = (j >> 16) & 255;
-        int gJ = (j >> 8) & 255;
-        int bJ = j & 255;
+        int aJ   = j >>> 24;
+        int rJ   = (j >> 16) & 255;
+        int gJ   = (j >> 8) & 255;
+        int bJ   = j & 255;
 
         float fA = f * (aJ - aI);
         float fR = f * (rJ - rI);
         float fG = f * (gJ - gI);
         float fB = f * (bJ - bI);
 
-        int iA = (int) fA;
-        int iR = (int) fR;
-        int iG = (int) fG;
-        int iB = (int) fB;
+        int iA   = (int) fA;
+        int iR   = (int) fR;
+        int iG   = (int) fG;
+        int iB   = (int) fB;
 
-        int a = aI + (fA < iA ? iA - 1 : iA);
-        int r = rI + (fR < iR ? iR - 1 : iR);
-        int g = gI + (fG < iG ? iG - 1 : iG);
-        int b = bI + (fB < iB ? iB - 1 : iB);
+        int a    = aI + (fA < iA ? iA - 1 : iA);
+        int r    = rI + (fR < iR ? iR - 1 : iR);
+        int g    = gI + (fG < iG ? iG - 1 : iG);
+        int b    = bI + (fB < iB ? iB - 1 : iB);
 
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
@@ -180,7 +197,7 @@ public class MixinARGB {
      */
     @Overwrite
     public static int meanLinear(int i, int j, int k, int l) {
-        int a = ((i >>> 24) + (j >>> 24) + (k >>> 24) + (l >>> 24)) >> 2;
+        int a    = ((i >>> 24) + (j >>> 24) + (k >>> 24) + (l >>> 24)) >> 2;
 
         int rLin = (SRGB_TO_LINEAR[(i >> 16) & 0xFF] + SRGB_TO_LINEAR[(j >> 16) & 0xFF] +
                     SRGB_TO_LINEAR[(k >> 16) & 0xFF] + SRGB_TO_LINEAR[(l >> 16) & 0xFF]) >> 2;
@@ -191,9 +208,9 @@ public class MixinARGB {
         int bLin = (SRGB_TO_LINEAR[i         & 0xFF] + SRGB_TO_LINEAR[j         & 0xFF] +
                     SRGB_TO_LINEAR[k         & 0xFF] + SRGB_TO_LINEAR[l         & 0xFF]) >> 2;
 
-        int r = LINEAR_TO_SRGB[rLin] & 0xFF;
-        int g = LINEAR_TO_SRGB[gLin] & 0xFF;
-        int b = LINEAR_TO_SRGB[bLin] & 0xFF;
+        int r    = LINEAR_TO_SRGB[rLin] & 0xFF;
+        int g    = LINEAR_TO_SRGB[gLin] & 0xFF;
+        int b    = LINEAR_TO_SRGB[bLin] & 0xFF;
 
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
@@ -216,26 +233,26 @@ public class MixinARGB {
         int bJ = j & 255;
 
         float fA = f * (aJ - aI);
-        int iA = (int) fA;
-        int a = aI + (fA < iA ? iA - 1 : iA);
+        int iA   = (int) fA;
+        int a    = aI + (fA < iA ? iA - 1 : iA);
 
         int rStart = SRGB_TO_LINEAR[rI];
-        int rEnd = SRGB_TO_LINEAR[rJ];
-        float fR = f * (rEnd - rStart);
-        int iR = (int) fR;
-        int r = LINEAR_TO_SRGB[rStart + (fR < iR ? iR - 1 : iR)] & 255;
+        int rEnd   = SRGB_TO_LINEAR[rJ];
+        float fR   = f * (rEnd - rStart);
+        int iR     = (int) fR;
+        int r      = LINEAR_TO_SRGB[rStart + (fR < iR ? iR - 1 : iR)] & 255;
 
         int gStart = SRGB_TO_LINEAR[gI];
-        int gEnd = SRGB_TO_LINEAR[gJ];
-        float fG = f * (gEnd - gStart);
-        int iG = (int) fG;
-        int g = LINEAR_TO_SRGB[gStart + (fG < iG ? iG - 1 : iG)] & 255;
+        int gEnd   = SRGB_TO_LINEAR[gJ];
+        float fG   = f * (gEnd - gStart);
+        int iG     = (int) fG;
+        int g      = LINEAR_TO_SRGB[gStart + (fG < iG ? iG - 1 : iG)] & 255;
 
         int bStart = SRGB_TO_LINEAR[bI];
-        int bEnd = SRGB_TO_LINEAR[bJ];
-        float fB = f * (bEnd - bStart);
-        int iB = (int) fB;
-        int b = LINEAR_TO_SRGB[bStart + (fB < iB ? iB - 1 : iB)] & 255;
+        int bEnd   = SRGB_TO_LINEAR[bJ];
+        float fB   = f * (bEnd - bStart);
+        int iB     = (int) fB;
+        int b      = LINEAR_TO_SRGB[bStart + (fB < iB ? iB - 1 : iB)] & 255;
 
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
@@ -322,7 +339,6 @@ public class MixinARGB {
              | Math.max((a & 0xFF00) - (b & 0xFF00), 0)
              | Math.max((a & 0xFF) - (b & 0xFF), 0);
     }
-}
 //?}
 
 //? if <1.21.2 {
@@ -334,8 +350,15 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(FastColor.ARGB32.class)
 public class MixinARGB {
+*///?}
 
-    @Overwrite
+    /**
+     * @author Starlev
+     * @reason Short-circuits identity/zero blend factors and folds the four 8-bit multiplications
+     *         into a single ~div-255 trick, avoiding the vanilla per-channel float math.
+     */
+    //? if <1.21.2 {
+    /*/*@Overwrite
     public static int multiply(int i, int j) {
         if (i == -1) return j;
         if (j == -1) return i;
@@ -348,25 +371,51 @@ public class MixinARGB {
 
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
+    *///?}
 
-    //? if >=1.21 {
-    @Overwrite
+    /**
+     * @author Starlev
+     * @reason Averages two packed ARGB pixels with bit arithmetic (no per-channel float math),
+     *         trading three multiplies for two shifts and an AND.
+     */
+    //? if >=1.21 && <1.21.2 {
+    /*@Overwrite
     public static int average(int a, int b) {
         return ((a & 0xFEFEFEFE) >>> 1) + ((b & 0xFEFEFEFE) >>> 1) + (a & b & 0x01010101);
     }
-    //?}
+    *///?}
 
-    @Overwrite
+    /**
+     * @author Starlev
+     * @reason Integer-space channel interpolation without the vanilla float cast per channel.
+     */
+    //? if >=1.21 && <1.21.2 {
+    /*@Overwrite
     public static int lerp(float f, int i, int j) {
         if (f <= 0.0f) return i;
         if (f >= 1.0f) return j;
-        int t = (int) (f * 256.0f);
-        int s = 256 - t;
-        int a = ((i >>> 24) * s + (j >>> 24) * t) >>> 8;
-        int r = (((i >>> 16) & 0xFF) * s + ((j >>> 16) & 0xFF) * t) >>> 8;
-        int g = (((i >>> 8) & 0xFF) * s + ((j >>> 8) & 0xFF) * t) >>> 8;
-        int b = ((i & 0xFF) * s + (j & 0xFF) * t) >>> 8;
+
+        int aD   = (j >>> 24) - (i >>> 24);
+        int rD   = ((j >>> 16) & 0xFF) - ((i >>> 16) & 0xFF);
+        int gD   = ((j >>> 8) & 0xFF) - ((i >>> 8) & 0xFF);
+        int bD   = (j & 0xFF) - (i & 0xFF);
+
+        float fA = f * aD;
+        float fR = f * rD;
+        float fG = f * gD;
+        float fB = f * bD;
+
+        int iA   = (int) fA;
+        int iR   = (int) fR;
+        int iG   = (int) fG;
+        int iB   = (int) fB;
+
+        int a    = (i >>> 24) + (fA < iA ? iA - 1 : iA);
+        int r    = ((i >>> 16) & 0xFF) + (fR < iR ? iR - 1 : iR);
+        int g    = ((i >>> 8) & 0xFF) + (fG < iG ? iG - 1 : iG);
+        int b    = (i & 0xFF) + (fB < iB ? iB - 1 : iB);
+
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
-}
-*///?}
+    *///?}
+} // starlevka strangiest conditionals

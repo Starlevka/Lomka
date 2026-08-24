@@ -8,6 +8,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.Copy
 import org.gradle.jvm.tasks.Jar
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.kotlin.dsl.*
 
 fun File.stripHashComments(): File {
@@ -52,17 +53,33 @@ fun Project.lomkaPlatform(loader: Loader) {
 	val mainSources = mainSourceSet.java
 	val parsed = sc.current.parsed
 
-	when (loader) {
-		Loader.FabricO, Loader.FabricM -> mainSources.exclude("lomka/neoforge/**", "lomka/forge/**")
-		Loader.NeoForge -> mainSources.exclude("lomka/fabric/**", "lomka/forge/**")
-		Loader.Forge -> mainSources.exclude("lomka/fabric/**", "lomka/neoforge/**")
-	}
-
 	val mixinsJson = sc.process(
 		rootProject.file("src/stonecutter/lomka.mixins.json5"),
 		"build/processed/${sc.current.project}/mixins/lomka.mixins.json"
 	).stripBlockComments()
+	stripUtf8Bom(mixinsJson)
+	if (loader == Loader.Forge) {
+		// Production Forge remaps member names to SRG. The packaged lomka.refmap.json
+		// (wired by the legacyforge mixin extension) is only loaded when the config
+		// references it explicitly - without this key Mixin logs "No refMap loaded"
+		// and every @Inject/@ModifyConstant fails on obfuscated targets.
+		mixinsJson.writeText(
+			mixinsJson.readText().replaceFirst("{", "{\n  \"refmap\": \"lomka.refmap.json\",")
+		)
+	}
 	mainSourceSet.resources.srcDir(mixinsJson.parentFile)
+
+	// Every variant build refreshes license headers on the shared source tree before compiling,
+	// so new classes and template edits converge without manual steps (see root licenseHeaders).
+	tasks.named("compileJava") {
+		dependsOn(rootProject.tasks.named("licenseHeaders"))
+	}
+
+	tasks.named<ProcessResources>("processResources") {
+		// Ship the project license text inside every jar so Modrinth/CurseForge scanners
+		// and end users can verify the terms without visiting the repository.
+		from(rootProject.file("LICENSE"))
+	}
 
 	excludeUnlistedMixins(mainSources, mixinsJson)
 
@@ -89,7 +106,7 @@ fun Project.lomkaAwFile(): File {
 	return sc.process(
 		rootProject.file("src/stonecutter/lomka.ct"),
 		"build/processed/${sc.current.project}/aw/${sc.current.version}.accesswidener"
-	).stripHashComments()
+	).stripHashComments().also { stripUtf8Bom(it) }
 }
 
 @OptIn(StonecutterExperimentalAPI::class)
@@ -98,7 +115,19 @@ fun Project.lomkaAtFile(): File {
 	return sc.process(
 		rootProject.file("src/stonecutter/accesstransformer.ct"),
 		"build/processed/${sc.current.project}/at/META-INF/accesstransformer.cfg"
-	).stripHashComments()
+	).stripHashComments().also { stripUtf8Bom(it) }
+}
+
+/**
+ * Stonecutter copies processed template bytes verbatim, so a UTF-8 BOM saved by an
+ * editor flows into every generated resource and crashes Gson-based mixin config
+ * parsing at launch ("Expected BEGIN_OBJECT but was STRING"). Strips it defensively.
+ */
+private fun stripUtf8Bom(file: File) {
+	val bytes = file.readBytes()
+	if (bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()) {
+		file.writeBytes(bytes.copyOfRange(3, bytes.size))
+	}
 }
 
 private fun Project.excludeUnlistedMixins(mainSources: SourceDirectorySet, mixinsJson: File) {

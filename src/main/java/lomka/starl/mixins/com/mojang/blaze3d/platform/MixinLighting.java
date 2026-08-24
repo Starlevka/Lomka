@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.com.mojang.blaze3d.platform;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -69,6 +88,10 @@ public abstract class MixinLighting {
     private Boolean lomka$currentNether;*/
     //?}
 
+    /**
+     * Precomputes one GpuBufferSlice per Lighting.Entry at construction so setupFor()
+     * never has to allocate or slice the shared buffer on the hot render path.
+     */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void lomka$initSlices(CallbackInfo ci) {
         Lighting.Entry[] entries = Lighting.Entry.values();
@@ -109,6 +132,11 @@ public abstract class MixinLighting {
         }
     }
     *///?} else if >=1.21.11 {
+    
+    /** 
+     * @author Starlev
+     * @reason Skips redundant GPU UBO writes when the nether flag has not changed.
+     */
     @Overwrite
     public void updateLevel(DimensionType.CardinalLightType type) {
         if (this.lomka$currentLightType == type) {

@@ -6,8 +6,10 @@ accessWidener v2 named
 
 #? if >=26.1 {
 accessible method net/minecraft/client/resources/model/geometry/QuadCollection <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+accessible method net/minecraft/client/resources/model/geometry/QuadCollection$Builder createFromSublists (Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/geometry/QuadCollection;
 #?} else if >=1.21.11 {
 accessible method net/minecraft/client/resources/model/QuadCollection <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+accessible method net/minecraft/client/resources/model/QuadCollection$Builder createFromSublists (Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/QuadCollection;
 #?}
 
 #? if >=1.21.11 {
@@ -24,10 +26,25 @@ accessible class net/minecraft/world/phys/shapes/IndexMerger$IndexConsumer
 accessible method net/minecraft/world/phys/shapes/IndexMerger size ()I
 accessible method net/minecraft/world/phys/shapes/IndexMerger forMergedIndexes (Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
+accessible method net/minecraft/core/SectionPos <init> (III)V
+
 accessible class net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache
 accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase cache Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
+accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache collisionShape Lnet/minecraft/world/phys/shapes/VoxelShape;
+
+accessible class net/minecraft/client/Camera$NearPlane
+accessible method net/minecraft/client/Camera$NearPlane <init> (Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
 
 accessible class net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry filterAll (Ljava/util/Collection;)V
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry resources ()Lnet/minecraft/server/packs/PackResources;
+
+accessible method net/minecraft/stats/Stat <init> (Lnet/minecraft/stats/StatType;Ljava/lang/Object;Lnet/minecraft/stats/StatFormatter;)V
+
+#? if <1.21.5 {
+accessible method com/mojang/blaze3d/vertex/PoseStack$Pose <init> (Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
+#?}
+#? if >=1.21 {
+accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
+#?}
 

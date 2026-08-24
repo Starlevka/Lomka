@@ -1,60 +1,62 @@
-![Lomka icon](https://cdn.modrinth.com/data/bd9cFfiC/827fe2486df2288c1fb2bc50ab513eb474a821fa_96.webp)
-## Summary
+![Lomka icon](https://cdn.modrinth.com/data/cached_images/5e22062d6564d104d3742aa7ec947aa2d394a2da_0.webp)
 
-- Reduces micro-stutters
-- Improves FPS
-- Decreases RAM usage sometimes
-- Decreases resources load (feels diffrent on some systems)
+<sub><i>The project code was created with help of Artificial Intelligence.</i></sub>
 
-## What actually does the mod do?
+An open source mod with mix of small optimizations for your Minecraft. **Fewer stutters, more FPS, faster resource loading and slightly reduces memory usage**.
 
-- Speeds up some calculations (colors engine, maths, AABB intersection, textures loads)
-- Fixes bugs in game code
-- Prevents unnecessary allocations (sounds, calcs, lightmap state and other methods)
-- Improves game caching (Input types, VertexFormats, font width glyphs cache)
-- Slightly improves client threading system
+## Optimizations
+- Faster hot-path math and color engine
+- Less garbage in render and tick loops
+- Caching where vanilla repeats work sometimes
+- Faster block collision scans
+- Lightning and textures light engine and chunk tracking speedups
+- Cheaper resource scanning and metadata reads
+- Leaner network buffers (without affecting on your connection)
+- Fewer redundant OpenGL calls
+- And more other small bugfixes in the game's code
+
+## Versions
+**1.21.11 is the main version.** It carries the full set of optimizations and gets the most testing.
+
+Other supported versions (1.20.1-26.2) are ports of the same or with the less of features set.
 
 ## FAQ
+**I see performance drops with Lomka installed**
 
-**Q: I'm having performance issues, and removing Lomka fixes them!**
-A: Make sure you are using the latest version. Lomka targets hot-paths across multiple Minecraft versions — if you encounter a compatibility issue, please report it. **At the moment the most perfomance friendly mod versions are 0.2.0 and 0.3.x.**
+Update to the latest build for your MC version first. Try out Lomka's best versions: **0.2.0**, **0.2.1**, **0.4.x**
 
-**Q: Can I run Lomka on the server-side?**
+Still bad? Report it (link below).
 
-A: Yes. 
+**Is it server-side compatible?**
 
-**Q: Forge support?**
+Yes, it is.
 
-A: No, except 1.20.1 Forge.
+**Will be added in the future more forge support?**
 
-**Q: Any backports? (<1.21 and <1.20.1)**
+No, only for 1.20.1 at the moment.
 
-A: No. The mod's current functionality largely follows Minecraft version 1.21.11 and its structure.
+**Will be mod backports below Minecraft version 1.20.1?**
 
-**Q: Does Lomka require Fabric API or any other dependencies?**
+No. The mod closely follows modern Minecraft internals. Surely, it possible but not too needly.
 
-A: No. Lomka depends only on Fabric Loader or NeoForge Loader, without any dependencies.
+**Can I add this mod in my modpack?**
 
-**Q: Mobile devices support?**
+Sure. Lomka is free and open source. Check out how it goes on your modpack first.
 
-A: Is it actually starts with Lomka? Cool. That's all.
+## Configuration
+Lomka has no in-game GUI. Instead, on first launch it creates `config/lomka-mixins.properties` with basic mixin configuration.
 
-**Q: Can I use Lomka in a modpack?**
+The full list of mixins with descriptions lives in the [wiki](https://github.com/Starlevka/Lomka/wiki/Configuration).
 
-A: Yes. Lomka is absolutely free and open-source. :sunglasses:
+## Compatibility
+This should work fine with most of mods (like Sodium, Lithium, Iris, FerriteCore, ModernFix, ImmediatelyFast and even VulkanMod) but no guarantees at all.
 
-**Q: Does Lomka have a config file? (Lomka v0.3.0>=)**
+Known conflicts are listed with Lomka versions in the [incompabilities list](https://github.com/Starlevka/Lomka/wiki/Incompabilities-with-mods).
 
-A: Soon as possible. Againly the maintained version is 1.21.11. Maybe with time will be added but currently mixins can be disabled by editing *lomka.mixins.json* inside the mod's archive.
+## Bug reports
+Found something that only happens with Lomka?
 
-## Compability
+1. Try reproducing it without Lomka first.
+2. Still there? Post it on [the issue tracker](https://github.com/Starlevka/Lomka/issues) with an optional log attached.
 
-Mod should be compatible with almost all mods perfectly but not surely!
-
-Check [list of incompatibility](https://github.com/Starlevka/Lomka/wiki/Incompabilities-with-mods) with Lomka mod.
-
-## Bug Reporting
-
-When reporting a bug that only appears with Lomka installed:
-- Report it on the project's issue tracker (not to other mod authors — Lomka's mixins are surgical and unlikely to cause crashes in unrelated systems).
-- Try to reproduce the issue without mod Lomka first.
+Please don't report Lomka-related crashes to other mod authors, because Lomka's mixins are cruel that could break unrelated systems.

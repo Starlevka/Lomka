@@ -1,3 +1,22 @@
+/*
+ * This file is part of Lomka (https://github.com/Starlevka/Lomka)
+ * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License only.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
 package lomka.starl.mixins.net.minecraft.util;
 
 import java.util.NoSuchElementException;
@@ -49,11 +68,11 @@ public class MixinArrayListDeque<T> {
     /**
      * @author Starlev
      * @reason Double capacity instead of 1.5x growth to preserve the power-of-two invariant.
-     * Uses System.arraycopy for bulk data migration instead of per-element virtual dispatch.
+     *         Uses System.arraycopy for bulk data migration instead of per-element virtual dispatch.
      *
-     * Defensive head normalization: vanilla remove(int) at i==0 increments head without
-     * masking, which can push it exactly to contents.length. Applying (head & (oldCap - 1))
-     * corrects this without branching and prevents NegativeArraySizeException in arraycopy.
+     *         Defensive head normalization: vanilla remove(int) at i==0 increments head without
+     *         masking, which can push it exactly to contents.length. Applying (head & (oldCap - 1))
+     *         corrects this without branching and prevents NegativeArraySizeException in arraycopy.
      */
     @Overwrite
     private void grow() {
@@ -138,10 +157,10 @@ public class MixinArrayListDeque<T> {
     /**
      * @author Starlev
      * @reason Fixes a bug in the vanilla implementation: at i==0 vanilla does ++head without
-     * masking, which breaks the power-of-two invariant and eventually causes
-     * NegativeArraySizeException inside grow() when the deque fills up again.
-     * Also eliminates the redundant get() call in the shift loop, replacing it with
-     * direct contents access via getIndex() to reduce virtual dispatch overhead.
+     *         masking, which breaks the power-of-two invariant and eventually causes
+     *         NegativeArraySizeException inside grow() when the deque fills up again.
+     *         Also eliminates the redundant get() call in the shift loop, replacing it with
+     *         direct contents access via getIndex() to reduce virtual dispatch overhead.
      */
     @SuppressWarnings("unchecked")
     @Overwrite
