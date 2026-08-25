@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.5.1] - 2026-08-25
+
+### Performance
+- Frame-end present replaced with a single hardware `glBlitFramebuffer(NEAREST)` call instead of the blit-shader fullscreen quad — no per-frame Matrix4f/Tesselator/MeshData allocations, no mid-frame shader program bind. (<1.21.4) **NEW**
+
+### Bug Fixes
+- Fixed entity tick crash (`ClassCastException` in `tickNonPassenger`) — the cached profiler name path now casts to the `Level` superclass directly instead of relying on a separate Level mixin being applied.
+- Mixin config (`lomka-mixins.properties`) keys now match full/short/simple mixin names. Toggles are no longer silently ignored or falsely reported as unknown.
+
+### Removed
+- Removed MixinLevel and the ILevelProfiler duck interface (superseded by the direct superclass cast).
+
+### Changed
+- Removed duplicated license headers and stale javadoc tags in several mixins.
+
 ## [0.5.0] - 2026-08-24
 
 ### Performance

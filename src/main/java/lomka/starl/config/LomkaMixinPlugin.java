@@ -49,12 +49,28 @@ public final class LomkaMixinPlugin implements IMixinConfigPlugin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Lomka/MixinConfig");
     private static final String WIKI_URL = " https://github.com/Starlevka/Lomka/wiki/Configuration";
+    private static final String MIXIN_PREFIX = "lomka.starl.mixins.";
     private static volatile Properties options = new Properties();
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        String value = options.getProperty(mixinClassName);
+        String value = lomka$lookup(mixinClassName);
         return value == null || value.equalsIgnoreCase("true") || value.equals("1");
+    }
+
+    /**
+     * Resolves a mixin's enable/disable flag tolerating the several name forms Mixin
+     * may hand to shouldApplyMixin: the config-declared short name.
+     */
+    private static String lomka$lookup(String mixinClassName) {
+        String v = options.getProperty(mixinClassName);
+        if (v != null) return v;
+        String stripped = mixinClassName.startsWith(MIXIN_PREFIX)
+                ? mixinClassName.substring(MIXIN_PREFIX.length()) : mixinClassName;
+        v = options.getProperty(stripped);
+        if (v != null) return v;
+        String simple = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
+        return options.getProperty(simple);
     }
 
     /** Both mixin generations route here - see the overload note at the bottom of this class. */
@@ -77,14 +93,19 @@ public final class LomkaMixinPlugin implements IMixinConfigPlugin {
             loaded.load(Files.newInputStream(file));
             options = loaded;
 
-            Set<String> packaged = Set.copyOf(lomka$packagedMixins());
+            Set<String> packaged = new java.util.HashSet<>(lomka$packagedMixins());
+            for (String p : new java.util.HashSet<>(packaged)) {
+                packaged.add(p.substring(p.lastIndexOf('.') + 1));
+            }
             List<String> disabled = new ArrayList<>();
             List<String> stale = new ArrayList<>();
 
             for (String key : loaded.stringPropertyNames()) {
                 String raw = loaded.getProperty(key);
 
-                if (!packaged.contains(key)) {
+                String norm = key.startsWith(MIXIN_PREFIX) ? key.substring(MIXIN_PREFIX.length()) : key;
+                String simple = key.substring(key.lastIndexOf('.') + 1);
+                if (!packaged.contains(key) && !packaged.contains(norm) && !packaged.contains(simple)) {
                     stale.add(key);
                     continue;
                 }

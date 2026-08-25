@@ -13,6 +13,7 @@ An open source mod with mix of small optimizations for your Minecraft. **Fewer s
 - Cheaper resource scanning and metadata reads
 - Leaner network buffers (without affecting on your connection)
 - Fewer redundant OpenGL calls
+- Removing thread yield() from render thread
 - And more other small bugfixes in the game's code
 
 ## Versions
@@ -23,7 +24,7 @@ Other supported versions (1.20.1-26.2) are ports of the same or with the less of
 ## FAQ
 **I see performance drops with Lomka installed**
 
-Update to the latest build for your MC version first. Try out Lomka's best versions: **0.2.0**, **0.2.1**, **0.4.x**
+Update to the latest build for your MC version first. Try out Lomka's best versions: **0.2.0**, **0.2.1**, **0.4.x** and **0.5.x**
 
 Still bad? Report it (link below).
 
