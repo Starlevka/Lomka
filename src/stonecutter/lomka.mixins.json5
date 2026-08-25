@@ -69,6 +69,9 @@
     /*? if <1.21.6 { */
     ,"com.mojang.blaze3d.vertex.MixinVertexBuffer"
     /*?} */
+    /*? if <1.21.4 { */
+    ,"com.mojang.blaze3d.pipeline.MixinRenderTarget"
+    /*?} */
     /*? if <1.21 { */
     ,"com.mojang.blaze3d.vertex.MixinVertexFormatElement"
     /*?} */
