@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public final class Lomka implements ModInitializer {
     public  static final String MOD_ID  = "lomka";
-    public  static final String VERSION = /*$ mod_version */ "0.5.0";
+    public  static final String VERSION = /*$ mod_version */ "0.5.1";
     private static final Logger LOGGER  = LoggerFactory.getLogger(MOD_ID);
 
     @Override
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 public final class Lomka {
     public  static final String MOD_ID  = "lomka";
     // NOTE: keep in sync with mod.version (the stonecutter swap lives in the fabric branch).
-    public  static final String VERSION = "0.5.0";
+    public  static final String VERSION = "0.5.1";
     private static final Logger LOGGER  = LoggerFactory.getLogger(MOD_ID);
 
     public Lomka() {
@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
 public final class Lomka {
     public  static final String MOD_ID  = "lomka";
     // NOTE: keep in sync with mod.version (the stonecutter swap lives in the fabric branch).
-    public  static final String VERSION = "0.5.0";
+    public  static final String VERSION = "0.5.1";
     private static final Logger LOGGER  = LoggerFactory.getLogger(MOD_ID);
 
     public Lomka() {

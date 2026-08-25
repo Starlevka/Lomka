@@ -40,14 +40,13 @@ public abstract class MixinBlockStateBaseCache {
     @Unique private long lomka$faceSturdyMask;
 
     /**
-     * @author Starlev
-     * @reason long instead of int: Java masks shift amounts to the operand's low bits
-     *         (5 bits for int), so "1 << 32" silently behaves as "1 << 0". With int this only
-     *         stays correct while Direction.values().length * SUPPORT_TYPE_COUNT <= 32; long
-     *         raises that ceiling to 64, covering SupportType growth across the full 1.21.1-26.2
-     *         range without two indices silently aliasing onto the same bit (which corrupts
-     *         results via OR for whichever earlier entry shares that bit, not just the
-     *         overflowing one).
+     * Long instead of int: Java masks shift amounts to the operand's low bits
+     * (5 bits for int), so "1 << 32" silently behaves as "1 << 0". With int this only
+     * stays correct while Direction.values().length * SUPPORT_TYPE_COUNT <= 32; long
+     * raises that ceiling to 64, covering SupportType growth across the full 1.21.1-26.2
+     * range without two indices silently aliasing onto the same bit (which corrupts
+     * results via OR for whichever earlier entry shares that bit, not just the
+     * overflowing one).
      */
     @Inject(method = "<init>", at = @At("TAIL"))
     private void lomka$initSturdyMask(BlockState blockstate, CallbackInfo ci) {

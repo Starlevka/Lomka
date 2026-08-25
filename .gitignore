@@ -10,7 +10,7 @@ build/
 versions/*/run/
 versions/*/bin/
 
-# ── IDE / Editor / Vibe ──
+# ── IDE / Editor ──
 .eclipse
 .idea/
 *.iml

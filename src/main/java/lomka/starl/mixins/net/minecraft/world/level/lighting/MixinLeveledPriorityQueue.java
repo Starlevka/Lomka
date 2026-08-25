@@ -35,16 +35,15 @@ public class MixinLeveledPriorityQueue {
     @Shadow @Final private LongLinkedOpenHashSet[] queues;
 
     /**
-     * @author Starlev
-     * @reason Replaces the vanilla LongLinkedOpenHashSet queues with SpatialLongSet,
-     *         which packs up to 64 light positions sharing a 4×4×4 key into a single
-     *         Long2LongLinkedOpenHashMap entry. This shrinks the per-queue starting
-     *         size from 512+ slots to minSize/64, cutting hash-table count, rehash
-     *         churn and allocations in the hot light queues (DynamicGraphMinFixedPoint).
-     *         dequeue() calls remove(long), but SpatialLongSet renames removal to
-     *         rem(long); the override below reroutes remove -> rem so pending nodes are
-     *         still deleted correctly. Actually, Mojang don't have uses of SpatialLongSet
-     *         at all. So this fixes that.
+     * Replaces the vanilla LongLinkedOpenHashSet queues with SpatialLongSet,
+     * which packs up to 64 light positions sharing a 4×4×4 key into a single
+     * Long2LongLinkedOpenHashMap entry. This shrinks the per-queue starting
+     * size from 512+ slots to minSize/64, cutting hash-table count, rehash
+     * churn and allocations in the hot light queues (DynamicGraphMinFixedPoint).
+     * dequeue() calls remove(long), but SpatialLongSet renames removal to
+     * rem(long); the override below reroutes remove -> rem so pending nodes are
+     * still deleted correctly. Actually, Mojang don't have uses of SpatialLongSet
+     * at all. So this fixes that.
      */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void lomka$spatialQueues(int i, int j, CallbackInfo ci) {
