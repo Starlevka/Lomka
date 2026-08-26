@@ -40,7 +40,7 @@ sealed class Loader(val id: String) {
 				appendLine("  \"environment\": \"*\",")
 				appendLine("  \"accessWidener\": ${jsonStr("${ctx.stonecutterVersion}.accesswidener")},")
 				appendLine("  \"entrypoints\": {")
-				appendLine("    \"main\": [\"lomka.Lomka\"]")
+				appendLine("    \"main\": [\"lomka.Lomka${'$'}Fabric\"]")
 				appendLine("  },")
 				appendLine("  \"mixins\": [\"${ctx.modId}.mixins.json\"],")
 				appendLine("  \"depends\": {")

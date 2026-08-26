@@ -34,7 +34,6 @@ import org.spongepowered.asm.mixin.Shadow;
 *///?}
 
 /**
- * @author Starlev
  * Pose-stack hot-path overwrites. Notes for branches that are pre-commented for the VCS version:
  * <ul>
  *   <li>1.21-1.21.4 {@code mulPose(Matrix4f)}: vanilla allocates a fresh Matrix3f on every
@@ -43,6 +42,7 @@ import org.spongepowered.asm.mixin.Shadow;
  *       confined scratch matrix ({@code lomka$scratchNormal}) replaces the allocation;
  *       everything else mirrors vanilla byte for byte.</li>
  * </ul>
+ * So, the method overwrite confict with Sodium is okay for <=1.21.4.
  */
 @Mixin(PoseStack.class)
 public abstract class MixinPoseStack {

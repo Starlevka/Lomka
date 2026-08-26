@@ -37,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = VertexBuffer.class, priority = 900)
+@Mixin(value = VertexBuffer.class, priority = 900) // Mojang overwrite first
 public abstract class MixinVertexBuffer {
 
     @Shadow private int indexCount;

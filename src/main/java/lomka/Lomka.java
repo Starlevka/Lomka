@@ -17,69 +17,53 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-//? if fabric {
 package lomka;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+//? if fabric {
 import net.fabricmc.api.ModInitializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public final class Lomka implements ModInitializer {
-    public  static final String MOD_ID  = "lomka";
-    public  static final String VERSION = /*$ mod_version */ "0.5.1";
-    private static final Logger LOGGER  = LoggerFactory.getLogger(MOD_ID);
-
-    @Override
-    public void onInitialize() {
-        init();
-    }
-
-    public static void init() {
-        LOGGER.info("Lomka v" + VERSION + " - Initializing... 🌠 Initialized!");
-    }
-}
+//?} else if neoforge {
+/*import net.neoforged.fml.common.Mod;*/
 //?} else if forge {
-/*package lomka;
+/*import net.minecraftforge.fml.common.Mod;*/
+//?}
 
-import net.minecraftforge.fml.common.Mod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-@Mod(Lomka.MOD_ID)
 public final class Lomka {
-    public  static final String MOD_ID  = "lomka";
-    // NOTE: keep in sync with mod.version (the stonecutter swap lives in the fabric branch).
-    public  static final String VERSION = "0.5.1";
+    public static final String MOD_ID  = "lomka";
+    public static final String VERSION = /*$ mod_version */ "0.5.1";
     private static final Logger LOGGER  = LoggerFactory.getLogger(MOD_ID);
 
-    public Lomka() {
-        init();
+    private Lomka() {
     }
 
     public static void init() {
         LOGGER.info("Lomka v" + VERSION + " - Initializing... 🌠 Initialized!");
     }
-}
-*///?} else if neoforge {
-/*package lomka;
 
-import net.neoforged.fml.common.Mod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+    //? if fabric {
+    public static final class Fabric implements ModInitializer {
 
-@Mod(Lomka.MOD_ID)
-public final class Lomka {
-    public  static final String MOD_ID  = "lomka";
-    // NOTE: keep in sync with mod.version (the stonecutter swap lives in the fabric branch).
-    public  static final String VERSION = "0.5.1";
-    private static final Logger LOGGER  = LoggerFactory.getLogger(MOD_ID);
-
-    public Lomka() {
-        init();
+        @Override
+        public void onInitialize() {
+            Lomka.init();
+        }
     }
+    //?} else if forge {
+    /*@Mod(Lomka.MOD_ID)
+    public static final class Forge {
 
-    public static void init() {
-        LOGGER.info("Lomka v" + VERSION + " - Initializing... 🌠 Initialized!");
-    }
+        public Forge() {
+            Lomka.init();
+        }
+    }*/
+    //?} else if neoforge {
+    /*@Mod(Lomka.MOD_ID)
+    public static final class NeoForge {
+
+        public NeoForge() {
+            Lomka.init();
+        }
+    }*/
+    //?}
 }
-*///?}

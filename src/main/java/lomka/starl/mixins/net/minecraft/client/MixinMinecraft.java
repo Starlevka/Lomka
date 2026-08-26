@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(value = Minecraft.class, priority = 500)
+@Mixin(value = Minecraft.class, priority = 500) // VulkanMod compability
 public class MixinMinecraft {
 
     /**

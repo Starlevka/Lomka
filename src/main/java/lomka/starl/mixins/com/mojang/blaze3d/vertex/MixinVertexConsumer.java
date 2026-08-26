@@ -46,7 +46,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(value = VertexConsumer.class, priority = 1100)
+@Mixin(value = VertexConsumer.class, priority = 999) // Sodium/VulkanMod compability
 public interface MixinVertexConsumer {
 
     @Shadow VertexConsumer addVertex(float f, float f1, float f2);

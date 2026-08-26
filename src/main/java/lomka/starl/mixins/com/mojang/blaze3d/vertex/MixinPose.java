@@ -31,15 +31,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 /**
- * @author Starlev
- * @reason Vanilla allocates a fresh Matrix3f on every orthonormal mulPose(Matrix4fc) call.
- *         Display entities invoke this per entity per frame to apply their interpolated
- *         transforms, so display-heavy maps stream thousands of short-lived matrices into the
- *         heap every frame. A render-thread-confined scratch matrix replaces the allocation;
- *         everything else mirrors vanilla exactly, including the non-orthonormal fallback that
- *         invalidates trustedNormals. Exists only while Pose#mulPose(Matrix4fc) does:
- *         absent before 1.21.6 (outer PoseStack did the work inline with a raw Matrix4f
- *         parameter - see MixinPoseStack) and removed again in 26.x.
+ * Vanilla allocates a fresh Matrix3f on every orthonormal mulPose(Matrix4fc) call.
+ * Display entities invoke this per entity per frame to apply their interpolated
+ * transforms, so display-heavy maps stream thousands of short-lived matrices into the
+ * heap every frame. A render-thread-confined scratch matrix replaces the allocation;
+ * everything else mirrors vanilla exactly, including the non-orthonormal fallback that
+ * invalidates trustedNormals. Exists only while Pose#mulPose(Matrix4fc) does:
+ * absent before 1.21.6 (outer PoseStack did the work inline with a raw Matrix4f
+ * parameter - see MixinPoseStack) and removed again in 26.x.
  */
 @Mixin(PoseStack.Pose.class)
 public abstract class MixinPose {

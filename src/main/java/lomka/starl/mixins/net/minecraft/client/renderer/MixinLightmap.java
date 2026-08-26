@@ -43,7 +43,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
-@Mixin(value = Lightmap.class, priority = 500)
+@Mixin(value = Lightmap.class, priority = 500) // idk why
 public abstract class MixinLightmap {
 
     private static final Supplier<String> RENDER_PASS_LABEL = () -> "Update light";

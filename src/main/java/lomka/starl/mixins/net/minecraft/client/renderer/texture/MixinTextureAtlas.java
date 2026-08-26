@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
 
-@Mixin(value = TextureAtlas.class, priority = 500)
+@Mixin(value = TextureAtlas.class, priority = 500) // Sodium compability
 public abstract class MixinTextureAtlas {
 
     //? if <1.21.6 {

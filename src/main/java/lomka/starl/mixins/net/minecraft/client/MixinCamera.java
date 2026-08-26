@@ -23,16 +23,11 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.FogType;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -45,14 +40,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = Camera.class, priority = 500)
+@Mixin(Camera.class)
 public abstract class MixinCamera {
 
     @Shadow private Vec3 position;
     @Shadow @Final private Quaternionf rotation;
     @Shadow protected abstract void setPosition(double d, double e, double f);
     @Shadow @Final private Vector3f forwards;
-    @Shadow private Entity entity;
     //? if >=1.21.11 {
     @Shadow private Level level;
     //?} else {
@@ -104,50 +98,6 @@ public abstract class MixinCamera {
                 this.position.y + (double) this.lomka$moveVector.y,
                 this.position.z + (double) this.lomka$moveVector.z
         );
-    }
-    //?}
-
-    //? if >=1.21 {
-    /**
-     * @author Starlev
-     * @reason Use Mth.square/Mth.sqrt instead of distanceToSqr, and shadow the
-     * level field directly instead of going through Minecraft.getInstance().level.
-     * FIX vs previous revision: forward vector must be rescaled by the CURRENT f
-     * each iteration, since f can shrink mid-loop (vanilla recomputes vec31 every
-     * iteration); precomputing it once before the loop used the original,
-     * un-shrunk f for every ray after the first hit.
-     */
-    @Overwrite
-    public float getMaxZoom(float f) {
-        double fux = this.forwards.x();
-        double fuy = this.forwards.y();
-        double fuz = this.forwards.z();
-
-        for (int i = 0; i < 8; ++i) {
-            float f2 = (float) ((i & 1) * 2 - 1);
-            float f3 = (float) ((i >> 1 & 1) * 2 - 1);
-            float f4 = (float) ((i >> 2 & 1) * 2 - 1);
-
-            double startX = this.position.x + (double) (f2 * 0.1F);
-            double startY = this.position.y + (double) (f3 * 0.1F);
-            double startZ = this.position.z + (double) (f4 * 0.1F);
-            double negF   = (double) (-f);
-
-            Vec3 vec3  = new Vec3(startX, startY, startZ);
-            Vec3 vec31 = new Vec3(startX + fux * negF, startY + fuy * negF, startZ + fuz * negF);
-
-            BlockHitResult blockhitresult = this.level.clip(
-                    new ClipContext(vec3, vec31, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, this.entity));
-
-            if (blockhitresult.getType() != HitResult.Type.MISS) {
-                float f5 = (float) blockhitresult.getLocation().distanceToSqr(this.position);
-                if (f5 < Mth.square(f)) {
-                    f = Mth.sqrt(f5);
-                }
-            }
-        }
-
-        return f;
     }
     //?}
 

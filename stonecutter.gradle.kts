@@ -41,6 +41,9 @@ stonecutter parameters {
 	replacements.string(current.parsed < "1.21.11") {
 		replace("net.minecraft.client.renderer.rendertype.RenderType", "net.minecraft.client.renderer.RenderType")
 	}
+	replacements.string(current.parsed < "1.21.6") {
+		replace("blaze3d.opengl.GlStateManager", "blaze3d.platform.GlStateManager")
+	}
 	replacements.string(current.parsed >= "26.1") {
 		replace("net.minecraft.client.resources.model.AtlasManager", "net.minecraft.client.resources.model.sprite.AtlasManager")
 		replace("net.minecraft.client.resources.model.Material", "net.minecraft.client.resources.model.sprite.Material")
