@@ -49,6 +49,19 @@ public class MixinMth {
 
     /**
      * @author Starlev
+     * @reason Single LZCNT instruction replaces the five-step OR-cone. Guarded to match
+     *         vanilla exactly: f(0)=0, f(negative)=0 except f(MIN_VALUE)=MIN_VALUE (vanilla's
+     *         OR-cone saturates to -1 whose +1 overflows back), f(1)=1; without the guard
+     *         value=0 would yield 1<<(32-nlz(-1))=1<<32=1.
+     */
+    @Overwrite
+    public static int smallestEncompassingPowerOfTwo(int i) {
+        if (i == Integer.MIN_VALUE) return i;
+        return i <= 0 ? 0 : i == 1 ? 1 : 1 << (32 - Integer.numberOfLeadingZeros(i - 1));
+    }
+
+    /**
+     * @author Starlev
      * @reason Use bitwise unsigned right shift instead of integer division.
      */
     @Overwrite
@@ -67,50 +80,7 @@ public class MixinMth {
         return i;
     }
 
-    /**
-     * @author Starlev
-     * @reason Inline lerp formula directly to assist JIT compiler in register allocation.
-     */
-    //? if >=1.21.11 {
-    @Overwrite
-    public static float clampedLerp(float f, float f1, float f2) {
-        return f < 0.0F ? f1 : (f > 1.0F ? f2 : f1 + f * (f2 - f1));
-    }
-    //?} else {
-    /*@Overwrite
-    public static float clampedLerp(float f, float f1, float f2) {
-        return f2 < 0.0F ? f : (f2 > 1.0F ? f1 : f + f2 * (f1 - f));
-    }*/
-    //?}
-
-    /**
-     * @author Starlev
-     * @reason Inline lerp formula directly to assist JIT compiler in register allocation.
-     */
-    //? if >=1.21.11 {
-    @Overwrite
-    public static double clampedLerp(double d0, double d1, double d2) {
-        return d0 < 0.0D ? d1 : (d0 > 1.0D ? d2 : d1 + d0 * (d2 - d1));
-    }
-    //?} else {
-    /*@Overwrite
-    public static double clampedLerp(double d0, double d1, double d2) {
-        return d2 < 0.0D ? d0 : (d2 > 1.0D ? d1 : d0 + d2 * (d1 - d0));
-    }*/
-    //?}
-
-    /**
-     * @author Starlev
-     * @reason Avoid Math.floor double conversion; precomputed exact float constant.
-     */
     //? if >=1.21.4 {
-    @Overwrite
-    public static byte packDegrees(float f) {
-        float val = f * (256.0F / 360.0F);
-        int i = (int) val;
-        return (byte) (val < (float) i ? i - 1 : i);
-    }
-
     /**
      * @author Starlev
      * @reason Replace complex division and casts with a single float multiplication.
@@ -121,29 +91,18 @@ public class MixinMth {
     }
     //?}
 
-    /**
-     * @author Starlev
-     * @reason Avoid Math.floor double conversion for typical lerp input range.
-     */
-    @Overwrite
-    public static int lerpInt(float alpha, int p0, int p1) {
-        float v = alpha * (float) (p1 - p0);
-        int i = (int) v;
-        return p0 + (v < (float) i ? i - 1 : i);
-    }
-
     //? if >=1.21 {
     /**
      * @author Starlev
      * @reason Optimize HSV to ARGB conversion by lazily evaluating sector-specific floats (f5/f6)
-     *         and bypassing modulo division on the normalized fast-path.
+     *         and bypassing modulo division on the normalized fast-path. Channel clamping and the
+     *         default-branch exception replicate vanilla exactly (negative hues reach default just
+     *         like vanilla's switch and must fail loudly, not fall through to sector 5).
      */
     @Overwrite
     public static int hsvToArgb(float f, float f1, float f2, int i) {
+        int j = (int) (f * 6.0F) % 6;
         float val = f * 6.0F;
-        int j = (int) val;
-        j %= 6;
-
         float f3 = val - (float) j;
         float f4 = f2 * (1.0F - f1);
         float f7;
@@ -175,16 +134,18 @@ public class MixinMth {
             f7 = f6;
             f8 = f4;
             f9 = f2;
-        } else {
+        } else if (j == 5) {
             float f5 = f2 * (1.0F - f3 * f1);
             f7 = f2;
             f8 = f4;
             f9 = f5;
+        } else {
+            throw new RuntimeException("Something went wrong when converting from HSV to RGB. Input was " + f + ", " + f1 + ", " + f2);
         }
 
-        int r = (int) (f7 * 255.0F);
-        int g = (int) (f8 * 255.0F);
-        int b = (int) (f9 * 255.0F);
+        int r = Math.min(Math.max((int) (f7 * 255.0F), 0), 255);
+        int g = Math.min(Math.max((int) (f8 * 255.0F), 0), 255);
+        int b = Math.min(Math.max((int) (f9 * 255.0F), 0), 255);
 
         return i << 24 | r << 16 | g << 8 | b;
     }
@@ -213,56 +174,6 @@ public class MixinMth {
         if (r == 0.0D) return 0.0D;
         return r;
     }
-
-    /**
-     * @author Starlev
-     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
-     */
-    @Overwrite
-    public static int wrapDegrees(int angle) {
-        int r = angle % 360;
-        if (r >= 180) return r - 360;
-        if (r < -180) return r + 360;
-        return r;
-    }
-
-    /**
-     * @author Starlev
-     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
-     */
-    @Overwrite
-    public static float wrapDegrees(float angle) {
-        float r = angle % 360.0F;
-        if (r >= 180.0F) return r - 360.0F;
-        if (r < -180.0F) return r + 360.0F;
-        return r;
-    }
-
-    /**
-     * @author Starlev
-     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
-     */
-    @Overwrite
-    public static double wrapDegrees(double angle) {
-        double r = angle % 360.0D;
-        if (r >= 180.0D) return r - 360.0D;
-        if (r < -180.0D) return r + 360.0D;
-        return r;
-    }
-
-    //? if >=1.21.4 {
-    /**
-     * @author Starlev
-     * @reason If-else skips second comparison when first matched; early return avoids reassignment.
-     */
-    @Overwrite
-    public static float wrapDegrees(long angle) {
-        float r = (float) (angle % 360L);
-        if (r >= 180.0F) return r - 360.0F;
-        if (r < -180.0F) return r + 360.0F;
-        return r;
-    }
-    //?}
 
     //? if >=1.21.4 {
     /**
