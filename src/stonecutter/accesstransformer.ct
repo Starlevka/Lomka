@@ -6,11 +6,6 @@ public net.minecraft.client.resources.model.QuadCollection <init>(Ljava/util/Lis
 public net.minecraft.client.resources.model.QuadCollection$Builder createFromSublists(Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/QuadCollection;
 #?}
 
-#? if >=1.21.11 {
-public net.minecraft.util.ARGB SRGB_TO_LINEAR # [S
-public net.minecraft.util.ARGB LINEAR_TO_SRGB # [B
-#?}
-
 #? if >=1.21.6 {
 private-f com.mojang.blaze3d.opengl.GlProgram uniformsByName # Ljava/util/Map;
 #?}
