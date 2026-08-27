@@ -146,7 +146,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer {
         if (pointer != -1L) {
             int packed = IS_LITTLE_ENDIAN
                 ? ((short1 & 0xFFFF) << 16) | (short0 & 0xFFFF)
-                : (short0 << 16) | (short1 & 0xFFFF);
+                : (short0 << 16)            | (short1 & 0xFFFF);
             MemoryUtil.memPutInt(pointer, packed);
         }
         return this;
