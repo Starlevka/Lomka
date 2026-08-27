@@ -118,6 +118,11 @@ public abstract class MixinCamera {
         return new Camera.NearPlane(vec3, vec31, vec32);
     }*/
     //?} else {
+    /**
+     * @author Starlev
+     * @reason Returns the cached near-plane vectors computed by lomka$computeNearPlane,
+     *         avoiding the per-call matrix/Vec3 work of vanilla's method.
+     */
     @Overwrite
     public Camera.NearPlane getNearPlane() {
         lomka$computeNearPlane();

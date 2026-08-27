@@ -31,31 +31,26 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 /**
- * Vanilla allocates a fresh Matrix3f on every orthonormal mulPose(Matrix4fc) call.
- * Display entities invoke this per entity per frame to apply their interpolated
- * transforms, so display-heavy maps stream thousands of short-lived matrices into the
- * heap every frame. A render-thread-confined scratch matrix replaces the allocation;
- * everything else mirrors vanilla exactly, including the non-orthonormal fallback that
- * invalidates trustedNormals. Exists only while Pose#mulPose(Matrix4fc) does:
- * absent before 1.21.6 (outer PoseStack did the work inline with a raw Matrix4f
- * parameter - see MixinPoseStack) and removed again in 26.x.
+ * @author Starlev
+ * Matrix mulPose hot path - scratch allocation removal.
+ * <p>
+ * The allocation site moved between classes: outer {@code PoseStack} with raw
+ * {@code Matrix4f} on 1.21-1.21.4, inner {@code PoseStack.Pose} with
+ * {@code Matrix4fc} on 1.21.6-26.x (removed again in 26.x). Both share one fix:
+ * render-thread confined scratch {@code Matrix3f} on the orthonormal path.
+ * Quaternion path stays in {@code MixinPoseStack}.
  */
+//? if >=1.21.6 && <26.1 {
 @Mixin(PoseStack.Pose.class)
 public abstract class MixinPose {
 
     @Shadow @Final private Matrix4f pose;
     @Shadow @Final private Matrix3f normal;
-    @Shadow private boolean trustedNormals;
 
     @Shadow abstract void computeNormalMatrix();
 
     @Unique private static final Matrix3f lomka$SCRATCH_NORMAL = new Matrix3f();
 
-    /**
-     * @author Starlev
-     * @reason See class comment - only the orthonormal-path allocation is replaced; semantics
-     *         are byte-for-byte vanilla.
-     */
     @Overwrite
     public void mulPose(Matrix4fc m) {
         this.pose.mul(m);
@@ -72,3 +67,30 @@ public abstract class MixinPose {
         }
     }
 }
+//?} else if >=1.21 && <1.21.6 {
+/*@Mixin(PoseStack.class)
+public abstract class MixinPose {
+
+    @Shadow @Final private java.util.Deque<PoseStack.Pose> poseStack;
+
+    @Unique private static final Matrix3f lomka$scratchNormal = new Matrix3f();
+
+    @Overwrite
+    public void mulPose(Matrix4f m) {
+        PoseStack.Pose pose = this.poseStack.getLast();
+        pose.pose().mul(m);
+        if (!MatrixUtil.isPureTranslation(m)) {
+            if (MatrixUtil.isOrthonormal(m)) {
+                lomka$scratchNormal.set(
+                        m.m00(), m.m01(), m.m02(),
+                        m.m10(), m.m11(), m.m12(),
+                        m.m20(), m.m21(), m.m22());
+                pose.normal().mul(lomka$scratchNormal);
+            } else {
+                pose.normal().set(pose.pose()).invert().transpose();
+                pose.trustedNormals = false;
+            }
+        }
+    }
+}
+*///?}

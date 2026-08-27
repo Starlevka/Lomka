@@ -44,10 +44,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * every current and future caller. State is stored in {@link GlRenderStateCache} so
  * MixinWindow can invalidate it on window/framebuffer resize - external mods using raw
  * LWJGL calls would otherwise desynchronize the cache until the next value change.
+ *
+ * Method = "_viewport" is also used by Sodium. I added and saved it just as a must-have
+ * with dedup system.
+ * 
+ * <p>Backport (&lt;1.21.2): vanilla deduplicates read/write framebuffer binds through its
+ * internal READ/DRAW_FRAMEBUFFER mirrors only from 1.21.2 up; on 1.20.1 and 1.21.x
+ * {@code _glBindFramebuffer} is an unconditional passthrough while post chains, render-target
+ * pipelines and GUI passes re-issue identical binds every frame. The gated handlers below
+ * replicate Mojang's own later implementation (including resetting mirrors to 0 when a deleted
+ * id matches, as vanilla does from 26.x onward), so a bind is skipped iff vanilla itself would
+ * skip it on 1.21.2+.
  */
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager {
 
+    /**
+     * Caches the incoming viewport rect and cancels the native call when unchanged.
+     */
     @Inject(
             method = "_viewport",
             at = @At("HEAD"),
@@ -67,6 +81,9 @@ public class MixinGlStateManager {
         }
     }
 
+    /**
+     * Caches the incoming scissor rect and cancels the native call when unchanged.
+     */
     @Inject(
             method = "_scissorBox",
             at = @At("HEAD"),
@@ -86,6 +103,9 @@ public class MixinGlStateManager {
         }
     }
 
+    /**
+     * Caches the polygon mode and cancels the native call when unchanged.
+     */
     @Inject(
             method = "_polygonMode",
             at = @At("HEAD"),
@@ -100,4 +120,56 @@ public class MixinGlStateManager {
             ci.cancel();
         }
     }
+
+    //? if <1.21.2 {
+    /**
+     * Mirrors Mojang's 1.21.2+ framebuffer-bind dedup onto older versions; cancels unchanged binds.
+     */
+    @Inject(
+            method = "_glBindFramebuffer",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private static void lomka$cacheBindFramebuffer(int target, int framebuffer, CallbackInfo ci) {
+        boolean known = false;
+        boolean changed = false;
+
+        if (target == 36008 || target == 36160) {
+            known = true;
+            if (GlRenderStateCache.get(GlRenderStateCache.FBO_READ) != framebuffer) {
+                GlRenderStateCache.set(GlRenderStateCache.FBO_READ, framebuffer);
+                changed = true;
+            }
+        }
+
+        if (target == 36009 || target == 36160) {
+            known = true;
+            if (GlRenderStateCache.get(GlRenderStateCache.FBO_WRITE) != framebuffer) {
+                GlRenderStateCache.set(GlRenderStateCache.FBO_WRITE, framebuffer);
+                changed = true;
+            }
+        }
+
+        if (known && !changed) {
+            ci.cancel();
+        }
+    }
+
+    /**
+     * Resets the cached FBO mirrors when a framebuffer is deleted.
+     */
+    @Inject(
+            method = "_glDeleteFramebuffers",
+            at = @At("TAIL")
+    )
+    private static void lomka$clearFboCache(int framebuffer, CallbackInfo ci) {
+        if (GlRenderStateCache.get(GlRenderStateCache.FBO_READ) == framebuffer) {
+            GlRenderStateCache.set(GlRenderStateCache.FBO_READ, 0);
+        }
+
+        if (GlRenderStateCache.get(GlRenderStateCache.FBO_WRITE) == framebuffer) {
+            GlRenderStateCache.set(GlRenderStateCache.FBO_WRITE, 0);
+        }
+    }
+    //?}
 }

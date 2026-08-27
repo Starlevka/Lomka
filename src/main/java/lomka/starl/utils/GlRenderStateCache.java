@@ -22,29 +22,32 @@ package lomka.starl.utils;
 import java.util.Arrays;
 
 /**
- * Backing store for the GL viewport/scissor dedup in MixinGlStateManager. Lives outside the
+ * Backing store for the GL viewport/scissor/polygon/fbo dedup in MixinGlStateManager. Lives outside the
  * mixin so both the injected handlers and the window-resize reset operate on one shared copy
  * (a mixin class and its merged duplicate keep separate statics).
  *
  * Indices 0-3: viewport x/y/w/h. Indices 4-7: scissor box x/y/w/h.
- * Indices 8-9: polygon mode face/mode. MIN_VALUE means unknown.
+ * Indices 8-9: polygon mode face/mode. Indices 10-11: bound read/write framebuffer ids.
+ * MIN_VALUE means unknown.
  */
 public final class GlRenderStateCache {
 
     private GlRenderStateCache() {}
 
-    public static final int VIEWPORT_X = 0;
-    public static final int VIEWPORT_Y = 1;
-    public static final int VIEWPORT_W = 2;
-    public static final int VIEWPORT_H = 3;
-    public static final int SCISSOR_X  = 4;
-    public static final int SCISSOR_Y  = 5;
-    public static final int SCISSOR_W  = 6;
-    public static final int SCISSOR_H  = 7;
+    public static final int VIEWPORT_X   = 0;
+    public static final int VIEWPORT_Y   = 1;
+    public static final int VIEWPORT_W   = 2;
+    public static final int VIEWPORT_H   = 3;
+    public static final int SCISSOR_X    = 4;
+    public static final int SCISSOR_Y    = 5;
+    public static final int SCISSOR_W    = 6;
+    public static final int SCISSOR_H    = 7;
     public static final int POLYGON_FACE = 8;
     public static final int POLYGON_MODE = 9;
+    public static final int FBO_READ     = 10;
+    public static final int FBO_WRITE    = 11;
 
-    private static final int[] STATE = new int[10];
+    private static final int[] STATE = new int[12];
 
     static {
         reset();

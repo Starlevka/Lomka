@@ -28,12 +28,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinMinecraft {
 
     /**
-     * @author Starlev
-     * @reason Thread.yield() at the end of runTick gives up the thread timeslice on
-     *         every frame; on Windows this can add up to a scheduler quantum (probably ~15ms) of
-     *         latency. Removing it costs slightly more CPU while frames are uncapped, in
-     *         exchange for lower input/render latency. Valid on 1.21-1.21.11: 26.x removed
-     *         the call natively (excluded from 26.x code).
+     * Thread.yield() at the end of runTick gives up the thread timeslice on
+     * every frame; on Windows this can add up to a scheduler quantum (probably ~15ms) of
+     * latency. Removing it costs slightly more CPU while frames are uncapped, in
+     * exchange for lower input/render latency. Valid on 1.21-1.21.11: 26.x removed
+     * the call natively (excluded from 26.x code).
      */
     @Redirect(
         method = "runTick",

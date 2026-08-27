@@ -12,7 +12,7 @@
     ,"com.mojang.blaze3d.platform.MixinWindow"
     ,"net.minecraft.client.renderer.culling.MixinFrustum"
     ,"net.minecraft.client.sounds.MixinSoundEngine"
-    /*? if >=1.21.6 && <26.1 { */
+    /*? if >=1.21 && <26.1 { */
     ,"com.mojang.blaze3d.vertex.MixinPose"
     /*?} */
     /*? if >=1.21 { */
@@ -87,7 +87,9 @@
     ,"net.minecraft.util.MixinARGB"
     ,"net.minecraft.core.MixinCursor3D"
     ,"net.minecraft.core.MixinDirect"
+    ,"net.minecraft.core.MixinDirection"
     ,"net.minecraft.core.MixinSectionPos"
+    ,"net.minecraft.core.MixinVec3i"
     ,"net.minecraft.network.MixinFriendlyByteBuf"
     ,"net.minecraft.network.MixinCompressionEncoder"
     ,"net.minecraft.stats.MixinStatType"

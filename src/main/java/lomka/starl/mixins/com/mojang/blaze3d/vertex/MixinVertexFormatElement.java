@@ -40,6 +40,9 @@ public abstract class MixinVertexFormatElement {
 
     @Unique private int lomka$cachedHash;
 
+    /**
+     * Precomputes the element hash at construction so hashCode() can return it without re-hashing.
+     */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void lomka$cacheHash(int i, VertexFormatElement.Type type, VertexFormatElement.Usage usage, int j, CallbackInfo ci) {
         int h = this.type.hashCode();

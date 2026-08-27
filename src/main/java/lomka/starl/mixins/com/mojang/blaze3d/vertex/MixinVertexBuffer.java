@@ -28,7 +28,6 @@ import com.mojang.blaze3d.vertex.MeshData;
 /*import com.mojang.blaze3d.vertex.BufferBuilder;
 *///?}
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -78,7 +77,6 @@ public abstract class MixinVertexBuffer {
      * @author Starlev
      * @reason Zero-alloc draw call: read cached GL primitive mode + live index type.
      */
-    @Dynamic
     @Overwrite
     public void draw() {
         RenderSystem.drawElements(this.lomka$cachedGlMode, this.indexCount, this.getIndexType().asGLType);

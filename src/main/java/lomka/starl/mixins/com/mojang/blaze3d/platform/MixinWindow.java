@@ -37,6 +37,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Window.class)
 public class MixinWindow {
 
+    /**
+     * Resets the GL state cache so viewport/scissor dedup re-learns from a clean slate after a resize.
+     */
     @Inject(
             method = "onResize",
             at = @At("TAIL")
@@ -45,6 +48,9 @@ public class MixinWindow {
         GlRenderStateCache.reset();
     }
 
+    /**
+     * Resets the GL state cache after a framebuffer resize.
+     */
     @Inject(
             method = "onFramebufferResize",
             at = @At("TAIL")

@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 /**
+ * @author Starlev
  * Replaces the per-call lambda allocation + Consumer.accept() dispatch of
  * VertexMultiConsumer.Multiple#forEach with direct indexed array loops. The
  * fan-out forwards every vertex mutation to all delegates; the lambdas

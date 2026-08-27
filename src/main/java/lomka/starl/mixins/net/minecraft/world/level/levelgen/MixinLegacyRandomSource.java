@@ -60,11 +60,10 @@ public abstract class MixinLegacyRandomSource {
     @Unique private long lomka$seed;
 
     /**
-     * @author Starlev
-     * @reason Vanilla wraps every draw in a volatile read + compareAndSet solely to detect
-     *         cross-thread misuse. Plain field turns the hot path into three integer ops
-     *         (identical to SingleThreadedRandomSource); LCG constants are unchanged so the
-     *         sequence - and therefore worldgen parity - remains bit-for-bit identical.
+     * Vanilla wraps every draw in a volatile read + compareAndSet solely to detect
+     * cross-thread misuse. Plain field turns the hot path into three integer ops
+     * (identical to SingleThreadedRandomSource); LCG constants are unchanged so the
+     * sequence - and therefore worldgen parity - remains bit-for-bit identical.
      */
     @Inject(
             method = "next(I)I",
@@ -78,10 +77,9 @@ public abstract class MixinLegacyRandomSource {
     }
 
     /**
-     * @author Starlev
-     * @reason Mirrors the seed value vanilla computed into its AtomicLong into the plain field
-     *         backing the fast {@code next}. Runs after the vanilla body, so the CAS-based misuse
-     *         detector on seed installation is fully preserved.
+     * Mirrors the seed value vanilla computed into its AtomicLong into the plain field
+     * backing the fast {@code next}. Runs after the vanilla body, so the CAS-based misuse
+     * detector on seed installation is fully preserved.
      */
     @Inject(
             method = "setSeed",

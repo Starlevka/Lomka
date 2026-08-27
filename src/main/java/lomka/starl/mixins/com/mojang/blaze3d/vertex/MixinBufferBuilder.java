@@ -28,7 +28,23 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(value = BufferBuilder.class, priority = 500) // Mojang overwrite first
+/**
+ * Speeds up per-vertex writes on the element-wise BufferBuilder paths
+ * (particles, glyphs, per-element geometry) and the packed-color path used
+ * by every chunk/entity vertex (putRgba, reached via the untouched 11-arg
+ * addVertex fast path):
+ *
+ * - putRgba: ARGB.toABGR's 7-op mask chain becomes BSWAP + ROR, both HotSpot
+ *   intrinsics (~2 ALU uops). The JIT cannot derive this from the masks.
+ * - setColor(IIII) / setUv(FF) / uvShort: N byte/short/float stores become a
+ *   single int/long store. floatToRawIntBits (not floatToIntBits) keeps NaN
+ *   payloads bit-identical to memPutFloat.
+ *
+ * The 11-argument addVertex is deliberately untouched: hottest method in the
+ * class and a magnet for foreign patches, and vanilla already keeps it at one
+ * store per element.
+ */
+@Mixin(value = BufferBuilder.class, priority = 999) // levl
 public abstract class MixinBufferBuilder implements VertexConsumer {
 
     @Shadow @Final private static boolean IS_LITTLE_ENDIAN;
@@ -46,37 +62,32 @@ public abstract class MixinBufferBuilder implements VertexConsumer {
     //?}
 
     /**
-     * Converts a 32-bit ARGB color value to ABGR format using hardware-accelerated instructions.
-     * <p>
-     * On Little-Endian architectures (x86_64, aarch64), GPU vertex memory expects 4 sequential
-     * bytes ordered as [R, G, B, A]. When writing via a single 32-bit integer store, the least
-     * significant byte is stored at offset 0. Therefore, the integer must be packed as ABGR
-     * ((A << 24) | (B << 16) | (G << 8) | R) so that R lands at byte 0, G at byte 1, B at byte 2,
-     * and A at byte 3 in native memory.
-     * <p>
-     * Replaces 7 bitwise operations with BSWAP (reverseBytes) and ROR (rotateRight 8), executing
-     * in ~2 CPU clock cycles. The {@code IS_LITTLE_ENDIAN} check is constant-folded by JIT C2.
+     * Packs ARGB into the int whose native store yields [R, G, B, A] bytes.
+     * Little-endian (all supported platforms): ABGR via BSWAP + ROR.
+     * Big-endian: vanilla's own expression, verbatim - byte parity by construction.
      */
-    private static int lomka$packAbgr(int argb) {
-        int abgr = Integer.rotateRight(Integer.reverseBytes(argb), 8);
-        return IS_LITTLE_ENDIAN ? abgr : Integer.reverseBytes(abgr);
+    private static int lomka$packColor(int argb) {
+        return IS_LITTLE_ENDIAN
+            ? Integer.rotateRight(Integer.reverseBytes(argb), 8)
+            : Integer.reverseBytes(argb & -16711936 |
+                                  (argb & 16711680) >> 16
+                                | (argb & 255) << 16);
     }
 
     /**
      * @author Starlev
-     * @reason Replace 7 bitwise operations with 2 native hardware instructions (BSWAP and ROR).
-     *         Converts ARGB to ABGR in 2 CPU cycles instead of standard masking.
+     * @reason BSWAP + ROR (2 intrinsic uops) instead of toABGR's 7-op mask chain.
+     *         Fires once per colored vertex on the chunk/entity mesh fast path.
      */
     @Overwrite
     private static void putRgba(long pointer, int argb) {
-        MemoryUtil.memPutInt(pointer, lomka$packAbgr(argb));
+        MemoryUtil.memPutInt(pointer, lomka$packColor(argb));
     }
 
     /**
      * @author Starlev
-     * @reason Batches 4 individual 8-bit byte writes into a single 32-bit integer store instruction.
-     *         Directly constructs the native Little-Endian ABGR memory layout to prevent L1D cache
-     *         port saturation and eliminate store-forwarding stalls during chunk mesh generation.
+     * @reason 4 byte stores -> 1 int store. Hot on per-element vertex paths
+     *         (particles, misc geometry); chunk meshes use the 11-arg fast path.
      */
     @Overwrite
     public VertexConsumer setColor(int r, int g, int b, int a) {
@@ -87,10 +98,10 @@ public abstract class MixinBufferBuilder implements VertexConsumer {
         //?}
 
         if (pointer != -1L) {
-            // Direct ABGR packing: on Little-Endian, bits 0..7 (R) land at byte +0,
-            // bits 8..15 (G) at byte +1, bits 16..23 (B) at byte +2, bits 24..31 (A) at byte +3.
-            int abgr = (a << 24) | ((b & 0xFF) << 16) | ((g & 0xFF) << 8) | (r & 0xFF);
-            MemoryUtil.memPutInt(pointer, IS_LITTLE_ENDIAN ? abgr : Integer.reverseBytes(abgr));
+            int packed = IS_LITTLE_ENDIAN
+                ? (a << 24) | ((b & 0xFF) << 16) | ((g & 0xFF) << 8) | (r & 0xFF)
+                : (r << 24) | ((g & 0xFF) << 16) | ((b & 0xFF) << 8) | a;
+            MemoryUtil.memPutInt(pointer, packed);
         }
 
         return this;
@@ -98,10 +109,12 @@ public abstract class MixinBufferBuilder implements VertexConsumer {
 
     /**
      * @author Starlev
-     * @reason Batches 2 32-bit float writes into a single 64-bit long native write on Little Endian architectures.
+     * @reason 2 float stores -> 1 long store (hot on the glyph/particle vertex
+     *         path). Each endianness branch orders the halves so u lands at +0
+     *         and v at +4; floatToRawIntBits preserves NaN payloads exactly.
      */
     @Overwrite
-    public VertexConsumer setUv(float f, float f1) {
+    public VertexConsumer setUv(float u, float v) {
         //? if >=26.2 {
         /*long pointer = this.beginElement(2);
         *///?} else {
@@ -109,15 +122,18 @@ public abstract class MixinBufferBuilder implements VertexConsumer {
         //?}
 
         if (pointer != -1L) {
-            long uv = ((long) Float.floatToRawIntBits(f1) << 32) | (Float.floatToRawIntBits(f) & 0xFFFFFFFFL);
-            MemoryUtil.memPutLong(pointer, uv);
+            long packed = IS_LITTLE_ENDIAN
+                ? ((long) Float.floatToRawIntBits(v) << 32) | (Float.floatToRawIntBits(u) & 0xFFFFFFFFL)
+                : ((long) Float.floatToRawIntBits(u) << 32) | (Float.floatToRawIntBits(v) & 0xFFFFFFFFL);
+            MemoryUtil.memPutLong(pointer, packed);
         }
         return this;
     }
 
     /**
      * @author Starlev
-     * @reason Batches 2 16-bit short writes into a single 32-bit int write to eliminate store forwarding stalls.
+     * @reason 2 short stores -> 1 int store; both endianness branches reproduce
+     *         vanilla's exact byte order ([s0hi, s0lo, s1hi, s1lo] on BE).
      */
     @Overwrite
     //? if >=26.2 {
@@ -128,8 +144,10 @@ public abstract class MixinBufferBuilder implements VertexConsumer {
         long pointer = this.beginElement(vertexformatelement);
     //?}
         if (pointer != -1L) {
-            int packed = ((short1 & 0xFFFF) << 16) | (short0 & 0xFFFF);
-            MemoryUtil.memPutInt(pointer, IS_LITTLE_ENDIAN ? packed : Integer.reverseBytes(packed));
+            int packed = IS_LITTLE_ENDIAN
+                ? ((short1 & 0xFFFF) << 16) | (short0 & 0xFFFF)
+                : (short0 << 16) | (short1 & 0xFFFF);
+            MemoryUtil.memPutInt(pointer, packed);
         }
         return this;
     }
