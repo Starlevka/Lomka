@@ -69,8 +69,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer {
     private static int lomka$packColor(int argb) {
         return IS_LITTLE_ENDIAN
             ? Integer.rotateRight(Integer.reverseBytes(argb), 8)
-            : Integer.reverseBytes(argb & -16711936 |
-                                  (argb & 16711680) >> 16
+            : Integer.reverseBytes(argb & -16711936 
+                                | (argb & 16711680) >> 16
                                 | (argb & 255) << 16);
     }
 
