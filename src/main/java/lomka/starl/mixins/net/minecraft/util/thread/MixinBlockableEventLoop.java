@@ -31,36 +31,15 @@ public abstract class MixinBlockableEventLoop {
 
     @Shadow protected abstract boolean scheduleExecutables();
 
-    private static final CompletableFuture<Void> COMPLETED_FUTURE =
-            CompletableFuture.completedFuture(null);
-
     /**
      * @author Starlev
      * @reason Uses leaner runAsync(runnable, this) instead of vanilla's supplyAsync(supplier, this),
-     *         skipping an extra captured-lambda allocation on the async submission path. Internal
+     *         skipping the extra capturing-lambda allocation on the async submission path. Internal
      *         vanilla call sites that block on submitAsync(...).join() route through this overwrite
      *         too, so behavior stays uniform.
      */
     @Overwrite
     private CompletableFuture<Void> submitAsync(Runnable runnable) {
         return CompletableFuture.runAsync(runnable, (Executor) this);
-    }
-
-    /**
-     * @author Starlev
-     * @reason Inline path runs the task directly and returns a shared already-completed future
-     *         instead of allocating a fresh one each call. Sharing is safe because a completed
-     *         future is immutable through the public completion API — complete()/cancel()/
-     *         completeExceptionally() are silent no-ops returning false, exactly as on vanilla's
-     *         own freshly-created instance. Only obtrudeValue()/obtrudeResult() could mutate it,
-     *         and no vanilla or modded caller uses those. The async branch reuses submitAsync.
-     */
-    @Overwrite
-    public CompletableFuture<Void> submit(Runnable runnable) {
-        if (this.scheduleExecutables()) {
-            return this.submitAsync(runnable);
-        }
-        runnable.run();
-        return COMPLETED_FUTURE;
     }
 }

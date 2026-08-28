@@ -36,27 +36,34 @@ public abstract class MixinSource implements IGlyphSource {
 
     @Shadow protected abstract BakedGlyph getGlyph(int codepoint);
 
+    /**
+     * @author Starlev
+     * Vanilla's glyph maps (and every downstream FontSet/Source structure) are
+     * render-thread-confined and unsynchronized - vanilla itself never synchronizes
+     * glyph lookups. A monitor enter/exit on EVERY codepoint width probe would cost
+     * more than the lookup it guards (biased locking is gone since JDK 15+, so each
+     * synchronized block is an uncontended CAS round-trip), turning the cache into a
+     * net regression on the text-layout hot path. Cache coherence therefore relies on
+     * the same single-thread assumption as vanilla; clear() runs on the render thread
+     * during resource reload, like every other FontSet reset.
+     */
     @Override
     public void lomka$clear() {
-        synchronized (this.lomka$advanceCache) {
-            this.lomka$advanceCache.clear();
-        }
+        this.lomka$advanceCache.clear();
     }
 
     @Override
     public float getAdvance(int codepoint, boolean bold) {
         int key = codepoint << 1 | (bold ? 1 : 0);
-        synchronized (this.lomka$advanceCache) {
-            float cached = this.lomka$advanceCache.getOrDefault(key, Float.NaN);
-            if (!Float.isNaN(cached)) {
-                return cached;
-            }
-            float advance = this.getGlyph(codepoint).info().getAdvance(bold);
-            if (this.lomka$advanceCache.size() >= LOMKA$MAX_CACHE_ENTRIES) {
-                this.lomka$advanceCache.clear();
-            }
-            this.lomka$advanceCache.put(key, advance);
-            return advance;
+        float cached = this.lomka$advanceCache.getOrDefault(key, Float.NaN);
+        if (!Float.isNaN(cached)) {
+            return cached;
         }
+        float advance = this.getGlyph(codepoint).info().getAdvance(bold);
+        if (this.lomka$advanceCache.size() >= LOMKA$MAX_CACHE_ENTRIES) {
+            this.lomka$advanceCache.clear();
+        }
+        this.lomka$advanceCache.put(key, advance);
+        return advance;
     }
 }
