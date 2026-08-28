@@ -38,32 +38,34 @@ public abstract class MixinSource implements IGlyphSource {
 
     /**
      * @author Starlev
-     * Vanilla's glyph maps (and every downstream FontSet/Source structure) are
-     * render-thread-confined and unsynchronized - vanilla itself never synchronizes
-     * glyph lookups. A monitor enter/exit on EVERY codepoint width probe would cost
-     * more than the lookup it guards (biased locking is gone since JDK 15+, so each
-     * synchronized block is an uncontended CAS round-trip), turning the cache into a
-     * net regression on the text-layout hot path. Cache coherence therefore relies on
-     * the same single-thread assumption as vanilla; clear() runs on the render thread
-     * during resource reload, like every other FontSet reset.
+     * Synchronized on purpose: StringSplitter width lookups are render-thread-bound in vanilla,
+     * but third-party mods may measure text off-thread, and a data race on a fastutil open-addressing
+     * map can corrupt it (lost entries, torn rehash state, ArrayIndexOutOfBounds mid-frame).
+     * An uncontended monitor costs ~15-20 cycles - negligible against a glyph map probe - while
+     * the corruption it prevents is unrecoverable. Do NOT remove this lock without a proven
+     * single-thread confinement guarantee.
      */
     @Override
     public void lomka$clear() {
-        this.lomka$advanceCache.clear();
+        synchronized (this.lomka$advanceCache) {
+            this.lomka$advanceCache.clear();
+        }
     }
 
     @Override
     public float getAdvance(int codepoint, boolean bold) {
         int key = codepoint << 1 | (bold ? 1 : 0);
-        float cached = this.lomka$advanceCache.getOrDefault(key, Float.NaN);
-        if (!Float.isNaN(cached)) {
-            return cached;
+        synchronized (this.lomka$advanceCache) {
+            float cached = this.lomka$advanceCache.getOrDefault(key, Float.NaN);
+            if (!Float.isNaN(cached)) {
+                return cached;
+            }
+            float advance = this.getGlyph(codepoint).info().getAdvance(bold);
+            if (this.lomka$advanceCache.size() >= LOMKA$MAX_CACHE_ENTRIES) {
+                this.lomka$advanceCache.clear();
+            }
+            this.lomka$advanceCache.put(key, advance);
+            return advance;
         }
-        float advance = this.getGlyph(codepoint).info().getAdvance(bold);
-        if (this.lomka$advanceCache.size() >= LOMKA$MAX_CACHE_ENTRIES) {
-            this.lomka$advanceCache.clear();
-        }
-        this.lomka$advanceCache.put(key, advance);
-        return advance;
     }
 }
