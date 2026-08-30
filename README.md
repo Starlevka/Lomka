@@ -2,7 +2,7 @@
 
 <sub><i>The project code was created with help of Artificial Intelligence.</i></sub>
 
-An open source mod with mix of small optimizations for your Minecraft. **Fewer stutters, more FPS, faster resource loading and slightly reduces memory usage**.
+An open source mod with mix of small optimizations for your Minecraft. **Fewer stutters, slightly more FPS (up to 3.89% increase), faster resource loading and slightly reduces memory usage**.
 
 ## Optimizations
 - Faster hot-path math and color engine

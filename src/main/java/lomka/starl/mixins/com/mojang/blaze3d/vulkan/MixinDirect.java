@@ -24,6 +24,7 @@ import com.mojang.blaze3d.vulkan.VulkanDevice;
 import com.mojang.blaze3d.vulkan.VulkanGpuBuffer;
 import com.mojang.blaze3d.vulkan.VulkanUtils;
 import java.nio.ByteBuffer;
+import java.util.function.Supplier;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -53,16 +54,18 @@ public abstract class MixinDirect extends VulkanGpuBuffer {
     }
 
     /**
-     * @author Starlev
-     * @reason Establish persistent mapping for host-visible buffers at creation time.
-     *         Vanilla sets VMA_ALLOCATION_CREATE_MAPPED_BIT (flags | 2048) but still
-     *         calls vmaMapMemory on every map() call. We cache the mapped address once
-     *         here so subsequent map() calls skip the driver round-trip entirely.
-     *         Only applies when usage contains READ or WRITE bits (host-visible).
+     * Establish persistent mapping for host-visible buffers at creation time.
+     * Vanilla sets VMA_ALLOCATION_CREATE_MAPPED_BIT (flags | 2048) but still
+     * calls vmaMapMemory on every map() call. We cache the mapped address once
+     * here so subsequent map() calls skip the driver round-trip entirely.
+     * Only applies when usage contains READ or WRITE bits (host-visible).
+     * The label parameter must be typed Supplier (vanilla: @Nullable Supplier&lt;String&gt;)
+     * — a callback handler's parameter types are descriptor-checked against the target
+     * at apply time, and an Object here fails with InvalidInjectionException.
      */
     @Inject(method = "<init>", at = @At("TAIL"))
     private void lomka$setupPersistentMapping(
-            VulkanDevice device, Object label, int usage,
+            VulkanDevice device, Supplier<String> label, int usage,
             long size, boolean forceHostVisibleAllocation, CallbackInfo ci) {
         if (VulkanUtils.hasAnyBit(usage, 3)) {
             MemoryStack stack = MemoryStack.stackPush();
@@ -136,10 +139,9 @@ public abstract class MixinDirect extends VulkanGpuBuffer {
     }
 
     /**
-     * @author Starlev
-     * @reason Explicitly unmap persistent memory before vmaDestroyBuffer to avoid
-     *         VMA validation layer warnings. Vanilla relies on implicit unmap inside
-     *         vmaDestroyBuffer, but explicit cleanup is safer for debug/validation builds.
+     * Explicitly unmap persistent memory before vmaDestroyBuffer to avoid
+     * VMA validation layer warnings. Vanilla relies on implicit unmap inside
+     * vmaDestroyBuffer, but explicit cleanup is safer for debug/validation builds.
      */
     @Inject(method = "destroy", at = @At("HEAD"))
     private void lomka$unmapPersistent(CallbackInfo ci) {
