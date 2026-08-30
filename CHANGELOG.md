@@ -2,6 +2,10 @@
 
 ## [0.5.2]
 
+### Performance
+- BitSetDiscreteVoxelShape.join accumulates contiguous bit runs and flushes them with bulk `BitSet.set(from, to)` word writes instead of one `set()` per voxel (all versions).
+- VoxelShape.toAabbs is computed once per shape and cached — `clip()` no longer allocates an ArrayList + AABBs on every raycast miss (crosshair raycast runs every frame). (all versions) **NEW**
+
 ## [0.5.1] - 2026-08-25
 
 ### Performance

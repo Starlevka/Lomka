@@ -100,6 +100,7 @@
     ,"net.minecraft.world.level.lighting.MixinLayerLightSectionStorage"
     ,"net.minecraft.world.level.lighting.MixinLeveledPriorityQueue"
     ,"net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape"
+    ,"net.minecraft.world.phys.shapes.MixinVoxelShape"
     ,"net.minecraft.server.packs.resources.MixinFallbackResourceManager"
     ,"net.minecraft.server.packs.resources.MixinMultiPackResourceManager"
     ,"net.minecraft.server.packs.MixinVanillaPackResources"
