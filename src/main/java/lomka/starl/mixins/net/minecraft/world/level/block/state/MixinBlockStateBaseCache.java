@@ -37,7 +37,7 @@ public abstract class MixinBlockStateBaseCache {
     @Shadow @Final private boolean[] faceSturdy;
     @Shadow @Final private static int SUPPORT_TYPE_COUNT;
 
-    @Unique private long lomka$faceSturdyMask;
+    @Unique private volatile long lomka$faceSturdyMask;
 
     /**
      * Long instead of int: Java masks shift amounts to the operand's low bits

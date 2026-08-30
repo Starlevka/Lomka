@@ -108,7 +108,7 @@ public abstract class MixinVanillaPackResources implements PackResources {
             return null;
         }
 
-        String relative = identifier.getNamespace() + "/" + String.join("/", segments);
+        String relative = segments.isEmpty() ? identifier.getNamespace() : identifier.getNamespace() + "/" + String.join("/", segments);
         for (int i = 0; i < paths.size(); i++) {
             Path path = paths.get(i).resolve(relative);
             if (Files.exists(path, NO_OPTIONS) && PathPackResources.validatePath(path)) {
@@ -181,7 +181,7 @@ public abstract class MixinVanillaPackResources implements PackResources {
             return;
         }
 
-        String relative = identifier.getNamespace() + "/" + String.join("/", segments);
+        String relative = segments.isEmpty() ? identifier.getNamespace() : identifier.getNamespace() + "/" + String.join("/", segments);
         for (int i = 0; i < paths.size(); i++) {
             consumer.accept(paths.get(i).resolve(relative));
         }

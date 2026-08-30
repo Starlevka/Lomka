@@ -75,10 +75,16 @@ public abstract class MixinFallbackResourceManager {
 
     @Unique private record Entry(PackResources source, IoSupplier<InputStream> resource, int packIndex) {}
 
+    @Shadow
+    private static InputStream wrapForDebug(Identifier id, PackResources pack, InputStream stream) {
+        throw new AssertionError();
+    }
+
     /**
      * @author Starlev
      * @reason Fast-path metadata check to eliminate thousands of useless .mcmeta Identifier allocations and Map lookups;
-     *         use direct Resource instantiation with EMPTY_SUPPLIER when metadata is absent. Probably a bugfix.
+     *         use direct Resource instantiation with EMPTY_SUPPLIER when metadata is absent. Debug-wrapped
+     *         input stream is preserved when log is in debug to keep LeakedResourceWarning parity with vanilla.
      */
     @Overwrite
     public Map<Identifier, Resource> listResources(String directory, Predicate<Identifier> filter) {
@@ -106,10 +112,14 @@ public abstract class MixinFallbackResourceManager {
         }
 
         TreeMap<Identifier, Resource> result = Maps.newTreeMap();
+        boolean debug = org.slf4j.LoggerFactory.getLogger(FallbackResourceManager.class).isDebugEnabled();
 
         if (metaEntries.isEmpty()) {
             fileEntries.forEach((id, entry) -> {
-                result.put(id, new Resource(entry.source, entry.resource));
+                IoSupplier<InputStream> supplier = debug
+                        ? () -> wrapForDebug(id, entry.source, entry.resource.get())
+                        : entry.resource;
+                result.put(id, new Resource(entry.source, supplier));
             });
             return result;
         }
@@ -117,10 +127,13 @@ public abstract class MixinFallbackResourceManager {
         fileEntries.forEach((id, entry) -> {
             Identifier metaId = lomka$getMetadataLocation(id);
             Entry metaEntry = metaEntries.get(metaId);
+            IoSupplier<InputStream> resSupplier = debug
+                    ? () -> wrapForDebug(id, entry.source, entry.resource.get())
+                    : entry.resource;
             if (metaEntry != null && metaEntry.packIndex >= entry.packIndex) {
-                result.put(id, new Resource(entry.source, entry.resource, lomka$convertToMetadata(metaEntry.resource)));
+                result.put(id, new Resource(entry.source, resSupplier, lomka$convertToMetadata(metaEntry.resource)));
             } else {
-                result.put(id, new Resource(entry.source, entry.resource));
+                result.put(id, new Resource(entry.source, resSupplier));
             }
         });
 

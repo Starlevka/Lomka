@@ -50,21 +50,27 @@ public abstract class MixinVoxelShape {
 
     /**
      * Serves the cached box list on repeat calls instead of reallocating ArrayList + AABBs per raycast.
+     * Defensive copy is used to preserve vanilla's ownership contract (caller may mutate the list);
+     * the published cache is unmodifiable to prevent accidental corruption.
      */
     @Inject(method = "toAabbs", at = @At("HEAD"), cancellable = true)
     private void lomka$serveCachedAabbs(CallbackInfoReturnable<List<AABB>> cir) {
         List<AABB> cached = this.lomka$aabbCache;
 
         if (cached != null) {
-            cir.setReturnValue(cached);
+            cir.setReturnValue(new java.util.ArrayList<>(cached));
         }
     }
 
     /**
      * Publishes the freshly computed list once; subsequent HEAD hits are served from the cache.
+     * Stored as unmodifiable to guard against callers mutating the cached instance.
      */
     @Inject(method = "toAabbs", at = @At("RETURN"))
     private void lomka$storeAabbs(CallbackInfoReturnable<List<AABB>> cir) {
-        this.lomka$aabbCache = cir.getReturnValue();
+        List<AABB> computed = cir.getReturnValue();
+        List<AABB> immutable = java.util.Collections.unmodifiableList(new java.util.ArrayList<>(computed));
+        this.lomka$aabbCache = immutable;
+        cir.setReturnValue(new java.util.ArrayList<>(immutable));
     }
 }

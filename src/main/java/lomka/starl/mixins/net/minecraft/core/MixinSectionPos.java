@@ -149,12 +149,14 @@ public abstract class MixinSectionPos {
      */
     @Overwrite
     public static Stream<SectionPos> betweenClosedStream(final int minX, final int minY, final int minZ, final int maxX, final int maxY, final int maxZ) {
-        return StreamSupport.stream(new AbstractSpliterator<SectionPos>((long) (maxX - minX + 1) * (maxY - minY + 1) * (maxZ - minZ + 1), 64) {
+        return StreamSupport.stream(new AbstractSpliterator<SectionPos>((long) (maxX - minX + 1) * (long) (maxY - minY + 1) * (long) (maxZ - minZ + 1), 64) {
             final Cursor3D cursor = new Cursor3D(minX, minY, minZ, maxX, maxY, maxZ);
+            boolean started = false;
 
             @Override
             public boolean tryAdvance(Consumer<? super SectionPos> consumer) {
                 if (this.cursor.advance()) {
+                    this.started = true;
                     consumer.accept(new SectionPos(this.cursor.nextX(), this.cursor.nextY(), this.cursor.nextZ()));
                     return true;
                 }
@@ -163,11 +165,21 @@ public abstract class MixinSectionPos {
 
             @Override
             public void forEachRemaining(Consumer<? super SectionPos> consumer) {
-                for (int z = minZ; z <= maxZ; ++z) {
-                    for (int y = minY; y <= maxY; ++y) {
-                        for (int x = minX; x <= maxX; ++x) {
-                            consumer.accept(new SectionPos(x, y, z));
+                if (!this.started) {
+                    for (int z = minZ; z <= maxZ; ++z) {
+                        for (int y = minY; y <= maxY; ++y) {
+                            for (int x = minX; x <= maxX; ++x) {
+                                consumer.accept(new SectionPos(x, y, z));
+                            }
                         }
+                    }
+                    // Mark cursor as exhausted to keep tryAdvance/forEachRemaining contract consistent.
+                    // Advance through all elements virtually so subsequent tryAdvance returns false.
+                    while (this.cursor.advance()) {}
+                    this.started = true;
+                } else {
+                    while (this.cursor.advance()) {
+                        consumer.accept(new SectionPos(this.cursor.nextX(), this.cursor.nextY(), this.cursor.nextZ()));
                     }
                 }
             }
