@@ -104,7 +104,7 @@ version simply does not exist in your jar the config loader ignores it with an
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.client.multiplayer.MixinClientLevel` | Caches entity-type names used by the tick profiler | 1.20.1-1.21.11 |
+| `net.minecraft.client.multiplayer.MixinClientLevel` | Caches entity-type names used by the tick profiler | 1.21-1.21.11 |
 | `net.minecraft.client.renderer.culling.MixinFrustum` | Branchless integer floor/ceil in frustum setup | all |
 | `net.minecraft.client.renderer.MixinDynamicUniformStorage` | Caches ring-buffer getter and reuses uniform slice records | 1.21.6+ |
 | `net.minecraft.client.renderer.MixinGameRenderer` | Reuses the camera render-state quaternion instead of per-frame allocation | 1.21.9-1.21.11 |

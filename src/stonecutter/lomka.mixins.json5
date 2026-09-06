@@ -49,7 +49,6 @@
     ,"net.minecraft.client.renderer.MixinItemInHandRenderer"
     /*?} */
     /*? if <26.1 { */
-    ,"net.minecraft.client.multiplayer.MixinClientLevel"
     ,"net.minecraft.client.resources.model.MixinMaterial"
     ,"net.minecraft.client.MixinMinecraft"
     ,"net.minecraft.client.MixinCamera"
@@ -63,6 +62,9 @@
     /*?} */
     /*? if >=26.2 { */
     ,"com.mojang.blaze3d.vulkan.MixinDirect"
+    /*?} */
+    /*? if >=1.21 && <26.1 { */
+    ,"net.minecraft.client.multiplayer.MixinClientLevel"
     /*?} */
     /*? if >=1.21 && <26.2 { */
     ,"com.mojang.blaze3d.vertex.MixinVertexFormat"

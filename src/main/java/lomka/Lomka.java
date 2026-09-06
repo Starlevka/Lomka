@@ -31,7 +31,7 @@ import net.fabricmc.api.ModInitializer;
 
 public final class Lomka {
     public static final String MOD_ID  = "lomka";
-    public static final String VERSION = /*$ mod_version */ "0.5.2";
+    public static final String VERSION = /*$ mod_version */ "0.5.3-hotfix";
     private static final Logger LOGGER  = LoggerFactory.getLogger(MOD_ID);
 
     private Lomka() {
