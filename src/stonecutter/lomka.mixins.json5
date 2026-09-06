@@ -2,6 +2,9 @@
   "required": true,
   "minVersion": "0.8",
   "plugin": "lomka.starl.config.LomkaMixinPlugin",
+  /*? if <1.21 { */
+  "refmap": "lomka.refmap.json",
+  /*?} */
   "package": "lomka.starl.mixins",
   "compatibilityLevel": "${java}",
   "client": [

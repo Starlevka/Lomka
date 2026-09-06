@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.3]
+### Bug Fixes
+- Refmaps fix for 1.20.1 Forge.
+
 ## [0.5.2]
 
 ### Performance
