@@ -34,6 +34,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(Frustum.class)
 public class MixinFrustum {
 
+    /**
+     * Branchless floor replacement avoiding Math.floor's library path on the per-frame cube setup.
+     */
     @Redirect(
             method = "offsetToFullyIncludeCameraCube",
             at = @At(
@@ -46,6 +49,9 @@ public class MixinFrustum {
         return v < (double) i ? (double) (i - 1L) : (double) i;
     }
 
+    /**
+     * Branchless ceil replacement avoiding Math.ceil's library path on the per-frame cube setup.
+     */
     @Redirect(
             method = "offsetToFullyIncludeCameraCube",
             at = @At(

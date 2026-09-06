@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.5.2]
+
+### Performance
+- VoxelShape.toAabbs is computed once per shape and cached — `clip()` no longer allocates an ArrayList + AABBs on every raycast miss (crosshair raycast runs every frame). (all versions) **NEW**
+- BitSetDiscreteVoxelShape.join accumulates contiguous bit runs and flushes them with bulk `BitSet.set(from, to)` word writes instead of one `set()` per voxel. (all versions)
+- New AABB mixin: allocation-free `clip` paths — no `double[1]` box, no per-iteration `AABB.move` in the `Iterable` variant, direct face tests. Keeps Lithium's AABB mixin intact. (all versions) **NEW**
+- New BlockPos mixin: `betweenClosed` replaces `2 div + 2 mod` per block with incremental stepped counters, preserving the vanilla X→Y→Z order. (all versions) **NEW**
+- AutoStorageIndexBuffer warmup lands the first allocation at 16384 indices (~32 KB SHORT) with the x4 growth no early mid-frame regen hitches. (all versions) **NEW**
+- New Vec3i mixin: exhaustive switch for `get(Axis)`, int-exact `distManhattan`, phi-mix `hashCode` (from `efficient_hashing` by ZZZank, CC0). (all versions) **NEW**
+- New LegacyRandomSource mixin: plain-field LCG draws instead of volatile + CAS per call; the vanilla seed-install guard stays, worldgen parity is bit-for-bit. (all versions) **NEW**
+- New Util mixin: cached OS/arch detection, array-backed shuffles, allocation-free URI scheme checks, single-step `offsetByCodepoints`, shared predicate constants. (all versions) **NEW**
+- New Direction mixin: `getClockWise`/`getCounterClockWise` via a flat 1D LUT instead of nested enum-switch dispatch; branch-free `getApproximateNearest`. (all versions, nearest optimization one: 1.21.4+) **NEW**
+- New ByteBufferBuilder mixin: inlined `reserve` fast path, max growth step raised from 2 MB to 8 MB — no repeated native reallocations on chunk/batch surges. (1.21+) **NEW**
+- BufferBuilder per-vertex writes (`setColor(IIII)`, `setUv(FF)`, `uvShort`) collapsed to single int/long stores; the packed-color path stays on BSWAP + ROR. (1.21+) **NEW**
+- VertexConsumer transforms rewritten with per-era coverage: scalar fma `addVertex` (1.21+), 2D `addVertexWith2DPose` (1.21.6+), `setNormal` via the widened `trustedNormals` field (1.21-1.21.11), `putBulkData` without bridge arrays (1.21.11+), fma `putBakedQuad` (26.1+). **NEW**
+- Mth: `smallestEncompassingPowerOfTwo` via a single LZCNT instruction, fma `lerp` (float/double) with single rounding — ported from SuperFastMath (elias, permission granted). (all versions) **NEW**
+- GlStateManager state dedup (viewport/scissor/polygonMode, cancellable HEAD injections) extended to all versions; GlStateCache now tracks bound read/write FBOs and dedups `_glBindFramebuffer` back to 1.20.1, replicating vanilla's own 1.21.2+ mirror logic. (all versions) **NEW from OLD**
+- Pose scratch-matrix optimization covers the outer `PoseStack.mulPose(Matrix4f)` era (1.21-1.21.4) too, unified in MixinPose. (1.21+, not 26.x) **NEW from OLD**
+- Std140Builder / Std140SizeCalculator: blanket per-`put*` overwrites replaced with a single power-of-two `align()` fast path, vanilla fallback for exotic alignments. (1.21.6+)
+- BitSetDiscreteVoxelShape.join accumulates contiguous bit runs and flushes them with bulk `BitSet.set(from, to)` word writes instead of one `set()` per voxel (all versions).
+
+### Bug Fixes
+- Supplier fix in VulkanGpuBuffer the `<init>` handler's `label` parameter is typed `Supplier<String>` now, fixing `InvalidInjectionException` at apply time.
+- MixinClientLevel causes crash.
+- Fixed `betweenClosedStream` int overflow in the spliterator estimate and duplicate emission after a partial `tryAdvance` (SectionPos).
+- `FallbackResourceManager` keeps the `wrapForDebug` wrapper when debug logging is on vanilla `LeakedResourceWarning` parity.
+- VanillaPackResources resolves root identifiers (empty path) to the namespace root instead of a malformed `namespace/` path.
+- CompressionEncoder shrinks runaway retained buffers (>64 KB and 4x the current packet) back to a power-of-two size no 8 MB held forever after one huge chunk packet.
+- BlockStateBaseCache publishes the face-sturdy mask through `volatile` fields with a `@Mutable` array no torn reads.
+- Mth.hsvToArgb clamps channels and throws exactly like vanilla on out-of-range hues.
+
+### Removed
+- Removed MixinStatType.
+- Removed the Camera `getMaxZoom` overwrite (vanilla restored, possibly Sable compability yea).
+- Removed the BlockableEventLoop `submit()` shared-future overwrite — only the leaner `submitAsync` remains.
+- Removed low-value Mth overwrites: `clampedLerp` (float/double), `lerpInt`, `wrapDegrees` (int/float/double/long), `packDegrees`.
+- Removed the VertexFormatElement cached `hashCode` overwrite. (1.20.1)
+- Removed the PoseStack `pushPose`/`popPose` Pose pooling (1.21-1.21.4) — superseded by vanilla's own pooled Pose model.
+
+### Changed
+- Unified entrypoint: `lomka.Lomka` with nested `Fabric`/`Forge`/`NeoForge` adapters gated by Stonecutter loader constants; `VERSION` is swapped from `stonecutter.properties.toml` automatically.
+- `LomkaMixinPlugin.onLoad()` sets `joml.fastmath=true` (unless the user set it) before JOML classes initialize.
+- `GlRenderStateCache` renamed to `GlStateCache` and moved to `utils/cache/`; `AxisPoseRotate` moved to `utils/math/`.
+- ARGB LUTs are built inside the mixin; AT/AW entries for vanilla `SRGB_TO_LINEAR`/`LINEAR_TO_SRGB` removed.
+- Mixin priorities lowered where foreign patches are expected (BufferBuilder, ByteBufferBuilder, VulkanGpuBuffer.Direct, Minecraft, lightmap mixins).
+
 ## [0.5.1] - 2026-08-25
 
 ### Performance

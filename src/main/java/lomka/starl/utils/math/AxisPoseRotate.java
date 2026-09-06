@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-package lomka.starl.utils;
+package lomka.starl.utils.math;
 
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;

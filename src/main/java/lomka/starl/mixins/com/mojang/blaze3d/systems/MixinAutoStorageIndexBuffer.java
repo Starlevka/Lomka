@@ -31,10 +31,11 @@ public abstract class MixinAutoStorageIndexBuffer {
 
     /**
      * Minimum index count requested from {@code ensureStorage} by the warmup
-     * injection below. Combined with vanilla's doubling this grows the shared
-     * buffer to at least 8192 indices (~16 KB SHORT) on first use instead of a
-     * few dozen, skipping the first five growth reallocations that otherwise
-     * hitch mid-frame during early rendering.
+     * injection below. With vanilla's doubling patched to 4x, the first growth
+     * goes to max(4096, req)*4 = 16384 indices (~32 KB SHORT, 16384 quads) on
+     * first use instead of a few dozen, skipping the first six growth
+     * reallocations that otherwise hitch mid-frame during early rendering.
+     * hasStorage() then makes subsequent calls a single int compare.
      */
     private static final int WARMUP_INDEX_COUNT = 4096;
 

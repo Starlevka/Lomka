@@ -52,18 +52,18 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
 
-@Mixin(value = TextureAtlas.class, priority = 500)
+@Mixin(value = TextureAtlas.class, priority = 500) // Sodium compability
 public abstract class MixinTextureAtlas {
-
-    //? if <1.21.6 {
-    /*@Shadow private List<TextureAtlasSprite.Ticker> animatedTextures;
-    @Shadow @Nullable private DynamicTexture texture;
 
     /**
      * @author Starlev
      * @reason Ticks animation frames with a plain indexed loop, avoiding the vanilla iterator
      *         allocation on the per-frame atlas animation path.
-     *\/
+     */
+    //? if <1.21.6 {
+    /*@Shadow private List<TextureAtlasSprite.Ticker> animatedTextures;
+    @Shadow @Nullable private DynamicTexture texture;
+
     @Overwrite
     public void cycleAnimationFrames() {
         DynamicTexture tex = this.texture;

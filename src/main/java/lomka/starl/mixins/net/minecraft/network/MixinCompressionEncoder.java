@@ -48,7 +48,10 @@ public abstract class MixinCompressionEncoder {
 	 * @reason Reuses a growing scratch byte[] instead of allocating `new byte[n]` for every
 	 *         compressed packet. The output side already reuses encodeBuf; only the input
 	 *         copy was missing reuse. Saves one heap array per chunk/map/entity packet on
-	 *         any server with network compression enabled.
+	 *         any server with network compression enabled. Monotonic growth is capped:
+	 *         buffers >64KB that are 4x larger than the current packet are shrunk to
+	 *         avoid holding an 8MB array from a single huge packet forever (ChannelHandler
+	 *         lives per connection on one EventLoop).
 	 */
 	@Overwrite
 	protected void encode(ChannelHandlerContext channelhandlercontext, ByteBuf bytebuf, ByteBuf bytebuf1) {
@@ -68,6 +71,12 @@ public abstract class MixinCompressionEncoder {
 			byte[] input = this.lomka$inputBuf;
 			if (input.length < i) {
 				input = this.lomka$inputBuf = new byte[Math.max(i, 8192)];
+			} else if (input.length > 65536 && input.length > i * 4) {
+				// Shrink runaway buffer (e.g. 8MB after one huge chunk packet) back to max(8KB, i*2)
+				int target = Math.max(8192, i * 2);
+				// Round to power-of-two to keep future grows amortized
+				target = Integer.highestOneBit(target - 1) << 1;
+				input = this.lomka$inputBuf = new byte[target];
 			}
 			bytebuf.readBytes(input, 0, i);
 			VarInt.write(bytebuf1, i);
@@ -91,6 +100,10 @@ public abstract class MixinCompressionEncoder {
 			byte[] input = this.lomka$inputBuf;
 			if (input.length < i) {
 				input = this.lomka$inputBuf = new byte[Math.max(i, 8192)];
+			} else if (input.length > 65536 && input.length > i * 4) {
+				int target = Math.max(8192, i * 2);
+				target = Integer.highestOneBit(target - 1) << 1;
+				input = this.lomka$inputBuf = new byte[target];
 			}
 			bytebuf.readBytes(input, 0, i);
 			friendlybytebuf.writeVarInt(i);

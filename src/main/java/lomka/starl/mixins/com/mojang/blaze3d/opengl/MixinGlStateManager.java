@@ -20,7 +20,7 @@
 package lomka.starl.mixins.com.mojang.blaze3d.opengl;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
-import lomka.starl.utils.GlRenderStateCache;
+import lomka.starl.utils.cache.GlStateCache;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -41,63 +41,135 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * call sites: @Redirect is exclusive - one redirect per instruction - and shader mods
  * (Iris) redirect those same encoder call sites, which crashes whichever mixin applies
  * second. A cancellable HEAD inject here composes with any upstream redirects and covers
- * every current and future caller. State is stored in {@link GlRenderStateCache} so
+ * every current and future caller. State is stored in {@link GlStateCache} so
  * MixinWindow can invalidate it on window/framebuffer resize - external mods using raw
  * LWJGL calls would otherwise desynchronize the cache until the next value change.
+ *
+ * Method = "_viewport" is also used by Sodium. I added and saved it just as a must-have
+ * with dedup system.
+ * 
+ * <p>Backport (&lt;1.21.2): vanilla deduplicates read/write framebuffer binds through its
+ * internal READ/DRAW_FRAMEBUFFER mirrors only from 1.21.2 up; on 1.20.1 and 1.21.x
+ * {@code _glBindFramebuffer} is an unconditional passthrough while post chains, render-target
+ * pipelines and GUI passes re-issue identical binds every frame. The gated handlers below
+ * replicate Mojang's own later implementation (including resetting mirrors to 0 when a deleted
+ * id matches, as vanilla does from 26.x onward), so a bind is skipped iff vanilla itself would
+ * skip it on 1.21.2+.
  */
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager {
 
+    /**
+     * Caches the incoming viewport rect and cancels the native call when unchanged.
+     */
     @Inject(
             method = "_viewport",
             at = @At("HEAD"),
             cancellable = true
     )
     private static void lomka$cacheViewport(int x, int y, int width, int height, CallbackInfo ci) {
-        if (x != GlRenderStateCache.get(GlRenderStateCache.VIEWPORT_X)
-                || y      != GlRenderStateCache.get(GlRenderStateCache.VIEWPORT_Y)
-                || width  != GlRenderStateCache.get(GlRenderStateCache.VIEWPORT_W)
-                || height != GlRenderStateCache.get(GlRenderStateCache.VIEWPORT_H)) {
-            GlRenderStateCache.set(GlRenderStateCache.VIEWPORT_X, x);
-            GlRenderStateCache.set(GlRenderStateCache.VIEWPORT_Y, y);
-            GlRenderStateCache.set(GlRenderStateCache.VIEWPORT_W, width);
-            GlRenderStateCache.set(GlRenderStateCache.VIEWPORT_H, height);
+        if (x != GlStateCache.get(GlStateCache.VIEWPORT_X)
+                || y      != GlStateCache.get(GlStateCache.VIEWPORT_Y)
+                || width  != GlStateCache.get(GlStateCache.VIEWPORT_W)
+                || height != GlStateCache.get(GlStateCache.VIEWPORT_H)) {
+            GlStateCache.set(GlStateCache.VIEWPORT_X, x);
+            GlStateCache.set(GlStateCache.VIEWPORT_Y, y);
+            GlStateCache.set(GlStateCache.VIEWPORT_W, width);
+            GlStateCache.set(GlStateCache.VIEWPORT_H, height);
         } else {
             ci.cancel();
         }
     }
 
+    /**
+     * Caches the incoming scissor rect and cancels the native call when unchanged.
+     */
     @Inject(
             method = "_scissorBox",
             at = @At("HEAD"),
             cancellable = true
     )
     private static void lomka$cacheScissorBox(int x, int y, int width, int height, CallbackInfo ci) {
-        if (x != GlRenderStateCache.get(GlRenderStateCache.SCISSOR_X)
-                || y      != GlRenderStateCache.get(GlRenderStateCache.SCISSOR_Y)
-                || width  != GlRenderStateCache.get(GlRenderStateCache.SCISSOR_W)
-                || height != GlRenderStateCache.get(GlRenderStateCache.SCISSOR_H)) {
-            GlRenderStateCache.set(GlRenderStateCache.SCISSOR_X, x);
-            GlRenderStateCache.set(GlRenderStateCache.SCISSOR_Y, y);
-            GlRenderStateCache.set(GlRenderStateCache.SCISSOR_W, width);
-            GlRenderStateCache.set(GlRenderStateCache.SCISSOR_H, height);
+        if (x != GlStateCache.get(GlStateCache.SCISSOR_X)
+                || y      != GlStateCache.get(GlStateCache.SCISSOR_Y)
+                || width  != GlStateCache.get(GlStateCache.SCISSOR_W)
+                || height != GlStateCache.get(GlStateCache.SCISSOR_H)) {
+            GlStateCache.set(GlStateCache.SCISSOR_X, x);
+            GlStateCache.set(GlStateCache.SCISSOR_Y, y);
+            GlStateCache.set(GlStateCache.SCISSOR_W, width);
+            GlStateCache.set(GlStateCache.SCISSOR_H, height);
         } else {
             ci.cancel();
         }
     }
 
+    /**
+     * Caches the polygon mode and cancels the native call when unchanged.
+     */
     @Inject(
             method = "_polygonMode",
             at = @At("HEAD"),
             cancellable = true
     )
     private static void lomka$cachePolygonMode(int face, int mode, CallbackInfo ci) {
-        if (face != GlRenderStateCache.get(GlRenderStateCache.POLYGON_FACE)
-         || mode != GlRenderStateCache.get(GlRenderStateCache.POLYGON_MODE)) {
-            GlRenderStateCache.set(GlRenderStateCache.POLYGON_FACE, face);
-            GlRenderStateCache.set(GlRenderStateCache.POLYGON_MODE, mode);
+        if (face != GlStateCache.get(GlStateCache.POLYGON_FACE)
+         || mode != GlStateCache.get(GlStateCache.POLYGON_MODE)) {
+            GlStateCache.set(GlStateCache.POLYGON_FACE, face);
+            GlStateCache.set(GlStateCache.POLYGON_MODE, mode);
         } else {
             ci.cancel();
         }
     }
+
+    //? if <1.21.2 {
+    /**
+     * Mirrors Mojang's 1.21.2+ framebuffer-bind dedup onto older versions; cancels unchanged binds.
+     */
+    @Inject(
+            method = "_glBindFramebuffer",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private static void lomka$cacheBindFramebuffer(int target, int framebuffer, CallbackInfo ci) {
+        boolean known = false;
+        boolean changed = false;
+
+        if (target == 36008 || target == 36160) {
+            known = true;
+            if (GlStateCache.get(GlStateCache.FBO_READ) != framebuffer) {
+                GlStateCache.set(GlStateCache.FBO_READ, framebuffer);
+                changed = true;
+            }
+        }
+
+        if (target == 36009 || target == 36160) {
+            known = true;
+            if (GlStateCache.get(GlStateCache.FBO_WRITE) != framebuffer) {
+                GlStateCache.set(GlStateCache.FBO_WRITE, framebuffer);
+                changed = true;
+            }
+        }
+
+        if (known && !changed) {
+            ci.cancel();
+        }
+    }
+
+    /**
+     * Resets the cached FBO mirrors when a framebuffer is deleted.
+     */
+    @Inject(
+            method = "_glDeleteFramebuffers",
+            at = @At("TAIL")
+    )
+    private static void lomka$clearFboCache(int framebuffer, CallbackInfo ci) {
+        if (GlStateCache.get(GlStateCache.FBO_READ) == framebuffer) {
+            GlStateCache.set(GlStateCache.FBO_READ, 0);
+        }
+
+        if (GlStateCache.get(GlStateCache.FBO_WRITE) == framebuffer) {
+            GlStateCache.set(GlStateCache.FBO_WRITE, 0);
+        }
+    }
+    //?}
 }

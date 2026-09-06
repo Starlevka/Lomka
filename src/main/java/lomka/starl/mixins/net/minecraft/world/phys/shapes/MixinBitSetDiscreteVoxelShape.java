@@ -57,17 +57,27 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
      * @reason Hoist the boolean[] mutable-capture wrappers outside the nested
      *         forMergedIndexes loops and reset their [0] slot per iteration instead of
      *         allocating a fresh boolean[1] on every X iteration and every (X,Y) pair.
-     *         Vanilla already hoists the int[] bounds accumulator (aint) the exact same
-     *         way, and its own correctness already relies on forMergedIndexes running
-     *         strictly sequentially (its shared-array min/max mutation would be racy
-     *         otherwise) — this extends that same pre-existing assumption to the boolean
-     *         flags rather than introducing a new one.
+     *         Additionally, the innermost loop writes bit indices one BitSet.set() call at
+     *         a time even though the merged index (third consumer arg) advances
+     *         sequentially over 0..size-1 for every IndexMerger implementation, and the bit
+     *         layout ((x*ySize + y)*zSize + z) makes consecutive z indices map to
+     *         consecutive bit indices — so the writes form contiguous runs. Runs are
+     *         accumulated in a hoisted int[2] scratch and flushed with a single
+     *         BitSet.set(from, to) bulk word write instead of N per-bit calls; the run
+     *         detector falls back to smaller runs transparently for any merger that ever
+     *         yields non-consecutive result indices. Vanilla already hoists the int[]
+     *         bounds accumulator (aint) the exact same way, and its own correctness
+     *         already relies on forMergedIndexes running strictly sequentially (its
+     *         shared-array min/max mutation would be racy otherwise) — this extends that
+     *         same pre-existing assumption to the boolean flags and the run scratch rather
+     *         than introducing a new one.
      */
     @Overwrite
     static BitSetDiscreteVoxelShape join(DiscreteVoxelShape discretevoxelshape, DiscreteVoxelShape discretevoxelshape1, IndexMerger indexmerger, IndexMerger indexmerger1, IndexMerger indexmerger2, BooleanOp booleanop) {
         BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(indexmerger.size() - 1, indexmerger1.size() - 1, indexmerger2.size() - 1);
         IBitSetDiscreteVoxelShape IBit = (IBitSetDiscreteVoxelShape) (Object) bitsetdiscretevoxelshape;
         int[] aint = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
+        int[] run  = new int[2];
         boolean[] aboolean  = new boolean[1];
         boolean[] aboolean1 = new boolean[1];
 
@@ -76,16 +86,30 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
 
             indexmerger1.forMergedIndexes((l, i1, j1) -> {
                 aboolean1[0] = false;
+                run[0] = -1;
 
                 indexmerger2.forMergedIndexes((k1, l1, i2) -> {
                     if (booleanop.apply(discretevoxelshape.isFullWide(i, l, k1), discretevoxelshape1.isFullWide(j, i1, l1))) {
-                        IBit.lomka$storage().set(IBit.lomka$index(k, j1, i2));
+                        int bitIndex = IBit.lomka$index(k, j1, i2);
+
+                        if (run[0] == -1) {
+                            run[0] = bitIndex;
+                        } else if (bitIndex != run[1] + 1) {
+                            IBit.lomka$storage().set(run[0], run[1] + 1);
+                            run[0] = bitIndex;
+                        }
+
+                        run[1] = bitIndex;
                         aint[2] = Math.min(aint[2], i2);
                         aint[5] = Math.max(aint[5], i2);
                         aboolean1[0] = true;
                     }
                     return true;
                 });
+                if (run[0] != -1) {
+                    IBit.lomka$storage().set(run[0], run[1] + 1);
+                    run[0] = -1;
+                }
                 if (aboolean1[0]) {
                     aint[1] = Math.min(aint[1], j1);
                     aint[4] = Math.max(aint[4], j1);

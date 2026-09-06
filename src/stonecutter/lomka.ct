@@ -12,11 +12,6 @@ accessible method net/minecraft/client/resources/model/QuadCollection <init> (Lj
 accessible method net/minecraft/client/resources/model/QuadCollection$Builder createFromSublists (Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/QuadCollection;
 #?}
 
-#? if >=1.21.11 {
-accessible field net/minecraft/util/ARGB SRGB_TO_LINEAR [S
-accessible field net/minecraft/util/ARGB LINEAR_TO_SRGB [B
-#?}
-
 #? if >=1.21.6 {
 mutable field com/mojang/blaze3d/opengl/GlProgram uniformsByName Ljava/util/Map;
 #?}
@@ -38,8 +33,6 @@ accessible method net/minecraft/client/Camera$NearPlane <init> (Lnet/minecraft/w
 accessible class net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry filterAll (Ljava/util/Collection;)V
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry resources ()Lnet/minecraft/server/packs/PackResources;
-
-accessible method net/minecraft/stats/Stat <init> (Lnet/minecraft/stats/StatType;Ljava/lang/Object;Lnet/minecraft/stats/StatFormatter;)V
 
 #? if <1.21.5 {
 accessible method com/mojang/blaze3d/vertex/PoseStack$Pose <init> (Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V

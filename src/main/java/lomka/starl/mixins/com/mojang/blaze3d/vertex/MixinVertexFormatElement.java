@@ -25,10 +25,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(VertexFormatElement.class)
 public abstract class MixinVertexFormatElement {
@@ -37,26 +33,6 @@ public abstract class MixinVertexFormatElement {
     @Shadow @Final private VertexFormatElement.Usage usage;
     @Shadow @Final private int index;
     @Shadow @Final private int count;
-
-    @Unique private int lomka$cachedHash;
-
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void lomka$cacheHash(int i, VertexFormatElement.Type type, VertexFormatElement.Usage usage, int j, CallbackInfo ci) {
-        int h = this.type.hashCode();
-        h = 31 * h + this.usage.hashCode();
-        h = 31 * h + this.index;
-        h = 31 * h + this.count;
-        this.lomka$cachedHash = h;
-    }
-
-    /**
-     * @author Starlev
-     * @reason Returns precomputed hash code to bypass repeated enum and field hashing during format map lookups.
-     */
-    @Overwrite
-    public int hashCode() {
-        return this.lomka$cachedHash;
-    }
 
     /**
      * @author Starlev

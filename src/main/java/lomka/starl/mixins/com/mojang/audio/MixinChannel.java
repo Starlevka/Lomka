@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(value = Channel.class, priority = 500)
+@Mixin(value = Channel.class, priority = 500) // Mojang overwrite first
 public abstract class MixinChannel {
 
     @Shadow @Final private int source;

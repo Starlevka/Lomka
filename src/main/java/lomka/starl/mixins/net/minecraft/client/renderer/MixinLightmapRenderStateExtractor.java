@@ -42,7 +42,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = LightmapRenderStateExtractor.class, priority = 500)
+@Mixin(value = LightmapRenderStateExtractor.class, priority = 500) // prob Iris/VulkanMod compability too
 public abstract class MixinLightmapRenderStateExtractor {
 
     @Shadow @Final private GameRenderer renderer;

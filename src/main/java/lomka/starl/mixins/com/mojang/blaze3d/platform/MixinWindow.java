@@ -20,7 +20,7 @@
 package lomka.starl.mixins.com.mojang.blaze3d.platform;
 
 import com.mojang.blaze3d.platform.Window;
-import lomka.starl.utils.GlRenderStateCache;
+import lomka.starl.utils.cache.GlStateCache;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -37,19 +37,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Window.class)
 public class MixinWindow {
 
+    /**
+     * Resets the GL state cache so viewport/scissor dedup re-learns from a clean slate after a resize.
+     */
     @Inject(
             method = "onResize",
             at = @At("TAIL")
     )
     private void lomka$resetGlCacheOnResize(long handle, int width, int height, CallbackInfo ci) {
-        GlRenderStateCache.reset();
+        GlStateCache.reset();
     }
 
+    /**
+     * Resets the GL state cache after a framebuffer resize.
+     */
     @Inject(
             method = "onFramebufferResize",
             at = @At("TAIL")
     )
     private void lomka$resetGlCacheOnFramebufferResize(long handle, int width, int height, CallbackInfo ci) {
-        GlRenderStateCache.reset();
+        GlStateCache.reset();
     }
 }

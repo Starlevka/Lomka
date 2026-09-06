@@ -36,6 +36,15 @@ public abstract class MixinSource implements IGlyphSource {
 
     @Shadow protected abstract BakedGlyph getGlyph(int codepoint);
 
+    /**
+     * @author Starlev
+     * Synchronized on purpose: StringSplitter width lookups are render-thread-bound in vanilla,
+     * but third-party mods may measure text off-thread, and a data race on a fastutil open-addressing
+     * map can corrupt it (lost entries, torn rehash state, ArrayIndexOutOfBounds mid-frame).
+     * An uncontended monitor costs ~15-20 cycles - negligible against a glyph map probe - while
+     * the corruption it prevents is unrecoverable. Do NOT remove this lock without a proven
+     * single-thread confinement guarantee.
+     */
     @Override
     public void lomka$clear() {
         synchronized (this.lomka$advanceCache) {

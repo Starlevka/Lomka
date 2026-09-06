@@ -1,19 +1,31 @@
 ![Lomka icon](https://cdn.modrinth.com/data/cached_images/5e22062d6564d104d3742aa7ec947aa2d394a2da_0.webp)
-
+<div align="center">
+  
 <sub><i>The project code was created with help of Artificial Intelligence.</i></sub>
+</div>
+<div align="center">
+<a href="https://modrinth.com/mod/lomka"><img alt="Available on Modrinth" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/modrinth_vector.svg"></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/lomka"><img alt="Available on CurseForge" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/curseforge_vector.svg"></a>
+<a href="https://github.com/Starlevka/Lomka"><img alt="GitHub" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact-minimal/available/github_vector.svg"></a>
+<a href="https://github.com/Starlevka/Lomka/issues"><img alt="Issues" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/documentation/issues_vector.svg"></a>
+<a href="https://github.com/Starlevka/Lomka/wiki"><img alt="Wiki" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/documentation/gitbook_vector.svg"></a>
+</div>
 
-An open source mod with mix of small optimizations for your Minecraft. **Fewer stutters, more FPS, faster resource loading and slightly reduces memory usage**.
+An open source mod with mix of small optimizations for your Minecraft. **Fewer stutters, slightly improvements: more FPS (up to 4.58% increase depends on your hardware), faster resource loading, world generation and reduces memory usage**.
 
 ## Optimizations
 - Faster hot-path math and color engine
 - Less garbage in render and tick loops
 - Caching where vanilla repeats work sometimes
 - Faster block collision scans
+- Cached voxel shape AABBs and allocation-free raycasts
+- Cached font glyph advances for faster text rendering
+- Fewer native buffer reallocations (audio streaming and mesh building)
 - Lightning and textures light engine and chunk tracking speedups
 - Cheaper resource scanning and metadata reads
 - Leaner network buffers (without affecting on your connection)
 - Fewer redundant OpenGL calls
-- Removing thread yield() from render thread
+- Removing thread.yield() from render thread
 - And more other small bugfixes in the game's code
 
 ## Versions

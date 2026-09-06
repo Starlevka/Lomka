@@ -34,13 +34,13 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(value = ItemInHandRenderer.class, priority = 500)
+@Mixin(value = ItemInHandRenderer.class, priority = 500) // compability for any scenario
 public abstract class MixinItemInHandRenderer {
 
     @Shadow @Final private ItemModelResolver itemModelResolver;
 
     @Unique private final ItemStackRenderState lomka$rightHandState = new ItemStackRenderState();
-    @Unique private final ItemStackRenderState lomka$leftHandState = new ItemStackRenderState();
+    @Unique private final ItemStackRenderState lomka$leftHandState  = new ItemStackRenderState();
 
     /**
      * @author Starlev
