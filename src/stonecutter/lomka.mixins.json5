@@ -5,7 +5,7 @@
   "package": "lomka.starl.mixins",
   "compatibilityLevel": "${java}",
   "client": [
-    ,"com.mojang.blaze3d.audio.MixinChannel"
+    "com.mojang.blaze3d.audio.MixinChannel"
     ,"com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer"
     ,"com.mojang.blaze3d.vertex.MixinPoseStack"
     ,"com.mojang.blaze3d.opengl.MixinGlStateManager"
