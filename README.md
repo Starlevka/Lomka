@@ -73,3 +73,6 @@ Found something that only happens with Lomka?
 2. Still there? Post it on [the issue tracker](https://github.com/Starlevka/Lomka/issues) with an optional log attached.
 
 Please don't report Lomka-related crashes to other mod authors, because Lomka's mixins are cruel that could break unrelated systems.
+
+## Contributing
+See [the contibuting guide](https://github.com/Starlevka/Lomka/blob/main/CONTRIBUTING.md).
