@@ -180,7 +180,14 @@ public final class LomkaMixinPlugin implements IMixinConfigPlugin {
     @Override public List<String> getMixins() { return Collections.emptyList(); }
     @Override public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {}
 
-    @Override public void onLoad(String configPath) { lomka$loadOptions(); }
+    @Override public void onLoad(String configPath) {
+        // joml.fastmath must be set before org.joml.Math is initialized (vanilla MatrixUtil/GivensParameters + any mod using JOML)
+        // null-check respects explicit -Djoml.fastmath=false user override
+        if (System.getProperty("joml.fastmath") == null) {
+            System.setProperty("joml.fastmath", "true");
+        }
+        lomka$loadOptions();
+    }
     @Override public void preApply(String targetClass, org.objectweb.asm.tree.ClassNode classNode, String mixinClass, IMixinInfo mixinInfo) {}
     @Override public void postApply(String targetClass, org.objectweb.asm.tree.ClassNode classNode, String mixinClass, IMixinInfo mixinInfo) {}
 }

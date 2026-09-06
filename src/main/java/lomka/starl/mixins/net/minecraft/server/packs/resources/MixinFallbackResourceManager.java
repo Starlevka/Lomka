@@ -76,7 +76,7 @@ public abstract class MixinFallbackResourceManager {
     @Unique private record Entry(PackResources source, IoSupplier<InputStream> resource, int packIndex) {}
 
     @Shadow
-    private static InputStream wrapForDebug(Identifier id, PackResources pack, InputStream stream) {
+    private static IoSupplier<InputStream> wrapForDebug(Identifier id, PackResources pack, IoSupplier<InputStream> supplier) {
         throw new AssertionError();
     }
 
@@ -117,7 +117,7 @@ public abstract class MixinFallbackResourceManager {
         if (metaEntries.isEmpty()) {
             fileEntries.forEach((id, entry) -> {
                 IoSupplier<InputStream> supplier = debug
-                        ? () -> wrapForDebug(id, entry.source, entry.resource.get())
+                        ? wrapForDebug(id, entry.source, entry.resource)
                         : entry.resource;
                 result.put(id, new Resource(entry.source, supplier));
             });
@@ -128,7 +128,7 @@ public abstract class MixinFallbackResourceManager {
             Identifier metaId = lomka$getMetadataLocation(id);
             Entry metaEntry = metaEntries.get(metaId);
             IoSupplier<InputStream> resSupplier = debug
-                    ? () -> wrapForDebug(id, entry.source, entry.resource.get())
+                    ? wrapForDebug(id, entry.source, entry.resource)
                     : entry.resource;
             if (metaEntry != null && metaEntry.packIndex >= entry.packIndex) {
                 result.put(id, new Resource(entry.source, resSupplier, lomka$convertToMetadata(metaEntry.resource)));

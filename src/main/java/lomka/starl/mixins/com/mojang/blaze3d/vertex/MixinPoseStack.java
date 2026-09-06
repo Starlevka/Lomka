@@ -20,7 +20,7 @@
 package lomka.starl.mixins.com.mojang.blaze3d.vertex;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import lomka.starl.utils.AxisPoseRotate;
+import lomka.starl.utils.math.AxisPoseRotate;
 //? if >=1.21.6 {
 import org.joml.Quaternionfc;
 //?} else {

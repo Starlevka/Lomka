@@ -40,7 +40,7 @@ public abstract class MixinItemInHandRenderer {
     @Shadow @Final private ItemModelResolver itemModelResolver;
 
     @Unique private final ItemStackRenderState lomka$rightHandState = new ItemStackRenderState();
-    @Unique private final ItemStackRenderState lomka$leftHandState = new ItemStackRenderState();
+    @Unique private final ItemStackRenderState lomka$leftHandState  = new ItemStackRenderState();
 
     /**
      * @author Starlev

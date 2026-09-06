@@ -20,7 +20,7 @@
 package lomka.starl.mixins.com.mojang.blaze3d.platform;
 
 import com.mojang.blaze3d.platform.Window;
-import lomka.starl.utils.GlRenderStateCache;
+import lomka.starl.utils.cache.GlStateCache;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -45,7 +45,7 @@ public class MixinWindow {
             at = @At("TAIL")
     )
     private void lomka$resetGlCacheOnResize(long handle, int width, int height, CallbackInfo ci) {
-        GlRenderStateCache.reset();
+        GlStateCache.reset();
     }
 
     /**
@@ -56,6 +56,6 @@ public class MixinWindow {
             at = @At("TAIL")
     )
     private void lomka$resetGlCacheOnFramebufferResize(long handle, int width, int height, CallbackInfo ci) {
-        GlRenderStateCache.reset();
+        GlStateCache.reset();
     }
 }

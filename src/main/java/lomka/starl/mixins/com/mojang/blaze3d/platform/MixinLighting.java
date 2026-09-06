@@ -59,33 +59,25 @@ public abstract class MixinLighting {
     @Shadow @Final private static Vector3f DIFFUSE_LIGHT_1;
     @Shadow @Final private static Vector3f NETHER_DIFFUSE_LIGHT_0;
     @Shadow @Final private static Vector3f NETHER_DIFFUSE_LIGHT_1;
+
+    @Shadow private void updateBuffer(Lighting.Entry lighting_entry, Vector3f vector3f, Vector3f vector3f1) {}
     //?} else {
     /*@Shadow @Final private static Vector3fc DIFFUSE_LIGHT_0;
     @Shadow @Final private static Vector3fc DIFFUSE_LIGHT_1;
     @Shadow @Final private static Vector3fc NETHER_DIFFUSE_LIGHT_0;
-    @Shadow @Final private static Vector3fc NETHER_DIFFUSE_LIGHT_1;*/
+    @Shadow @Final private static Vector3fc NETHER_DIFFUSE_LIGHT_1;
+    
+    @Shadow private void updateBuffer(Lighting.Entry lighting_entry, Vector3fc vector3f, Vector3fc vector3f1) {}*/
     //?}
 
-    //? if <26.2 {
-    @Shadow
-    private void updateBuffer(Lighting.Entry lighting_entry, Vector3f vector3f, Vector3f vector3f1) {}
-    //?} else {
-    /*@Shadow
-    private void updateBuffer(Lighting.Entry lighting_entry, Vector3fc vector3f, Vector3fc vector3f1) {}*/
-    //?}
-
-    @Unique
-    private GpuBufferSlice[] lomka$entrySlices;
+    @Unique private GpuBufferSlice[] lomka$entrySlices;
 
     //? if >=26.1 {
-    /*@Unique
-    private CardinalLighting.Type lomka$currentLightType;*/
+    /*@Unique private CardinalLighting.Type lomka$currentLightType;*/
     //?} else if >=1.21.11 {
-    @Unique
-    private DimensionType.CardinalLightType lomka$currentLightType;
+    @Unique private DimensionType.CardinalLightType lomka$currentLightType;
     //?} else {
-    /*@Unique
-    private Boolean lomka$currentNether;*/
+    /*@Unique private Boolean lomka$currentNether;*/
     //?}
 
     /**
@@ -132,11 +124,6 @@ public abstract class MixinLighting {
         }
     }
     *///?} else if >=1.21.11 {
-    
-    /** 
-     * @author Starlev
-     * @reason Skips redundant GPU UBO writes when the nether flag has not changed.
-     */
     @Overwrite
     public void updateLevel(DimensionType.CardinalLightType type) {
         if (this.lomka$currentLightType == type) {

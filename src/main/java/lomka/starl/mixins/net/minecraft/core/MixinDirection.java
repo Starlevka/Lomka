@@ -48,16 +48,16 @@ public abstract class MixinDirection {
      * /getClockWiseZ() switch bodies exactly, including the parallel-axis identity entries
      * vanilla expresses as early-exit guards.
      */
-    @Unique
-    private static final Direction[] lomka$CLOCKWISE = {
+    @Unique private static final Direction[] lomka$CLOCKWISE = {
         /* X */ Direction.SOUTH, Direction.NORTH, Direction.DOWN,  Direction.UP,    Direction.WEST,  Direction.EAST,
         /* Y */ Direction.DOWN,  Direction.UP,    Direction.EAST,  Direction.WEST,  Direction.NORTH, Direction.SOUTH,
         /* Z */ Direction.WEST,  Direction.EAST,  Direction.NORTH, Direction.SOUTH, Direction.UP,    Direction.DOWN
     };
 
-    /** Same flat layout as {@link #lomka$CLOCKWISE}, mirroring getCounterClockWiseX/Y/Z. */
-    @Unique
-    private static final Direction[] lomka$COUNTERCLOCKWISE = {
+    /** 
+     * Same flat layout as {@link #lomka$CLOCKWISE}, mirroring getCounterClockWiseX/Y/Z. 
+     */
+    @Unique private static final Direction[] lomka$COUNTERCLOCKWISE = {
         /* X */ Direction.NORTH, Direction.SOUTH, Direction.UP,    Direction.DOWN,  Direction.WEST,  Direction.EAST,
         /* Y */ Direction.DOWN,  Direction.UP,    Direction.WEST,  Direction.EAST,  Direction.SOUTH, Direction.NORTH,
         /* Z */ Direction.EAST,  Direction.WEST,  Direction.NORTH, Direction.SOUTH, Direction.DOWN,  Direction.UP
@@ -83,7 +83,6 @@ public abstract class MixinDirection {
         return lomka$COUNTERCLOCKWISE[axis.ordinal() * 6 + ((Direction) (Object) this).ordinal()];
     }
 
-    //? if >=1.21.4 {
     /**
      * @author Starlev
      * @reason Normals are unit axes, so the six dot products reduce to &plusmn;f/&plusmn;f1/&plusmn;f2
@@ -100,6 +99,7 @@ public abstract class MixinDirection {
      *         every other dot is poisoned by Inf*0=NaN, so vanilla picks exactly that axis; two or
      *         more infinite components poison all six dots and vanilla stays NORTH.
      */
+    //? if >=1.21.4 {
     @Overwrite
     public static Direction getApproximateNearest(float f, float f1, float f2) {
         float absF  = Math.abs(f);

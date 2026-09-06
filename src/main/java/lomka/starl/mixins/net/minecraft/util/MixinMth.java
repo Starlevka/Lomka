@@ -197,6 +197,26 @@ public class MixinMth {
 
     /**
      * @author Starlev
+     * @reason Use FMA for single rounding and single FMADD instruction;
+     *         functionally ported from SuperFastMath (elias).
+     */
+    @Overwrite
+    public static float lerp(float f, float f1, float f2) {
+        return Math.fma(f, f2 - f1, f1);
+    }
+
+    /**
+     * @author Starlev
+     * @reason Use FMA for single rounding and single FMADD instruction;
+     *         functionally ported from SuperFastMath (elias).
+     */
+    @Overwrite
+    public static double lerp(double d, double d1, double d2) {
+        return Math.fma(d, d2 - d1, d1);
+    }
+
+    /**
+     * @author Starlev
      * @reason Optimize ray-AABB intersection with cheap early-out checks to bypass heavy math.
      */
     @Overwrite

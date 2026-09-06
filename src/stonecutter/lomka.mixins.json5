@@ -5,7 +5,7 @@
   "package": "lomka.starl.mixins",
   "compatibilityLevel": "${java}",
   "client": [
-    "com.mojang.blaze3d.audio.MixinChannel"
+    ,"com.mojang.blaze3d.audio.MixinChannel"
     ,"com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer"
     ,"com.mojang.blaze3d.vertex.MixinPoseStack"
     ,"com.mojang.blaze3d.opengl.MixinGlStateManager"
@@ -18,6 +18,7 @@
     /*? if >=1.21 { */
     ,"com.mojang.blaze3d.audio.MixinListener"
     ,"com.mojang.blaze3d.vertex.MixinBufferBuilder"
+    ,"com.mojang.blaze3d.vertex.MixinByteBufferBuilder"
     ,"com.mojang.blaze3d.vertex.MixinVertexConsumer"
     ,"net.minecraft.client.sounds.MixinJOrbisAudioStream"
     ,"net.minecraft.client.sounds.MixinChunkedSampleByteBuf"
@@ -85,6 +86,8 @@
     ,"net.minecraft.util.MixinByIdMap"
     ,"net.minecraft.util.MixinMth"
     ,"net.minecraft.util.MixinARGB"
+    ,"net.minecraft.util.MixinUtil"
+    ,"net.minecraft.core.MixinBlockPos"
     ,"net.minecraft.core.MixinCursor3D"
     ,"net.minecraft.core.MixinDirect"
     ,"net.minecraft.core.MixinDirection"
@@ -92,7 +95,6 @@
     ,"net.minecraft.core.MixinVec3i"
     ,"net.minecraft.network.MixinFriendlyByteBuf"
     ,"net.minecraft.network.MixinCompressionEncoder"
-    ,"net.minecraft.stats.MixinStatType"
     ,"net.minecraft.world.level.block.state.MixinBlockStateBase"
     ,"net.minecraft.world.level.block.state.MixinBlockStateBaseCache"
     ,"net.minecraft.world.level.chunk.MixinDataLayer"
@@ -101,6 +103,7 @@
     ,"net.minecraft.world.level.lighting.MixinLeveledPriorityQueue"
     ,"net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape"
     ,"net.minecraft.world.phys.shapes.MixinVoxelShape"
+    ,"net.minecraft.world.phys.MixinAABB"
     ,"net.minecraft.server.packs.resources.MixinFallbackResourceManager"
     ,"net.minecraft.server.packs.resources.MixinMultiPackResourceManager"
     ,"net.minecraft.server.packs.MixinVanillaPackResources"

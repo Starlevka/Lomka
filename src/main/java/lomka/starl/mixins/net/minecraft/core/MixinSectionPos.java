@@ -78,7 +78,7 @@ public abstract class MixinSectionPos {
     @Overwrite
     public static long blockToSection(long blockPosLong) {
         return (blockPosLong & -4398046511104L)
-                | ((blockPosLong << 4)          & 4398045462528L)
+                |  ((blockPosLong << 4)         & 4398045462528L)
                 | (((blockPosLong << 52) >> 56) & 1048575L);
     }
 
@@ -173,8 +173,6 @@ public abstract class MixinSectionPos {
                             }
                         }
                     }
-                    // Mark cursor as exhausted to keep tryAdvance/forEachRemaining contract consistent.
-                    // Advance through all elements virtually so subsequent tryAdvance returns false.
                     while (this.cursor.advance()) {}
                     this.started = true;
                 } else {

@@ -19,58 +19,39 @@
 
 package lomka.starl.mixins.net.minecraft.world.phys.shapes;
 
+import com.google.common.collect.Lists;
+import java.util.Collections;
 import java.util.List;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * @author Starlev
- * VoxelShape#clip falls back to AABB.clip(this.toAabbs(), ...) whenever the fast
- * single-voxel endpoint test misses — which is essentially every crosshair raycast
- * frame plus every projectile/tracing query: vanilla toAabbs() allocates a fresh
- * ArrayList and one AABB per box on each call. Shapes are effectively immutable in
- * practice (DiscreteVoxelShape#fill is public but nothing re-fills shipped shapes);
- * vanilla itself already caches VoxelShape#faces under the exact same assumption
- * and never invalidates it, so caching the box list once per shape is no stronger
- * a guarantee than vanilla already makes. The cached list is only ever read
- * (AABB.clip iterates it), never mutated by vanilla call sites.
- * Cancellable HEAD + RETURN pair: any upstream @Redirect/@Inject into toAabbs
- * keeps working — its RETURN result still gets published, and a cancelled HEAD
- * simply bypasses the cache.
- */
 @Mixin(VoxelShape.class)
 public abstract class MixinVoxelShape {
+
+    @Shadow public abstract void forAllBoxes(Shapes.DoubleLineConsumer shapes_doublelineconsumer);
 
     @Unique private volatile List<AABB> lomka$aabbCache;
 
     /**
-     * Serves the cached box list on repeat calls instead of reallocating ArrayList + AABBs per raycast.
-     * Defensive copy is used to preserve vanilla's ownership contract (caller may mutate the list);
-     * the published cache is unmodifiable to prevent accidental corruption.
+     * @author Starlev
+     * @reason Caches computed AABB list on first access to eliminate ArrayList
+     *         and AABB allocations on hot-path raycasting and collision queries.
      */
-    @Inject(method = "toAabbs", at = @At("HEAD"), cancellable = true)
-    private void lomka$serveCachedAabbs(CallbackInfoReturnable<List<AABB>> cir) {
-        List<AABB> cached = this.lomka$aabbCache;
-
-        if (cached != null) {
-            cir.setReturnValue(new java.util.ArrayList<>(cached));
+    @Overwrite
+    public List<AABB> toAabbs() {
+        List<AABB> list = this.lomka$aabbCache;
+        if (list == null) {
+            List<AABB> arrayList = Lists.newArrayList();
+            this.forAllBoxes((d0, d1, d2, d3, d4, d5) -> {
+                arrayList.add(new AABB(d0, d1, d2, d3, d4, d5));
+            });
+            this.lomka$aabbCache = list = Collections.unmodifiableList(arrayList);
         }
-    }
-
-    /**
-     * Publishes the freshly computed list once; subsequent HEAD hits are served from the cache.
-     * Stored as unmodifiable to guard against callers mutating the cached instance.
-     */
-    @Inject(method = "toAabbs", at = @At("RETURN"))
-    private void lomka$storeAabbs(CallbackInfoReturnable<List<AABB>> cir) {
-        List<AABB> computed = cir.getReturnValue();
-        List<AABB> immutable = java.util.Collections.unmodifiableList(new java.util.ArrayList<>(computed));
-        this.lomka$aabbCache = immutable;
-        cir.setReturnValue(new java.util.ArrayList<>(immutable));
+        return list;
     }
 }

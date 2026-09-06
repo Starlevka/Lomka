@@ -66,12 +66,12 @@ public class MixinLightCoordsUtil {
         if (coords1 == coords2) {
             return coords1;
         }
-        int block1 = coords1 >> 4 & 15;
-        int block2 = coords2 >> 4 & 15;
-        int sky1 = coords1 >> 20 & 15;
-        int sky2 = coords2 >> 20 & 15;
-        int block = block1 > block2 ? block1 : block2;
-        int sky = sky1 > sky2 ? sky1 : sky2;
+        int block1 = coords1 >>  4 & 15;
+        int block2 = coords2 >>  4 & 15;
+        int sky1   = coords1 >> 20 & 15;
+        int sky2   = coords2 >> 20 & 15;
+        int block  = block1 > block2 ? block1 : block2;
+        int sky    = sky1 > sky2 ? sky1 : sky2;
         return block << 4 | sky << 20;
     }
 
@@ -89,10 +89,10 @@ public class MixinLightCoordsUtil {
         if (emission >= 15) {
             return LightCoordsUtil.FULL_BRIGHT;
         }
-        int sky = lightCoords >> 20 & 15;
-        int block = lightCoords >> 4 & 15;
-        if (sky < emission) {
-            sky = emission;
+        int sky   = lightCoords >> 20 & 15;
+        int block = lightCoords >>  4 & 15;
+        if (sky   < emission) {
+            sky   = emission;
         }
         if (block < emission) {
             block = emission;
@@ -108,8 +108,8 @@ public class MixinLightCoordsUtil {
      */
     @Overwrite
     public static int smoothWeightedBlend(final int coords1, final int coords2, final int coords3, final int coords4, final float weight1, final float weight2, final float weight3, final float weight4) {
-        int sky = (int) ((coords1 >> 16 & 255) * weight1 + (coords2 >> 16 & 255) * weight2 + (coords3 >> 16 & 255) * weight3 + (coords4 >> 16 & 255) * weight4);
-        int block = (int) ((coords1 & 255) * weight1 + (coords2 & 255) * weight2 + (coords3 & 255) * weight3 + (coords4 & 255) * weight4);
+        int sky   = (int) ((coords1 >> 16 & 255) * weight1 + (coords2 >> 16 & 255) * weight2 + (coords3 >> 16 & 255) * weight3 + (coords4 >> 16 & 255) * weight4);
+        int block = (int) ((coords1 & 255)       * weight1 + (coords2 & 255)       * weight2 + (coords3 & 255)       * weight3 + (coords4 & 255)       * weight4);
 
         return (block & 255) | ((sky & 255) << 16);
     }
@@ -127,9 +127,9 @@ public class MixinLightCoordsUtil {
         if (state.emissiveRendering()) {
             return LightCoordsUtil.FULL_BRIGHT;
         }
-        int sky = level.getBrightness(LightLayer.SKY, pos);
+        int sky   = level.getBrightness(LightLayer.SKY,   pos);
         int block = level.getBrightness(LightLayer.BLOCK, pos);
-        int packedBrightness = block << 4 | sky << 20;
+        int packedBrightness  = block << 4 | sky << 20;
         int blockSelfEmission = state.getLightEmission();
         if (blockSelfEmission > 0 && block < blockSelfEmission) {
             return packedBrightness & 16711680 | blockSelfEmission << 4;

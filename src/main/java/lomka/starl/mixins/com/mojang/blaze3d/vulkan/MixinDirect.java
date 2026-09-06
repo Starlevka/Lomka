@@ -38,7 +38,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(VulkanGpuBuffer.Direct.class)
+@Mixin(value = VulkanGpuBuffer.Direct.class, priority = 500) // Vitrail compability
 public abstract class MixinDirect extends VulkanGpuBuffer {
 
     @Shadow @Final protected VulkanDevice device;

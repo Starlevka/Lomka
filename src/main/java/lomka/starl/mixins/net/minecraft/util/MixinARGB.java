@@ -77,6 +77,7 @@ public class MixinARGB {
         return lomka$FROM_8_BIT[i & 255];
     }
 
+    //? if >=1.21.11 {
     /**
      * @author Starlev
      * @reason Replaces the three variable integer divisions per channel with precomputed
@@ -91,21 +92,18 @@ public class MixinARGB {
     public static int alphaBlend(int bottomColor, int topColor) {
         int topA = topColor >>> 24;
         if (topA == 255) return topColor;
-        if (topA == 0) return bottomColor;
+        if (topA == 0)   return bottomColor;
 
-        int botA          = bottomColor >>> 24;
-
-        int botWeight     = (botA * (255 - topA)) * 65794 >>> 24;
-
-        int outA  = topA + botWeight;
-
-        int rec   = lomka$RECIPROCALS[outA];
-        int r     = (((topColor >> 16) & 255) * topA + ((bottomColor >> 16) & 255) * (outA - topA)) * rec >>> 24;
-        int g     = (((topColor >> 8) & 255) * topA + ((bottomColor >> 8) & 255) * (outA - topA)) * rec >>> 24;
-        int b     = ((topColor & 255) * topA + ((bottomColor & 255)) * (outA - topA)) * rec >>> 24;
-
+        int botA      = bottomColor >>> 24;
+        int botWeight = (botA * (255 - topA)) * 65794 >>> 24;
+        int outA      = topA + botWeight;
+        int rec       = lomka$RECIPROCALS[outA];
+        int r         = (((topColor >> 16) & 255) * topA + ((bottomColor >> 16) & 255) * (outA - topA)) * rec >>> 24;
+        int g         = (((topColor >> 8) & 255)  * topA + ((bottomColor >> 8) & 255)  * (outA - topA)) * rec >>> 24;
+        int b         = ((topColor & 255)         * topA + ((bottomColor & 255))       * (outA - topA)) * rec >>> 24;
         return (outA << 24) | (r << 16) | (g << 8) | b;
     }
+    //?}
 
     /**
      * @author Starlev
@@ -115,13 +113,11 @@ public class MixinARGB {
     @Overwrite
     public static int scaleRGB(int i, float f, float f1, float f2) {
         int r = (int) (((i >> 16) & 255) * f);
-        int g = (int) (((i >> 8) & 255) * f1);
-        int b = (int) ((i & 255) * f2);
-
-        r = r < 0 ? 0 : (r > 255 ? 255 : r);
-        g = g < 0 ? 0 : (g > 255 ? 255 : g);
-        b = b < 0 ? 0 : (b > 255 ? 255 : b);
-
+        int g = (int) (((i >> 8) & 255)  * f1);
+        int b = (int) ((i & 255)         * f2);
+            r = r < 0 ? 0 : (r > 255 ? 255 : r);
+            g = g < 0 ? 0 : (g > 255 ? 255 : g);
+            b = b < 0 ? 0 : (b > 255 ? 255 : b);
         return (i & 0xFF000000) | (r << 16) | (g << 8) | b;
     }
 
@@ -136,13 +132,11 @@ public class MixinARGB {
     @Overwrite
     public static int scaleRGB(int i, int j) {
         int r = (int) (((long) ((i >> 16) & 255) * j * 65794) >> 24);
-        int g = (int) (((long) ((i >> 8) & 255) * j * 65794) >> 24);
-        int b = (int) (((long) (i & 255) * j * 65794) >> 24);
-
+        int g = (int) (((long) ((i >> 8) & 255)  * j * 65794) >> 24);
+        int b = (int) (((long) (i & 255)         * j * 65794) >> 24);
         r = r < 0 ? 0 : (r > 255 ? 255 : r);
         g = g < 0 ? 0 : (g > 255 ? 255 : g);
         b = b < 0 ? 0 : (b > 255 ? 255 : b);
-
         return (i & 0xFF000000) | (r << 16) | (g << 8) | b;
     }
 
@@ -174,20 +168,18 @@ public class MixinARGB {
      *         into a single ~div-255 trick, avoiding the vanilla per-channel float math.
      */
     //? if <1.21.2 {
-    /*/*@Overwrite
-    public static int multiply(int i, int j) {
+     /*/*@Overwrite
+     public static int multiply(int i, int j) {
         if (i == -1) return j;
         if (j == -1) return i;
         if (i == 0 || j == 0) return 0;
-
-        int a = (((i >>> 24) * (j >>> 24)) * 32897) >>> 23;
+        int a = (((i >>> 24)          * (j >>> 24)) * 32897)          >>> 23;
         int r = ((((i >>> 16) & 0xFF) * ((j >>> 16) & 0xFF)) * 32897) >>> 23;
-        int g = ((((i >>> 8) & 0xFF) * ((j >>> 8) & 0xFF)) * 32897) >>> 23;
-        int b = (((i & 0xFF) * (j & 0xFF)) * 32897) >>> 23;
-
+        int g = ((((i >>> 8) & 0xFF)  * ((j >>> 8) & 0xFF)) * 32897)  >>> 23;
+        int b = (((i & 0xFF)          * (j & 0xFF)) * 32897)          >>> 23;
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
-    *///?}
+     *///?}
 
     /**
      * @author Starlev
@@ -195,43 +187,40 @@ public class MixinARGB {
      *         trading three multiplies for two shifts and an AND.
      */
     //? if >=1.21 && <1.21.2 {
-    /*@Overwrite
-    public static int average(int a, int b) {
+     /*@Overwrite
+     public static int average(int a, int b) {
         return ((a & 0xFEFEFEFE) >>> 1) + ((b & 0xFEFEFEFE) >>> 1) + (a & b & 0x01010101);
     }
-    *///?}
+     *///?}
 
     /**
      * @author Starlev
      * @reason Integer-space channel interpolation without the vanilla float cast per channel.
      */
     //? if >=1.21 && <1.21.2 {
-    /*@Overwrite
-    public static int lerp(float f, int i, int j) {
+     /*@Overwrite
+     public static int lerp(float f, int i, int j) {
         if (f <= 0.0f) return i;
         if (f >= 1.0f) return j;
-
-        int aD   = (j >>> 24) - (i >>> 24);
-        int rD   = ((j >>> 16) & 0xFF) - ((i >>> 16) & 0xFF);
-        int gD   = ((j >>> 8) & 0xFF) - ((i >>> 8) & 0xFF);
-        int bD   = (j & 0xFF) - (i & 0xFF);
+        int aD = (j >>> 24)          - (i >>> 24);
+        int rD = ((j >>> 16) & 0xFF) - ((i >>> 16) & 0xFF);
+        int gD = ((j >>> 8) & 0xFF)  - ((i >>> 8) & 0xFF);
+        int bD = (j & 0xFF)          - (i & 0xFF);
 
         float fA = f * aD;
         float fR = f * rD;
         float fG = f * gD;
         float fB = f * bD;
-
-        int iA   = (int) fA;
-        int iR   = (int) fR;
-        int iG   = (int) fG;
-        int iB   = (int) fB;
-
-        int a    = (i >>> 24) + (fA < iA ? iA - 1 : iA);
-        int r    = ((i >>> 16) & 0xFF) + (fR < iR ? iR - 1 : iR);
-        int g    = ((i >>> 8) & 0xFF) + (fG < iG ? iG - 1 : iG);
-        int b    = (i & 0xFF) + (fB < iB ? iB - 1 : iB);
-
+        
+        int iA = (int) fA;
+        int iR = (int) fR;
+        int iG = (int) fG;
+        int iB = (int) fB;
+        int a  = (i >>> 24)          + (fA < iA ? iA - 1 : iA);
+        int r  = ((i >>> 16) & 0xFF) + (fR < iR ? iR - 1 : iR);
+        int g  = ((i >>> 8) & 0xFF)  + (fG < iG ? iG - 1 : iG);
+        int b  = (i & 0xFF)          + (fB < iB ? iB - 1 : iB);
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
-    *///?}
+     *///?}
 } // starlevka strangiest conditionals

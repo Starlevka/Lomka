@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-package lomka.starl.utils;
+package lomka.starl.utils.cache;
 
 import java.util.Arrays;
 
@@ -30,9 +30,9 @@ import java.util.Arrays;
  * Indices 8-9: polygon mode face/mode. Indices 10-11: bound read/write framebuffer ids.
  * MIN_VALUE means unknown.
  */
-public final class GlRenderStateCache {
+public final class GlStateCache {
 
-    private GlRenderStateCache() {}
+    private GlStateCache() {}
 
     public static final int VIEWPORT_X   = 0;
     public static final int VIEWPORT_Y   = 1;
