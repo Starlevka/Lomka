@@ -1,9 +1,8 @@
 # Changelog
 
 ## [0.5.3]
-
-### Removed
-- Removed MixinClientLevel from 1.20.1 Fabric/Forge.
+### Bug Fixes
+- Refmaps fix for 1.20.1 Forge.
 
 ## [0.5.2]
 
