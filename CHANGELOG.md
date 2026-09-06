@@ -19,6 +19,7 @@
 - GlStateManager state dedup (viewport/scissor/polygonMode, cancellable HEAD injections) extended to all versions; GlStateCache now tracks bound read/write FBOs and dedups `_glBindFramebuffer` back to 1.20.1, replicating vanilla's own 1.21.2+ mirror logic. (all versions) **NEW from OLD**
 - Pose scratch-matrix optimization covers the outer `PoseStack.mulPose(Matrix4f)` era (1.21-1.21.4) too, unified in MixinPose. (1.21+, not 26.x) **NEW from OLD**
 - Std140Builder / Std140SizeCalculator: blanket per-`put*` overwrites replaced with a single power-of-two `align()` fast path, vanilla fallback for exotic alignments. (1.21.6+)
+- BitSetDiscreteVoxelShape.join accumulates contiguous bit runs and flushes them with bulk `BitSet.set(from, to)` word writes instead of one `set()` per voxel (all versions).
 
 ### Bug Fixes
 - Supplier fix in VulkanGpuBuffer the `<init>` handler's `label` parameter is typed `Supplier<String>` now, fixing `InvalidInjectionException` at apply time.
