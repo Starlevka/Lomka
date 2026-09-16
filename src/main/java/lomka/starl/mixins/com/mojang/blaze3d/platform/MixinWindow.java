@@ -40,6 +40,12 @@ public class MixinWindow {
     /**
      * Resets the GL state cache so viewport/scissor dedup re-learns from a clean slate after a resize.
      */
+    //? if >=26.3 {
+    /*@Inject(method = "onResize", at = @At("TAIL"))
+    private void lomka$resetGlCacheOnResize(int width, int height, CallbackInfo ci) {
+        GlStateCache.reset();
+    }*/
+    //?} else {
     @Inject(
             method = "onResize",
             at = @At("TAIL")
@@ -47,10 +53,17 @@ public class MixinWindow {
     private void lomka$resetGlCacheOnResize(long handle, int width, int height, CallbackInfo ci) {
         GlStateCache.reset();
     }
+    //?}
 
     /**
      * Resets the GL state cache after a framebuffer resize.
      */
+    //? if >=26.3 {
+    /*@Inject(method = "onFramebufferResize", at = @At("TAIL"))
+    private void lomka$resetGlCacheOnFramebufferResize(int width, int height, CallbackInfo ci) {
+        GlStateCache.reset();
+    }*/
+    //?} else {
     @Inject(
             method = "onFramebufferResize",
             at = @At("TAIL")
@@ -58,4 +71,5 @@ public class MixinWindow {
     private void lomka$resetGlCacheOnFramebufferResize(long handle, int width, int height, CallbackInfo ci) {
         GlStateCache.reset();
     }
+    //?}
 }

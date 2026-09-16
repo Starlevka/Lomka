@@ -1,8 +1,20 @@
 # Changelog
 
-## [0.5.3]
+## [0.5.3] - 2026-09-16
+
+### Performance
+- New Level mixin: `ThreadLocal` scratch for `getEntities(Entity,AABB,Predicate)` — hottest entity query. (all) **NEW**
+- New PalettedContainer mixin: uniform-section fast path via `volatile Data` identity. (all) **NEW**
+- New FrameBufferCache mixin: zero-alloc probe `CacheKey` for `getFbo`. (26.3) **NEW**
+- DynamicGpuDataStorageMapped mixin: `renderpearl` successor of `DynamicUniformStorage`. (26.3)
+
 ### Bug Fixes
 - Refmaps fix for 1.20.1 Forge.
+- Lightmap profiler/pipeline + `RenderStateExtractor` vectors (probably Axiom compability)
+
+### Changed
+- 26.3 `renderpearl` replacements (`GpuBuffer`, `GlProgram`, etc.) — 19 variants, `PoseStack`/`GlProgram` gated `<26.3`, `neoforge-moddev` 2.0.147, `VERSION` 0.5.3.
+- 26.3 `ResourceManager.Selector` compat for pack managers, Window `onResize` signature.
 
 ## [0.5.2]
 

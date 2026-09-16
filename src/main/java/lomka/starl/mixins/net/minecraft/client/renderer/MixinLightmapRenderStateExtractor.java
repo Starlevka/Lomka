@@ -78,15 +78,23 @@ public abstract class MixinLightmapRenderStateExtractor {
 
                 renderState.blockFactor = this.blockLightFlicker + 1.4F;
 
+                //? if >=26.3 {
+                /*renderState.blockLightTint = camera.attributeProbe().getValue(EnvironmentAttributes.BLOCK_LIGHT_TINT, partialTicks);*/
+                //?} else {
                 int blockTint = (Integer) camera.attributeProbe().getValue(EnvironmentAttributes.BLOCK_LIGHT_TINT, partialTicks);
                 lomka$setVector3fFromRGB24(this.lomka$blockLightTint, blockTint);
                 renderState.blockLightTint = this.lomka$blockLightTint;
+                //?}
 
                 renderState.skyFactor = (Float) camera.attributeProbe().getValue(EnvironmentAttributes.SKY_LIGHT_FACTOR, partialTicks);
 
+                //? if >=26.3 {
+                /*renderState.skyLightColor = camera.attributeProbe().getValue(EnvironmentAttributes.SKY_LIGHT_COLOR, partialTicks);*/
+                //?} else {
                 int skyColor = (Integer) camera.attributeProbe().getValue(EnvironmentAttributes.SKY_LIGHT_COLOR, partialTicks);
                 lomka$setVector3fFromRGB24(this.lomka$skyLightColor, skyColor);
                 renderState.skyLightColor = this.lomka$skyLightColor;
+                //?}
 
                 EndFlashState endFlashState = level.endFlashState();
 
@@ -103,9 +111,13 @@ public abstract class MixinLightmapRenderStateExtractor {
                     }
                 }
 
+                //? if >=26.3 {
+                /*renderState.ambientColor = camera.attributeProbe().getValue(EnvironmentAttributes.AMBIENT_LIGHT_COLOR, partialTicks);*/
+                //?} else {
                 int ambient = (Integer) camera.attributeProbe().getValue(EnvironmentAttributes.AMBIENT_LIGHT_COLOR, partialTicks);
                 lomka$setVector3fFromRGB24(this.lomka$ambientColor, ambient);
                 renderState.ambientColor = this.lomka$ambientColor;
+                //?}
 
                 float gamma = ((Double) this.minecraft.options.gamma().get()).floatValue();
                 float darknessEffectScaleOption = ((Double) this.minecraft.options.darknessEffectScale().get()).floatValue();
@@ -128,9 +140,13 @@ public abstract class MixinLightmapRenderStateExtractor {
                     renderState.nightVisionEffectIntensity = 0.0F;
                 }
 
+                //? if >=26.3 {
+                /*renderState.nightVisionColor = camera.attributeProbe().getValue(EnvironmentAttributes.NIGHT_VISION_COLOR, partialTicks);*/
+                //?} else {
                 int nightColor = (Integer) camera.attributeProbe().getValue(EnvironmentAttributes.NIGHT_VISION_COLOR, partialTicks);
                 lomka$setVector3fFromRGB24(this.lomka$nightVisionColor, nightColor);
                 renderState.nightVisionColor = this.lomka$nightVisionColor;
+                //?}
 
                 //? if >=26.2 {
                 /*renderState.bossOverlayWorldDarkening = this.renderer.bossOverlayWorldDarkening(partialTicks);

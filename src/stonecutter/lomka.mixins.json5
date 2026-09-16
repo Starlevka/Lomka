@@ -10,7 +10,6 @@
   "client": [
     "com.mojang.blaze3d.audio.MixinChannel"
     ,"com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer"
-    ,"com.mojang.blaze3d.vertex.MixinPoseStack"
     ,"com.mojang.blaze3d.opengl.MixinGlStateManager"
     ,"com.mojang.blaze3d.platform.MixinWindow"
     ,"net.minecraft.client.renderer.culling.MixinFrustum"
@@ -29,10 +28,20 @@
     /*? if >=1.21.6 { */
     ,"com.mojang.blaze3d.buffers.MixinStd140SizeCalculator"
     ,"com.mojang.blaze3d.buffers.MixinStd140Builder"
-    ,"com.mojang.blaze3d.opengl.MixinGlProgram"
     ,"com.mojang.blaze3d.platform.MixinLighting"
-    ,"net.minecraft.client.renderer.MixinDynamicUniformStorage"
     ,"net.minecraft.client.renderer.texture.MixinTextureAtlas"
+    /*?} */
+    /*? if <26.3 { */
+    ,"com.mojang.blaze3d.vertex.MixinPoseStack"
+    /*?} */
+    /*? if >=1.21.6 && <26.3 { */
+    ,"com.mojang.blaze3d.opengl.MixinGlProgram"
+    ,"net.minecraft.client.renderer.MixinDynamicUniformStorage"
+    /*?} */
+    /*? if >=26.3 { */
+    ,"net.minecraft.client.renderer.MixinDynamicGpuDataStorageMapped"
+    ,"com.mojang.renderpearl.backend.opengl.MixinFrameBufferCache"
+    ,"com.mojang.renderpearl.backend.opengl.MixinFrameBufferCacheKey"
     /*?} */
     /*? if >=1.21.6 && <26.2 { */
     ,"com.mojang.blaze3d.buffers.MixinGpuBuffer"
@@ -49,6 +58,8 @@
     ,"net.minecraft.client.gui.font.MixinFontSet"
     ,"net.minecraft.client.gui.font.MixinSource"
     ,"net.minecraft.client.resources.model.MixinBuilder"
+    /*?} */
+    /*? if >=1.21.11 && <26.3 { */
     ,"net.minecraft.client.renderer.MixinItemInHandRenderer"
     /*?} */
     /*? if <26.1 { */
@@ -101,6 +112,8 @@
     ,"net.minecraft.world.level.block.state.MixinBlockStateBase"
     ,"net.minecraft.world.level.block.state.MixinBlockStateBaseCache"
     ,"net.minecraft.world.level.chunk.MixinDataLayer"
+    ,"net.minecraft.world.level.chunk.MixinPalettedContainer"
+    ,"net.minecraft.world.level.MixinLevel"
     ,"net.minecraft.world.level.levelgen.MixinLegacyRandomSource"
     ,"net.minecraft.world.level.lighting.MixinLayerLightSectionStorage"
     ,"net.minecraft.world.level.lighting.MixinLeveledPriorityQueue"
