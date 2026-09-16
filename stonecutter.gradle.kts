@@ -42,11 +42,27 @@ stonecutter parameters {
 		replace("net.minecraft.client.renderer.rendertype.RenderType", "net.minecraft.client.renderer.RenderType")
 	}
 	replacements.string(current.parsed < "1.21.6") {
-		replace("blaze3d.opengl.GlStateManager", "blaze3d.platform.GlStateManager")
+		replace("com.mojang.blaze3d.opengl.GlStateManager", "com.mojang.blaze3d.platform.GlStateManager")
 	}
 	replacements.string(current.parsed >= "26.1") {
 		replace("net.minecraft.client.resources.model.AtlasManager", "net.minecraft.client.resources.model.sprite.AtlasManager")
 		replace("net.minecraft.client.resources.model.Material", "net.minecraft.client.resources.model.sprite.Material")
+	}
+	// 26.3 moved the whole GPU backend out of blaze3d into the new com.mojang.renderpearl library.
+	replacements.string(current.parsed >= "26.3") {
+		replace("com.mojang.blaze3d.buffers.GpuBuffer", "com.mojang.renderpearl.api.buffers.GpuBuffer")
+		replace("com.mojang.blaze3d.textures.GpuTexture", "com.mojang.renderpearl.api.textures.GpuTexture")
+		replace("com.mojang.blaze3d.systems.CommandEncoder", "com.mojang.renderpearl.api.commands.CommandEncoder")
+		replace("com.mojang.blaze3d.systems.RenderPass", "com.mojang.renderpearl.api.commands.RenderPass")
+		replace("com.mojang.blaze3d.systems.GpuDevice", "com.mojang.renderpearl.api.device.GpuDevice")
+		replace("com.mojang.blaze3d.vertex.VertexFormatElement", "com.mojang.renderpearl.api.vertex.VertexFormatElement")
+		replace("com.mojang.blaze3d.vertex.VertexFormat", "com.mojang.renderpearl.api.vertex.VertexFormat")
+		replace("com.mojang.blaze3d.opengl.GlProgram", "com.mojang.renderpearl.backend.opengl.GlProgram")
+		replace("com.mojang.blaze3d.opengl.GlStateManager", "com.mojang.renderpearl.backend.opengl.GlStateManager")
+		replace("com.mojang.blaze3d.opengl.Uniform", "com.mojang.renderpearl.backend.opengl.Uniform")
+		replace("com.mojang.blaze3d.vulkan.VulkanDevice", "com.mojang.renderpearl.backend.vulkan.VulkanDevice")
+		replace("com.mojang.blaze3d.vulkan.VulkanGpuBuffer", "com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer")
+		replace("com.mojang.blaze3d.vulkan.VulkanUtils", "com.mojang.renderpearl.backend.vulkan.VulkanUtils")
 	}
 }
 

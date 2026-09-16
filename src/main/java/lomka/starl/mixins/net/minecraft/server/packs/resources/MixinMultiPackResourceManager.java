@@ -23,9 +23,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+//? if <26.3 {
 import java.util.function.Predicate;
+//?}
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.FallbackResourceManager;
+//? if >=26.3 {
+/*import net.minecraft.server.packs.resources.ResourceManager;
+*///?}
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.server.packs.resources.Resource;
 import org.spongepowered.asm.mixin.Final;
@@ -44,7 +49,11 @@ public abstract class MixinMultiPackResourceManager {
      * @reason Bypass redundant secondary TreeMap allocation when only one namespace manager is present.
      */
     @Overwrite
+    //? if >=26.3 {
+    /*public Map<Identifier, Resource> listResources(String path, ResourceManager.Selector filter) {*/
+    //?} else {
     public Map<Identifier, Resource> listResources(String path, Predicate<Identifier> filter) {
+    //?}
         checkTrailingDirectoryPath(path);
         Collection<FallbackResourceManager> managers = this.namespacedManagers.values();
         int size = managers.size();
@@ -66,7 +75,11 @@ public abstract class MixinMultiPackResourceManager {
      * @reason Bypass redundant secondary TreeMap allocation when only one namespace manager is present.
      */
     @Overwrite
+    //? if >=26.3 {
+    /*public Map<Identifier, List<Resource>> listResourceStacks(String path, ResourceManager.Selector filter) {*/
+    //?} else {
     public Map<Identifier, List<Resource>> listResourceStacks(String path, Predicate<Identifier> filter) {
+    //?}
         checkTrailingDirectoryPath(path);
         Collection<FallbackResourceManager> managers = this.namespacedManagers.values();
         int size = managers.size();

@@ -34,6 +34,8 @@ import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.LightmapRenderState;
+import net.minecraft.util.profiling.Profiler;
+import net.minecraft.util.profiling.ProfilerFiller;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,6 +62,9 @@ public abstract class MixinLightmap {
         if (!renderState.needsUpdate) {
             return;
         }
+
+        ProfilerFiller profiler = Profiler.get();
+        profiler.push("lightmap");
 
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
 
@@ -115,7 +120,11 @@ public abstract class MixinLightmap {
         //?}
 
         try {
+            //? if >=26.3 {
+            /*renderPass.setPipeline(RenderSystem.getCompiledPipeline(RenderPipelines.LIGHTMAP));*/
+            //?} else {
             renderPass.setPipeline(RenderPipelines.LIGHTMAP);
+            //?}
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("LightmapInfo", this.ubo.currentBuffer());
 
@@ -131,5 +140,6 @@ public abstract class MixinLightmap {
         }
 
         this.ubo.rotate();
+        profiler.pop();
     }
 }

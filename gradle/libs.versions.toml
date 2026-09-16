@@ -1,7 +1,7 @@
 [versions]
 stonecutter = "0.9.7"
 fabric-loom = "1.16-SNAPSHOT"
-neoforge-moddev = "2.0.141"
+neoforge-moddev = "2.0.147"
 foojay = "1.0.0"
 
 [libraries]

@@ -26,11 +26,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+//? if <26.3 {
 import java.util.function.Predicate;
+//?}
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.FallbackResourceManager;
+//? if >=26.3 {
+/*import net.minecraft.server.packs.resources.ResourceManager;
+*///?}
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceMetadata;
@@ -73,6 +78,16 @@ public abstract class MixinFallbackResourceManager {
         return () -> parseMetadata(supplier);
     }
 
+    //? if >=26.3 {
+    /*@Unique private static boolean lomka$isIncluded(ResourceManager.Selector filter, Identifier id) {
+        return filter.isIncluded(id);
+    }*/
+    //?} else {
+    @Unique private static boolean lomka$isIncluded(Predicate<Identifier> filter, Identifier id) {
+        return filter.test(id);
+    }
+    //?}
+
     @Unique private record Entry(PackResources source, IoSupplier<InputStream> resource, int packIndex) {}
 
     @Shadow
@@ -87,7 +102,11 @@ public abstract class MixinFallbackResourceManager {
      *         input stream is preserved when log is in debug to keep LeakedResourceWarning parity with vanilla.
      */
     @Overwrite
+    //? if >=26.3 {
+    /*public Map<Identifier, Resource> listResources(String directory, ResourceManager.Selector filter) {*/
+    //?} else {
     public Map<Identifier, Resource> listResources(String directory, Predicate<Identifier> filter) {
+    //?}
         Map<Identifier, Entry> fileEntries = new HashMap<>();
         Map<Identifier, Entry> metaEntries = new HashMap<>();
         int count = this.fallbacks.size();
@@ -101,10 +120,10 @@ public abstract class MixinFallbackResourceManager {
                 int packIndex = i;
                 pack.listResources(this.type, this.namespace, directory, (id, streamSupplier) -> {
                     if (lomka$isMetadata(id)) {
-                        if (filter.test(lomka$getIdentifierFromMetadata(id))) {
+                        if (lomka$isIncluded(filter, lomka$getIdentifierFromMetadata(id))) {
                             metaEntries.put(id, new Entry(pack, streamSupplier, packIndex));
                         }
-                    } else if (filter.test(id)) {
+                    } else if (lomka$isIncluded(filter, id)) {
                         fileEntries.put(id, new Entry(pack, streamSupplier, packIndex));
                     }
                 });

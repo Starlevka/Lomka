@@ -33,7 +33,7 @@ them enabled.
 
 ## Versions
 
-Supported game versions: **1.20.1 · 1.21-1.21.1 · 1.21.4 · 1.21.6-1.21.8 · 1.21.9-1.21.10 · 1.21.11 · 26.1-26.1.2 · 26.2**
+Supported game versions: **1.20.1 · 1.21-1.21.1 · 1.21.4 · 1.21.6-1.21.8 · 1.21.9-1.21.10 · 1.21.11 · 26.1-26.1.2 · 26.2 · 26.3**
 
 ## Shared helpers
 
@@ -66,13 +66,15 @@ version simply does not exist in your jar the config loader ignores it with an
 | `com.mojang.blaze3d.buffers.MixinGpuBuffer` | Caches the full-buffer slice instead of allocating per call | 1.21.6-26.1 |
 | `com.mojang.blaze3d.buffers.MixinStd140Builder` | Bitwise std140 alignment and absolute writes when building uniform blocks | 1.21.6+ |
 | `com.mojang.blaze3d.buffers.MixinStd140SizeCalculator` | Bitwise std140 alignment for uniform size math | 1.21.6+ |
-| `com.mojang.blaze3d.opengl.MixinGlProgram` | Flat uniform-location table for faster per-draw uniform lookup | 1.21.6+ |
+| `com.mojang.blaze3d.opengl.MixinGlProgram` | Flat uniform-location table for faster per-draw uniform lookup | 1.21.6-26.1 |
+| `com.mojang.renderpearl.backend.opengl.MixinFrameBufferCache` | Reuses a probe CacheKey + int[] to resolve FBO hits with zero allocation | 26.3 |
+| `com.mojang.renderpearl.backend.opengl.MixinFrameBufferCacheKey` | Duck for in-place probe key reset (`lomka$reset`) | 26.3 |
 | `com.mojang.blaze3d.opengl.MixinGlStateManager` | Skips redundant viewport/scissor/polygonMode driver calls via `cache/GlStateCache` | all |
 | `com.mojang.blaze3d.pipeline.MixinRenderTarget` | Hardware blit-to-screen present instead of the blit-shader quad; zero allocations, no mid-frame program switch | <1.21.4 |
 | `com.mojang.blaze3d.platform.MixinWindow` | Invalidates `cache/GlStateCache` on window/framebuffer resize | all |
 | `com.mojang.blaze3d.platform.MixinLighting` | Caches light UBO slices; skips unchanged GPU uploads | 1.21.6+ |
 | `com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer` | Grows the shared index buffer x4 with a warm start; fewer mid-frame stalls | all |
-| `com.mojang.blaze3d.vertex.MixinPoseStack` | Pooled matrix-stack push/pop and sparse rotate via `math/AxisPoseRotate` | all |
+| `com.mojang.blaze3d.vertex.MixinPoseStack` | Pooled matrix-stack push/pop and sparse rotate via `math/AxisPoseRotate` | all (<26.3) |
 | `com.mojang.blaze3d.vertex.MixinPose` | Scratch matrix reuse in mulPose for display entities | 1.21-1.21.11 |
 | `com.mojang.blaze3d.vertex.MixinBufferBuilder` | Fast ARGB-to-ABGR color packing while feeding vertices | 1.21+ |
 | `com.mojang.blaze3d.vertex.MixinByteBufferBuilder` | Inlined `reserve` fast path and 8 MB growth steps for mesh building buffers (low priority, stays compatible with VulkanMod) | 1.21+ |
@@ -106,7 +108,8 @@ version simply does not exist in your jar the config loader ignores it with an
 |---|---|---|
 | `net.minecraft.client.multiplayer.MixinClientLevel` | Caches entity-type names used by the tick profiler | 1.20.1-1.21.11 |
 | `net.minecraft.client.renderer.culling.MixinFrustum` | Branchless integer floor/ceil in frustum setup | all |
-| `net.minecraft.client.renderer.MixinDynamicUniformStorage` | Caches ring-buffer getter and reuses uniform slice records | 1.21.6+ |
+| `net.minecraft.client.renderer.MixinDynamicUniformStorage` | Caches ring-buffer getter and reuses uniform slice records | 1.21.6-26.2 |
+| `net.minecraft.client.renderer.MixinDynamicGpuDataStorageMapped` | `renderpearl` successor: caches `currentBuffer()` and dedupes `GpuBufferSlice` for `DynamicGpuData` | 26.3 |
 | `net.minecraft.client.renderer.MixinGameRenderer` | Reuses the camera render-state quaternion instead of per-frame allocation | 1.21.9-1.21.11 |
 | `net.minecraft.client.renderer.MixinItemInHandRenderer` | Reuses one render state per hand slot instead of allocating every frame | 1.21.11+ |
 | `net.minecraft.client.renderer.MixinLightmap` | Zero-allocation direct UBO writing for lightmap updates | 26.1+ |
@@ -130,6 +133,8 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.world.level.block.state.MixinBlockStateBaseCache` | Long-keyed state cache without int-shift overflow | all |
 | `net.minecraft.world.level.chunk.status.MixinChunkStatus` | Caches per-status progression lists | 1.21+ |
 | `net.minecraft.world.level.chunk.MixinDataLayer` | Flattens light-data delegation to a single nibble call | all |
+| `net.minecraft.world.level.chunk.MixinPalettedContainer` | Uniform-section fast path via `volatile Data` identity (zero-bit palette) | all |
+| `net.minecraft.world.level.MixinLevel` | `ThreadLocal` scratch list for `getEntities(Entity,AABB,Predicate)` — hottest entity query | all |
 | `net.minecraft.world.level.levelgen.MixinLegacyRandomSource` | Plain-field RNG draw instead of a CAS per call; seed installation keeps the vanilla thread guard. Concurrent misuse of `next` no longer throws. | all |
 | `net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape` | Reusable index lists in shape merge loops; `join` accumulates contiguous bit runs into bulk `BitSet.set(from, to)` writes | all |
 | `net.minecraft.world.phys.shapes.MixinVoxelShape` | Caches the computed AABB list so raycasts (crosshair `clip()` runs every frame) stop allocating per call | all |
@@ -164,6 +169,15 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.util.MixinARGB` | Flat LUT lookup instead of float division in color helpers | all |
 | `net.minecraft.util.MixinUtil` | Cached OS/arch detection, array-backed shuffles, allocation-free URI scheme checks and single-step codepoint offsets | all |
 | `net.minecraft.util.MixinArrayListDeque` | Power-of-two deque indexing without modulo | 1.21+ |
+
+## Presets
+
+Ready-to-paste `config/lomka-mixins.properties` blocks for common trade-offs (advanced users):
+
+* **Higher RAM / lower stutter:** disables caches that hold static memory (`TextureAtlas` hundreds of MB, `AutoStorageIndexBuffer` x4, `ByteBufferBuilder` 8MB, `Pose` pool, etc.). Use if `<4GB` / `iGPU` + `native OOM`.
+* **Lower FPS / higher compat:** disables hot-path CPU opts (`GlStateManager`, `Frustum`, `VertexConsumer`, `Direction LUT`, `Mth`, etc.). Use if `Iris/Sodium` artifacts or vanilla parity debugging.
+
+Full blocks are in `wiki/Performance-Presets.md` — just copy-paste into `config/lomka-mixins.properties`. Comments must be on their own line (`#` at line start); `key=false # comment` on the same line triggers `WARN is not true/false`.
 
 ## Accessor mixin
 
