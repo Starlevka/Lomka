@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(ChunkStatus.class)
 public abstract class MixinChunkStatus {
 
-	@Unique private static List<ChunkStatus> lomka$cachedStatusList;
+	@Unique private static volatile List<ChunkStatus> lomka$cachedStatusList;
 
 	/**
 	 * @author Starlev

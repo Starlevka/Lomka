@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.5.4] - 2026-09-17
+
+### Performance
+- VertexConsumer `putBulkData`/`putBakedQuad`: pose-matrix loads hoisted out of the per-vertex loop and the 4-vertex loop fully unrolled — no per-vertex interface dispatch, friendlier to auto-vectorization. (1.21.11+ / 26.1+) **REWORK**
+- FriendlyByteBuf `writeMap`: cached reusable `BiConsumer` keeps `HashMap.forEach` internal iteration (measured faster than an entry-set loop) with zero per-packet lambda allocations; `writeEnumSet`/`readEnumSet` rewritten as sparse bit packing (`O(set size)` instead of `O(enum length)`), no `BitSet` temporaries. (all versions) **REWORK**
+- FallbackResourceManager `listResources`: derived base->meta index built after pack filtering — zero-alloc metadata attach per file with exact vanilla filter semantics; logger handle cached instead of a registry lookup per call. (all versions) **REWORK**
+
+### Bug Fixes
+- Mod dev version -> Normal mod version
+
+### Removed
+- Removed MixinDataLayer and MixinSoundEngine cause the rare scenarios.
+- Removed Frustum `offsetToFullyIncludeCameraCube` (branchless int casts measured slower than `Math.floor`/`ceil` intrinsics).
+- Removed SectionPos `asLong`/`x`/`blockToSection` overwrites.
+
+### Changed
+- ChunkStatus status-list cache is now published via `volatile` — safe for worldgen worker threads at no steady-state cost. (1.21+)
+
 ## [0.5.3] - 2026-09-16
 
 ### Performance

@@ -55,7 +55,6 @@ version simply does not exist in your jar the config loader ignores it with an
 |---|---|---|
 | `com.mojang.blaze3d.audio.MixinChannel` | Passes sound positions as primitives instead of allocating `float[3]` | all |
 | `com.mojang.blaze3d.audio.MixinListener` | Reuses a cached orientation array for listener updates | 1.21+ |
-| `net.minecraft.client.sounds.MixinSoundEngine` | Skips redundant OpenAL updates; throttles sound floods | all |
 | `net.minecraft.client.sounds.MixinJOrbisAudioStream` | Reuses ogg decode output containers during streamed audio | 1.21+ |
 | `net.minecraft.client.sounds.MixinChunkedSampleByteBuf` | Single growing buffer for streamed sounds | 1.21+ |
 
@@ -66,7 +65,7 @@ version simply does not exist in your jar the config loader ignores it with an
 | `com.mojang.blaze3d.buffers.MixinGpuBuffer` | Caches the full-buffer slice instead of allocating per call | 1.21.6-26.1 |
 | `com.mojang.blaze3d.buffers.MixinStd140Builder` | Bitwise std140 alignment and absolute writes when building uniform blocks | 1.21.6+ |
 | `com.mojang.blaze3d.buffers.MixinStd140SizeCalculator` | Bitwise std140 alignment for uniform size math | 1.21.6+ |
-| `com.mojang.blaze3d.opengl.MixinGlProgram` | Flat uniform-location table for faster per-draw uniform lookup | 1.21.6-26.1 |
+| `com.mojang.blaze3d.opengl.MixinGlProgram` | Flat uniform-location table for faster per-draw uniform lookup | 1.21.6-26.2 |
 | `com.mojang.renderpearl.backend.opengl.MixinFrameBufferCache` | Reuses a probe CacheKey + int[] to resolve FBO hits with zero allocation | 26.3 |
 | `com.mojang.renderpearl.backend.opengl.MixinFrameBufferCacheKey` | Duck for in-place probe key reset (`lomka$reset`) | 26.3 |
 | `com.mojang.blaze3d.opengl.MixinGlStateManager` | Skips redundant viewport/scissor/polygonMode driver calls via `cache/GlStateCache` | all |
@@ -78,12 +77,12 @@ version simply does not exist in your jar the config loader ignores it with an
 | `com.mojang.blaze3d.vertex.MixinPose` | Scratch matrix reuse in mulPose for display entities | 1.21-1.21.11 |
 | `com.mojang.blaze3d.vertex.MixinBufferBuilder` | Fast ARGB-to-ABGR color packing while feeding vertices | 1.21+ |
 | `com.mojang.blaze3d.vertex.MixinByteBufferBuilder` | Inlined `reserve` fast path and 8 MB growth steps for mesh building buffers (low priority, stays compatible with VulkanMod) | 1.21+ |
-| `com.mojang.blaze3d.vertex.MixinVertexConsumer` | Affine fast path with fma transforms for pose application | 1.21+ |
+| `com.mojang.blaze3d.vertex.MixinVertexConsumer` | Direct FMA pose transforms; on 1.21.11+, bulk quad writes hoist matrix loads and unroll all four vertices | 1.21+ |
 | `com.mojang.blaze3d.vertex.MixinVertexFormat` | Reuses precomputed mask/offset arrays on the hot path | 1.21-26.1 |
 | `com.mojang.blaze3d.vertex.MixinMultiple` | Direct indexed loops for multi-consumer fan-out instead of per-vertex lambdas | 1.20.1-26.1 |
 | `com.mojang.blaze3d.vertex.MixinVertexBuffer` | Caches the GL primitive mode per buffer | 1.20.1-1.21.4 |
 | `com.mojang.blaze3d.vertex.MixinVertexFormatElement` | Precomputed hashCode for format map lookups | 1.20.1 |
-| `com.mojang.blaze3d.vulkan.MixinDirect` | Persistent mapping for host-visible Vulkan buffers | 26.2 |
+| `com.mojang.blaze3d.vulkan.MixinDirect` | Persistent mapping for host-visible Vulkan buffers | 26.2+ |
 
 ## GUI mixins
 
@@ -107,15 +106,14 @@ version simply does not exist in your jar the config loader ignores it with an
 | Key | Description | Versions |
 |---|---|---|
 | `net.minecraft.client.multiplayer.MixinClientLevel` | Caches entity-type names used by the tick profiler | 1.20.1-1.21.11 |
-| `net.minecraft.client.renderer.culling.MixinFrustum` | Branchless integer floor/ceil in frustum setup | all |
 | `net.minecraft.client.renderer.MixinDynamicUniformStorage` | Caches ring-buffer getter and reuses uniform slice records | 1.21.6-26.2 |
 | `net.minecraft.client.renderer.MixinDynamicGpuDataStorageMapped` | `renderpearl` successor: caches `currentBuffer()` and dedupes `GpuBufferSlice` for `DynamicGpuData` | 26.3 |
 | `net.minecraft.client.renderer.MixinGameRenderer` | Reuses the camera render-state quaternion instead of per-frame allocation | 1.21.9-1.21.11 |
-| `net.minecraft.client.renderer.MixinItemInHandRenderer` | Reuses one render state per hand slot instead of allocating every frame | 1.21.11+ |
+| `net.minecraft.client.renderer.MixinItemInHandRenderer` | Reuses one render state per hand slot instead of allocating every frame | 1.21.11-26.2 |
 | `net.minecraft.client.renderer.MixinLightmap` | Zero-allocation direct UBO writing for lightmap updates | 26.1+ |
 | `net.minecraft.client.renderer.MixinLightmapRenderStateExtractor` | Cached vectors avoid per-frame allocations in lightmap state extraction | 26.1+ |
 | `net.minecraft.client.renderer.MixinLightTexture` | Zero-allocation lightmap texture updates | 1.20.1-1.21 · 1.21.6-1.21.11 |
-| `net.minecraft.client.renderer.texture.MixinTextureAtlas` | Frees sprite pixel data right after atlas upload | 1.21.6+ |
+| `net.minecraft.client.renderer.texture.MixinTextureAtlas` | Animation ticking and batched render-pass uploads with a cached GPU device on 1.21.11+; registered but has no active patches on 1.21.6-1.21.10 | 1.21.6+ |
 | `net.minecraft.client.MixinMinecraft` | Removes `Thread.yield()` from the frame loop | 1.20.1-1.21.11 |
 | `net.minecraft.client.MixinCamera` | Vector-based camera math without temporary allocations | 1.20.1-1.21.11 |
 
@@ -125,14 +123,13 @@ version simply does not exist in your jar the config loader ignores it with an
 |---|---|---|
 | `net.minecraft.core.MixinCursor3D` | Incremental voxel stepping instead of div/mod in AABB scans | all |
 | `net.minecraft.core.MixinDirect` | Linear scan for tiny holder sets instead of building a Set | all |
-| `net.minecraft.core.MixinSectionPos` | Cheaper packed section-pos math and allocation-free stream traversal | all |
+| `net.minecraft.core.MixinSectionPos` | Fast packed section offsets, direct around-and-at-block traversal, and allocation-free stream traversal | all |
 | `net.minecraft.core.MixinVec3i` | Raw-Vec3i `get(Axis)` via enum switch and int-exact `distManhattan` | all |
 | `net.minecraft.core.MixinDirection` | Direction rotation via an inlined flat LUT instead of nested enum-switch; branch-free `getApproximateNearest` on 1.21.4+ | all |
 | `net.minecraft.core.MixinBlockPos` | Incremental stepped counters in `betweenClosed` instead of div/mod per block; byte-identical X→Y→Z order | all |
 | `net.minecraft.world.level.block.state.MixinBlockStateBase` | Returns cached collision shapes, bypassing virtual dispatch | all |
-| `net.minecraft.world.level.block.state.MixinBlockStateBaseCache` | Long-keyed state cache without int-shift overflow | all |
-| `net.minecraft.world.level.chunk.status.MixinChunkStatus` | Caches per-status progression lists | 1.21+ |
-| `net.minecraft.world.level.chunk.MixinDataLayer` | Flattens light-data delegation to a single nibble call | all |
+| `net.minecraft.world.level.block.state.MixinBlockStateBaseCache` | Caches face-sturdiness checks in a volatile long bitmask, refreshing it when the backing array is replaced | all |
+| `net.minecraft.world.level.chunk.status.MixinChunkStatus` | Caches the status progression list with volatile publication for worldgen threads | 1.21+ |
 | `net.minecraft.world.level.chunk.MixinPalettedContainer` | Uniform-section fast path via `volatile Data` identity (zero-bit palette) | all |
 | `net.minecraft.world.level.MixinLevel` | `ThreadLocal` scratch list for `getEntities(Entity,AABB,Predicate)` — hottest entity query | all |
 | `net.minecraft.world.level.levelgen.MixinLegacyRandomSource` | Plain-field RNG draw instead of a CAS per call; seed installation keeps the vanilla thread guard. Concurrent misuse of `next` no longer throws. | all |
@@ -146,7 +143,7 @@ version simply does not exist in your jar the config loader ignores it with an
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.network.MixinFriendlyByteBuf` | Indexed collection/map writes without iterators or lambdas | all |
+| `net.minecraft.network.MixinFriendlyByteBuf` | Indexed list writes, reusable BiConsumer for HashMap writes, and sparse EnumSet bit packing/unpacking without BitSet temporaries | all |
 | `net.minecraft.network.MixinCompressionEncoder` | Reuses the input buffer between packet compressions | all |
 | `net.minecraft.network.MixinCompressionDecoder` | Direct-buffer inflate path for compressed packets | 1.21+ |
 
@@ -154,7 +151,7 @@ version simply does not exist in your jar the config loader ignores it with an
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.server.packs.resources.MixinFallbackResourceManager` | Drops useless `.mcmeta` work during resource listing | all |
+| `net.minecraft.server.packs.resources.MixinFallbackResourceManager` | Builds a base-to-metadata index after pack filtering to avoid per-file metadata identifier allocations; caches the logger | all |
 | `net.minecraft.server.packs.resources.MixinMultiPackResourceManager` | Skips redundant TreeMap copies with one namespace manager | all |
 | `net.minecraft.server.packs.MixinVanillaPackResources` | Fast namespace/path resolution and cached pack.mcmeta | all |
 
@@ -174,8 +171,8 @@ version simply does not exist in your jar the config loader ignores it with an
 
 Ready-to-paste `config/lomka-mixins.properties` blocks for common trade-offs (advanced users):
 
-* **Higher RAM / lower stutter:** disables caches that hold static memory (`TextureAtlas` hundreds of MB, `AutoStorageIndexBuffer` x4, `ByteBufferBuilder` 8MB, `Pose` pool, etc.). Use if `<4GB` / `iGPU` + `native OOM`.
-* **Lower FPS / higher compat:** disables hot-path CPU opts (`GlStateManager`, `Frustum`, `VertexConsumer`, `Direction LUT`, `Mth`, etc.). Use if `Iris/Sodium` artifacts or vanilla parity debugging.
+* **Higher RAM / lower stutter:** disables caches that hold static memory (`AutoStorageIndexBuffer` x4, `ByteBufferBuilder` 8MB, `PoseStack` pool, etc.). Use if `<4GB` / `iGPU` + `native OOM`.
+* **Lower FPS / higher compat:** disables hot-path CPU opts (`GlStateManager`, `VertexConsumer`, `Direction LUT`, `Mth`, etc.). Use if `Iris/Sodium` artifacts or vanilla parity debugging.
 
 Full blocks are in `wiki/Performance-Presets.md` — just copy-paste into `config/lomka-mixins.properties`. Comments must be on their own line (`#` at line start); `key=false # comment` on the same line triggers `WARN is not true/false`.
 

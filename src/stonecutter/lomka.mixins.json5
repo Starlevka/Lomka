@@ -12,8 +12,6 @@
     ,"com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer"
     ,"com.mojang.blaze3d.opengl.MixinGlStateManager"
     ,"com.mojang.blaze3d.platform.MixinWindow"
-    ,"net.minecraft.client.renderer.culling.MixinFrustum"
-    ,"net.minecraft.client.sounds.MixinSoundEngine"
     /*? if >=1.21 && <26.1 { */
     ,"com.mojang.blaze3d.vertex.MixinPose"
     /*?} */
@@ -111,7 +109,6 @@
     ,"net.minecraft.network.MixinCompressionEncoder"
     ,"net.minecraft.world.level.block.state.MixinBlockStateBase"
     ,"net.minecraft.world.level.block.state.MixinBlockStateBaseCache"
-    ,"net.minecraft.world.level.chunk.MixinDataLayer"
     ,"net.minecraft.world.level.chunk.MixinPalettedContainer"
     ,"net.minecraft.world.level.MixinLevel"
     ,"net.minecraft.world.level.levelgen.MixinLegacyRandomSource"

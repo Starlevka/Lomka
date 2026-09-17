@@ -39,6 +39,8 @@ import net.minecraft.server.packs.resources.FallbackResourceManager;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -68,10 +70,7 @@ public abstract class MixinFallbackResourceManager {
         return id.withPath(path.substring(0, path.length() - 7));
     }
 
-    @Unique
-    private static Identifier lomka$getMetadataLocation(Identifier id) {
-        return id.withPath(id.getPath() + ".mcmeta");
-    }
+    @Unique private static final Logger lomka$LOGGER = LoggerFactory.getLogger(FallbackResourceManager.class);
 
     @Unique
     private static IoSupplier<ResourceMetadata> lomka$convertToMetadata(IoSupplier<InputStream> supplier) {
@@ -98,8 +97,13 @@ public abstract class MixinFallbackResourceManager {
     /**
      * @author Starlev
      * @reason Fast-path metadata check to eliminate thousands of useless .mcmeta Identifier allocations and Map lookups;
-     *         use direct Resource instantiation with EMPTY_SUPPLIER when metadata is absent. Debug-wrapped
-     *         input stream is preserved when log is in debug to keep LeakedResourceWarning parity with vanilla.
+     *         a derived base->meta index (built after pack filtering, so filterAll keeps exact vanilla
+     *         META-id semantics across all versions) makes the final merge a zero-alloc direct get per file;
+     *         cached static logger skips a synchronized registry lookup per call. Debug-wrapped input stream
+     *         is preserved when log is in debug to keep LeakedResourceWarning parity with vanilla. Composes
+     *         with ModernFix's FilePackResources index and quick-pack's entries() wrap: both serve the
+     *         per-pack listResources callback we consume, never the methods overwritten here.
+     *         (Measured figures live in scripts/bench, not in source comments.)
      */
     @Overwrite
     //? if >=26.3 {
@@ -131,7 +135,7 @@ public abstract class MixinFallbackResourceManager {
         }
 
         TreeMap<Identifier, Resource> result = Maps.newTreeMap();
-        boolean debug = org.slf4j.LoggerFactory.getLogger(FallbackResourceManager.class).isDebugEnabled();
+        boolean debug = lomka$LOGGER.isDebugEnabled();
 
         if (metaEntries.isEmpty()) {
             fileEntries.forEach((id, entry) -> {
@@ -143,9 +147,20 @@ public abstract class MixinFallbackResourceManager {
             return result;
         }
 
+        // Derived base->meta index: built AFTER all pack filters ran, so filterAll keeps
+        // exact vanilla META-id semantics (filters are path regexes and CAN distinguish "x"
+        // from "x.mcmeta"; PackEntry's filter accessor is version-specific, so re-keying
+        // before filtering is NOT version-agnostic). One base-id alloc per META (rare path)
+        // instead of one file+".mcmeta" concat per FILE; the hot loop below is then a
+        // zero-alloc direct get. (Figures: scripts/bench.)
+        Map<Identifier, Entry> metaByBase = new HashMap<>(metaEntries.size() * 2 + 1);
+        metaEntries.forEach((metaId, metaEntry) ->
+            metaByBase.put(lomka$getIdentifierFromMetadata(metaId), metaEntry));
+
+        // Kept as forEach (not an entrySet loop): HashMap.forEach's internal table walk
+        // measured faster than the loop. (Figures: scripts/bench.)
         fileEntries.forEach((id, entry) -> {
-            Identifier metaId = lomka$getMetadataLocation(id);
-            Entry metaEntry = metaEntries.get(metaId);
+            Entry metaEntry = metaByBase.get(id);
             IoSupplier<InputStream> resSupplier = debug
                     ? wrapForDebug(id, entry.source, entry.resource)
                     : entry.resource;
