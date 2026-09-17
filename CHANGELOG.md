@@ -34,7 +34,7 @@
 - 26.3 `renderpearl` replacements (`GpuBuffer`, `GlProgram`, etc.) — 19 variants, `PoseStack`/`GlProgram` gated `<26.3`, `neoforge-moddev` 2.0.147, `VERSION` 0.5.3.
 - 26.3 `ResourceManager.Selector` compat for pack managers, Window `onResize` signature.
 
-## [0.5.2]
+## [0.5.2] - 2026-09-06
 
 ### Performance
 - VoxelShape.toAabbs is computed once per shape and cached — `clip()` no longer allocates an ArrayList + AABBs on every raycast miss (crosshair raycast runs every frame). (all versions) **NEW**
