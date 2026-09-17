@@ -183,22 +183,49 @@ public interface MixinVertexConsumer {
         int color = ARGB.colorFromFloat(a, r, g, b);
         int lightWithEmission = LightTexture.lightCoordsWithEmission(light, quad.lightEmission());
         boolean affine = poseMat.m03() == 0.0F && poseMat.m13() == 0.0F && poseMat.m23() == 0.0F && poseMat.m33() == 1.0F;
+        float m00 = poseMat.m00(), m10 = poseMat.m10(), m20 = poseMat.m20(), m30 = poseMat.m30();
+        float m01 = poseMat.m01(), m11 = poseMat.m11(), m21 = poseMat.m21(), m31 = poseMat.m31();
+        float m02 = poseMat.m02(), m12 = poseMat.m12(), m22 = poseMat.m22(), m32 = poseMat.m32();
+        float m03 = poseMat.m03(), m13 = poseMat.m13(), m23 = poseMat.m23(), m33 = poseMat.m33();
 
-        for (int k = 0; k < 4; ++k) {
-            Vector3fc p = quad.position(k);
-            long packedUV = quad.packedUV(k);
+        {
+            Vector3fc p = quad.position(0);
+            long packedUV = quad.packedUV(0);
             float px = p.x(), py = p.y(), pz = p.z();
-
-            float vx = Math.fma(poseMat.m00(), px, Math.fma(poseMat.m10(), py, Math.fma(poseMat.m20(), pz, poseMat.m30())));
-            float vy = Math.fma(poseMat.m01(), px, Math.fma(poseMat.m11(), py, Math.fma(poseMat.m21(), pz, poseMat.m31())));
-            float vz = Math.fma(poseMat.m02(), px, Math.fma(poseMat.m12(), py, Math.fma(poseMat.m22(), pz, poseMat.m32())));
-            if (!affine) {
-                float w = Math.fma(poseMat.m03(), px, Math.fma(poseMat.m13(), py, Math.fma(poseMat.m23(), pz, poseMat.m33())));
-                vx /= w;
-                vy /= w;
-                vz /= w;
-            }
-
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
+        }
+        {
+            Vector3fc p = quad.position(1);
+            long packedUV = quad.packedUV(1);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
+        }
+        {
+            Vector3fc p = quad.position(2);
+            long packedUV = quad.packedUV(2);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
+        }
+        {
+            Vector3fc p = quad.position(3);
+            long packedUV = quad.packedUV(3);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
         }
     }
@@ -222,26 +249,61 @@ public interface MixinVertexConsumer {
         Matrix4f poseMat = pose.pose();
         int emission = quad.lightEmission();
         boolean affine = poseMat.m03() == 0.0F && poseMat.m13() == 0.0F && poseMat.m23() == 0.0F && poseMat.m33() == 1.0F;
+        float m00 = poseMat.m00(), m10 = poseMat.m10(), m20 = poseMat.m20(), m30 = poseMat.m30();
+        float m01 = poseMat.m01(), m11 = poseMat.m11(), m21 = poseMat.m21(), m31 = poseMat.m31();
+        float m02 = poseMat.m02(), m12 = poseMat.m12(), m22 = poseMat.m22(), m32 = poseMat.m32();
+        float m03 = poseMat.m03(), m13 = poseMat.m13(), m23 = poseMat.m23(), m33 = poseMat.m33();
 
-        for (int k = 0; k < 4; ++k) {
-            Vector3fc p = quad.position(k);
-            long packedUV = quad.packedUV(k);
+        {
+            Vector3fc p = quad.position(0);
+            long packedUV = quad.packedUV(0);
             float px = p.x(), py = p.y(), pz = p.z();
-            float br = brightness[k];
-
+            float br = brightness[0];
             int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
-            int light = LightTexture.lightCoordsWithEmission(lights[k], emission);
-
-            float vx = Math.fma(poseMat.m00(), px, Math.fma(poseMat.m10(), py, Math.fma(poseMat.m20(), pz, poseMat.m30())));
-            float vy = Math.fma(poseMat.m01(), px, Math.fma(poseMat.m11(), py, Math.fma(poseMat.m21(), pz, poseMat.m31())));
-            float vz = Math.fma(poseMat.m02(), px, Math.fma(poseMat.m12(), py, Math.fma(poseMat.m22(), pz, poseMat.m32())));
-            if (!affine) {
-                float w = Math.fma(poseMat.m03(), px, Math.fma(poseMat.m13(), py, Math.fma(poseMat.m23(), pz, poseMat.m33())));
-                vx /= w;
-                vy /= w;
-                vz /= w;
-            }
-
+            int light = LightTexture.lightCoordsWithEmission(lights[0], emission);
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
+        }
+        {
+            Vector3fc p = quad.position(1);
+            long packedUV = quad.packedUV(1);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float br = brightness[1];
+            int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
+            int light = LightTexture.lightCoordsWithEmission(lights[1], emission);
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
+        }
+        {
+            Vector3fc p = quad.position(2);
+            long packedUV = quad.packedUV(2);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float br = brightness[2];
+            int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
+            int light = LightTexture.lightCoordsWithEmission(lights[2], emission);
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
+        }
+        {
+            Vector3fc p = quad.position(3);
+            long packedUV = quad.packedUV(3);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float br = brightness[3];
+            int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
+            int light = LightTexture.lightCoordsWithEmission(lights[3], emission);
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
         }
     }
@@ -255,23 +317,50 @@ public interface MixinVertexConsumer {
         Vector3f normal = pose.transformNormal(unit, new Vector3f());
         int emission = quad.materialInfo().lightEmission();
         boolean affine = matrix.m03() == 0.0F && matrix.m13() == 0.0F && matrix.m23() == 0.0F && matrix.m33() == 1.0F;
+        float m00 = matrix.m00(), m10 = matrix.m10(), m20 = matrix.m20(), m30 = matrix.m30();
+        float m01 = matrix.m01(), m11 = matrix.m11(), m21 = matrix.m21(), m31 = matrix.m31();
+        float m02 = matrix.m02(), m12 = matrix.m12(), m22 = matrix.m22(), m32 = matrix.m32();
+        float m03 = matrix.m03(), m13 = matrix.m13(), m23 = matrix.m23(), m33 = matrix.m33();
 
-        for (int v = 0; v < 4; ++v) {
-            Vector3fc p = quad.position(v);
-            long packedUV = quad.packedUV(v);
+        {
+            Vector3fc p = quad.position(0);
+            long packedUV = quad.packedUV(0);
             float px = p.x(), py = p.y(), pz = p.z();
-
-            float vx = Math.fma(matrix.m00(), px, Math.fma(matrix.m10(), py, Math.fma(matrix.m20(), pz, matrix.m30())));
-            float vy = Math.fma(matrix.m01(), px, Math.fma(matrix.m11(), py, Math.fma(matrix.m21(), pz, matrix.m31())));
-            float vz = Math.fma(matrix.m02(), px, Math.fma(matrix.m12(), py, Math.fma(matrix.m22(), pz, matrix.m32())));
-            if (!affine) {
-                float w = Math.fma(matrix.m03(), px, Math.fma(matrix.m13(), py, Math.fma(matrix.m23(), pz, matrix.m33())));
-                vx /= w;
-                vy /= w;
-                vz /= w;
-            }
-
-            this.addVertex(vx, vy, vz, instance.getColor(v), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(v, emission), normal.x(), normal.y(), normal.z());
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, instance.getColor(0), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(0, emission), normal.x(), normal.y(), normal.z());
+        }
+        {
+            Vector3fc p = quad.position(1);
+            long packedUV = quad.packedUV(1);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, instance.getColor(1), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(1, emission), normal.x(), normal.y(), normal.z());
+        }
+        {
+            Vector3fc p = quad.position(2);
+            long packedUV = quad.packedUV(2);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, instance.getColor(2), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(2, emission), normal.x(), normal.y(), normal.z());
+        }
+        {
+            Vector3fc p = quad.position(3);
+            long packedUV = quad.packedUV(3);
+            float px = p.x(), py = p.y(), pz = p.z();
+            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
+            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
+            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
+            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            this.addVertex(vx, vy, vz, instance.getColor(3), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(3, emission), normal.x(), normal.y(), normal.z());
         }
     }
     *///?}

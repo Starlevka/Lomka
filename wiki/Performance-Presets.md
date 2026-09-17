@@ -8,7 +8,7 @@ Guide for advanced users. Ready-to-paste blocks for `config/lomka-mixins.propert
 # Preset higher FPS for config/lomka-mixins.properties (just copy and paste)
 # Effect of disabling: -static memory/caches/DirectBuffer, BUT +allocations/+GC stutter
 
-# 1.21.6+ | Frees sprite pixels after upload - hundreds of MB native heap. Disable = +RAM
+# 1.21.6+ | Animation ticking/batched uploads on 1.21.11+; no active patches on 1.21.6-1.21.10. Disable = vanilla animation path
 net.minecraft.client.renderer.texture.MixinTextureAtlas=false
 # all | x4 growth + warm 16384 indices - holds extra VRAM. Disable = -VRAM, +mid-frame reallocs
 com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer=false
@@ -16,7 +16,7 @@ com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer=false
 com.mojang.blaze3d.vertex.MixinByteBufferBuilder=false
 # 1.21.6-26.1 | Caches full-buffer slice. Disable = +alloc per uniform
 com.mojang.blaze3d.buffers.MixinGpuBuffer=false
-# all | Pose pool + AxisPoseRotate. Disable = +new Pose per push
+# 1.20.1-26.2 | Pose pool + AxisPoseRotate. Disable = +new Pose per push
 com.mojang.blaze3d.vertex.MixinPoseStack=false
 # 1.21-1.21.11 | Scratch Matrix3f in mulPose. Disable = +new Matrix3f per call
 com.mojang.blaze3d.vertex.MixinPose=false
@@ -24,7 +24,7 @@ com.mojang.blaze3d.vertex.MixinPose=false
 net.minecraft.client.sounds.MixinChunkedSampleByteBuf=false
 # 1.21+ | Reuses ogg containers. Disable = +alloc on decode
 net.minecraft.client.sounds.MixinJOrbisAudioStream=false
-# all | Reuses float[3] sound positions. Disable = +float[3] per sound
+# all | Passes sound positions as primitives via alSource3f. Disable = +float[3] per position update
 com.mojang.blaze3d.audio.MixinChannel=false
 # 1.21+ | Caches listener orientation. Disable = +arrays per frame
 com.mojang.blaze3d.audio.MixinListener=false
@@ -35,10 +35,8 @@ net.minecraft.world.phys.shapes.MixinVoxelShape=false
 net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape=false
 # all | No double[1] box + no AABB.move() allocs. Disable = +garbage on traces
 net.minecraft.world.phys.MixinAABB=false
-# 1.21+ | Caches progression lists. Disable = +List.of per query
+# 1.21+ | Caches the status progression list with volatile publication. Disable = vanilla list construction
 net.minecraft.world.level.chunk.status.MixinChunkStatus=false
-# all | Inline nibble. Disable = +delegations
-net.minecraft.world.level.chunk.MixinDataLayer=false
 # all | SpatialLongSet 4x4x4 instead of LongLinkedOpenHashSet 512. Disable = +rehash on chunk load
 net.minecraft.world.level.lighting.MixinLeveledPriorityQueue=false
 # all | Reuses LongConsumer instead of per-block lambda. Disable = +lambdas
@@ -57,9 +55,9 @@ net.minecraft.client.gui.font.MixinFontSet=false
 net.minecraft.network.MixinCompressionEncoder=false
 # 1.21+ | Direct inflate path. Disable = +heap ByteBuffer duplicates
 net.minecraft.network.MixinCompressionDecoder=false
-# all | Indexed writes without iterators. Disable = +iterators/lambdas
+# all | Indexed list writes, reusable HashMap consumer, sparse EnumSet packing. Disable = vanilla serialization
 net.minecraft.network.MixinFriendlyByteBuf=false
-# all | Skips .mcmeta work. Disable = +locations
+# all | Base-to-metadata index after pack filtering + cached logger. Disable = vanilla metadata lookup
 net.minecraft.server.packs.resources.MixinFallbackResourceManager=false
 # all | Skips TreeMap copies. Disable = +copies
 net.minecraft.server.packs.resources.MixinMultiPackResourceManager=false
@@ -73,7 +71,7 @@ net.minecraft.util.MixinByIdMap=false
 net.minecraft.util.MixinArrayListDeque=false
 # all | LUT[256] FROM_8_BIT + RECIPROCALS. Disable = +divisions, but -1KB static
 net.minecraft.util.MixinARGB=false
-# 1.21.6+ | Reuses Vector4f/3f scratch. Disable = +uniform objects
+# 1.21.6-26.2 | Caches ring-buffer getter and uniform slices. Disable = vanilla buffer/slice lookup
 net.minecraft.client.renderer.MixinDynamicUniformStorage=false
 # 1.21.6+ | Bitwise std140. Disable = +compute
 com.mojang.blaze3d.buffers.MixinStd140Builder=false
@@ -93,9 +91,7 @@ com.mojang.blaze3d.opengl.MixinGlStateManager=false
 com.mojang.blaze3d.platform.MixinWindow=false
 # <1.21.4 | glBlitFramebuffer instead of blit-shader quad. Disable = +shader switches
 com.mojang.blaze3d.pipeline.MixinRenderTarget=false
-# all | Branchless fastFloor/fastCeil. Disable = +Math.floor/ceil 4x/frame
-net.minecraft.client.renderer.culling.MixinFrustum=false
-# 1.21+ | Affine fma transforms. Disable = +Matrix3f allocs
+# 1.21+ | Direct FMA pose transforms; 1.21.11+ hoists matrix loads and unrolls quad writes. Disable = vanilla transforms
 com.mojang.blaze3d.vertex.MixinVertexConsumer=false
 # 1.21+ | Fast ARGB->ABGR packing. Disable = +branches
 com.mojang.blaze3d.vertex.MixinBufferBuilder=false
@@ -107,7 +103,7 @@ com.mojang.blaze3d.vertex.MixinVertexBuffer=false
 com.mojang.blaze3d.vertex.MixinVertexFormat=false
 # 1.20.1 only | Caches hashCode
 com.mojang.blaze3d.vertex.MixinVertexFormatElement=false
-# 1.21.6+ | Flat uniform-location table
+# 1.21.6-26.2 | Flat uniform-location table
 com.mojang.blaze3d.opengl.MixinGlProgram=false
 # 1.21.6+ | Caches UBO slices
 com.mojang.blaze3d.platform.MixinLighting=false
@@ -123,14 +119,14 @@ net.minecraft.client.MixinMinecraft=false
 net.minecraft.client.MixinCamera=false
 # 1.21.9-1.21.11 | Reuses quaternion
 net.minecraft.client.renderer.MixinGameRenderer=false
-# 1.21.11+ | Reuses render state per hand
+# 1.21.11-26.2 | Reuses render state per hand
 net.minecraft.client.renderer.MixinItemInHandRenderer=false
 
 # all | Flat 1D LUT axis*6+ord + branch-free getApproximateNearest
 net.minecraft.core.MixinDirection=false
 # all | Stepped counters instead of div/mod in betweenClosed (fill 16^3)
 net.minecraft.core.MixinBlockPos=false
-# all | Packed bit math + alloc-free spliterator
+# all | Packed section offsets, around-and-at-block traversal + alloc-free spliterator
 net.minecraft.core.MixinSectionPos=false
 # all | Incremental stepping instead of mod/div in AABB scans
 net.minecraft.core.MixinCursor3D=false
@@ -140,7 +136,7 @@ net.minecraft.core.MixinVec3i=false
 net.minecraft.core.MixinDirect=false
 # all | Caches collisionShape without virtual dispatch
 net.minecraft.world.level.block.state.MixinBlockStateBase=false
-# all | volatile long bitmask instead of 18 array
+# all | Volatile face-sturdiness bitmask; refreshes on backing-array replacement
 net.minecraft.world.level.block.state.MixinBlockStateBaseCache=false
 # all | Inline t + epsilon 1e-7 (both RAM and FPS)
 net.minecraft.world.phys.MixinAABB=false

@@ -23,8 +23,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import net.minecraft.network.FriendlyByteBuf;
 //? if >=1.21 {
 import net.minecraft.network.codec.StreamEncoder;
@@ -32,6 +34,7 @@ import net.minecraft.network.codec.StreamEncoder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(FriendlyByteBuf.class)
 public abstract class MixinFriendlyByteBuf {
@@ -42,6 +45,25 @@ public abstract class MixinFriendlyByteBuf {
     @Shadow public abstract FriendlyByteBuf writeByte(int i);
     //?}
     @Shadow public abstract byte readByte();
+
+    @Unique private final LomkaMapHelper lomka$mapHelper = new LomkaMapHelper();
+
+    @Unique
+    private static final class LomkaMapHelper<K, V> implements BiConsumer<K, V> {
+        FriendlyByteBuf buf;
+        //? if >=1.21 {
+        StreamEncoder<? super FriendlyByteBuf, K> keyEnc;
+        StreamEncoder<? super FriendlyByteBuf, V> valEnc;
+        @Override public void accept(K k, V v) {
+            this.keyEnc.encode(this.buf, k);
+            this.valEnc.encode(this.buf, v);
+        }
+        //?} else {
+        /*FriendlyByteBuf.Writer<K> keyEnc;
+        FriendlyByteBuf.Writer<V> valEnc;
+        @Override public void accept(K k, V v) { this.keyEnc.accept(this.buf, k); this.valEnc.accept(this.buf, v); }*/
+        //?}
+    }
 
     /**
      * @author Starlev
@@ -82,10 +104,10 @@ public abstract class MixinFriendlyByteBuf {
 
     /**
      * @author Starlev
-     * @reason Replaces map.forEach(capturingLambda) with a direct entrySet
-     *         loop. Vanilla's lambda captures `this` and both encoders, so a fresh
-     *         instance is allocated on every writeMap call; this removes that
-     *         allocation entirely.
+     * @reason Replaces per-call capturing lambda with a cached BiConsumer that
+     *         still uses HashMap.forEach's internal table walk (no Entry iterator).
+     *         For non-HashMap maps falls back to entrySet loop. Saves one lambda
+     *         allocation per packet while keeping the fast internal iteration.
      */
     @Overwrite
     //? if >=1.21 {
@@ -94,54 +116,76 @@ public abstract class MixinFriendlyByteBuf {
     /*public <K, V> void writeMap(Map<K, V> map, FriendlyByteBuf.Writer<K> streamencoder, FriendlyByteBuf.Writer<V> streamencoder1) {*/
     //?}
         this.writeVarInt(map.size());
-        for (Map.Entry<K, V> entry : map.entrySet()) {
+        if (map instanceof HashMap) {
+            @SuppressWarnings("unchecked")
+            LomkaMapHelper<K, V> h = (LomkaMapHelper<K, V>) this.lomka$mapHelper;
+            h.buf = (FriendlyByteBuf) (Object) this;
+            h.keyEnc = streamencoder;
+            h.valEnc = streamencoder1;
             //? if >=1.21 {
-            streamencoder.encode((FriendlyByteBuf) (Object) this, entry.getKey());
+            ((HashMap<K, V>) map).forEach(h);
             //?} else {
-            /*streamencoder.accept((FriendlyByteBuf) (Object) this, entry.getKey());*/
+            /*((HashMap<K, V>) map).forEach(h);*/
             //?}
-            //? if >=1.21 {
-            streamencoder1.encode((FriendlyByteBuf) (Object) this, entry.getValue());
-            //?} else {
-            /*streamencoder1.accept((FriendlyByteBuf) (Object) this, entry.getValue());*/
-            //?}
+            h.buf = null;
+            h.keyEnc = null;
+            h.valEnc = null;
+        } else {
+            for (Map.Entry<K, V> entry : map.entrySet()) {
+                //? if >=1.21 {
+                streamencoder.encode((FriendlyByteBuf) (Object) this, entry.getKey());
+                //?} else {
+                /*streamencoder.accept((FriendlyByteBuf) (Object) this, entry.getKey());*/
+                //?}
+                //? if >=1.21 {
+                streamencoder1.encode((FriendlyByteBuf) (Object) this, entry.getValue());
+                //?} else {
+                /*streamencoder1.accept((FriendlyByteBuf) (Object) this, entry.getValue());*/
+                //?}
+            }
         }
     }
 
     /**
      * @author Starlev
-     * @reason Replaces BitSet + toByteArray()/writeFixedBitSet with direct
-     *         manual bit packing, avoiding the BitSet allocation and its
-     *         intermediate byte[]. Uses the same LSB-first-within-byte convention as
-     *         BitSet.toByteArray(); verified via round-trip testing against random
-     *         enum sets at many lengths, including non-multiple-of-8 boundaries.
+     * @reason Replaces BitSet + toByteArray() with sparse-aware packing: iterate
+     *         only over present elements (size) instead of all enum constants (len).
+     *         For DyeColor/Direction sets (1-4 elements of 16) this is 4-8x fewer
+     *         contains checks. Same LSB-first convention, verified round-trip.
      */
     @Overwrite
     public <E extends Enum<E>> void writeEnumSet(EnumSet<E> enumset, Class<E> oclass) {
-        E[] aenum = oclass.getEnumConstants();
-        int len = aenum.length;
+        int len = oclass.getEnumConstants().length;
         int byteCount = (len + 7) >> 3;
-        for (int i = 0; i < byteCount; ++i) {
-            int b = 0;
-            int start = i << 3;
-            int end = Math.min(start + 8, len);
-            for (int j = start; j < end; ++j) {
-                if (enumset.contains(aenum[j])) {
-                    b |= (1 << (j - start));
-                }
+        if (enumset.isEmpty()) {
+            for (int i = 0; i < byteCount; ++i) {
+                //? if >=1.21 {
+                this.writeByte(0);
+                //?} else {
+                /*((io.netty.buffer.ByteBuf) (Object) this).writeByte(0);*/
+                //?}
             }
+            return;
+        }
+        byte[] out = new byte[byteCount];
+        for (E e : enumset) {
+            int ord = e.ordinal();
+            out[ord >> 3] |= (byte) (1 << (ord & 7));
+        }
+        for (int i = 0; i < byteCount; ++i) {
             //? if >=1.21 {
-            this.writeByte(b);
+            this.writeByte(out[i] & 255);
             //?} else {
-            /*((io.netty.buffer.ByteBuf) (Object) this).writeByte(b);
-             *///?}
+            /*((io.netty.buffer.ByteBuf) (Object) this).writeByte(out[i] & 255);*/
+            //?}
         }
     }
 
     /**
      * @author Starlev
-     * @reason Mirrors writeEnumSet's manual bit packing, avoiding
-     *         readFixedBitSet's BitSet.valueOf() allocation on the read side.
+     * @reason Sparse-aware unpack: iterate only set bits via trailingZeros
+     *         instead of all 8 per byte. Avoids BitSet.valueOf() alloc and
+     *         is O(set size) not O(len).
      */
     @Overwrite
     public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> oclass) {
@@ -152,11 +196,11 @@ public abstract class MixinFriendlyByteBuf {
         for (int i = 0; i < byteCount; ++i) {
             int b = this.readByte() & 255;
             int start = i << 3;
-            int end = Math.min(start + 8, len);
-            for (int j = start; j < end; ++j) {
-                if ((b & (1 << (j - start))) != 0) {
-                    enumset.add(aenum[j]);
-                }
+            while (b != 0) {
+                int bit = Integer.numberOfTrailingZeros(b);
+                int ord = start + bit;
+                if (ord < len) enumset.add(aenum[ord]);
+                b &= b - 1;
             }
         }
         return enumset;

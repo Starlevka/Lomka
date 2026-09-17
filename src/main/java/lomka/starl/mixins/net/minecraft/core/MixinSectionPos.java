@@ -51,39 +51,6 @@ public abstract class MixinSectionPos {
 
     /**
      * @author Starlev
-     * @reason Direct 64-bit packing in a single expression without stack variables.
-     */
-    @Overwrite
-    public static long asLong(int x, int y, int z) {
-        return ((long) x & 4194303L) << 42
-             | ((long) z & 4194303L) << 20
-             | (long) (y & 1048575);
-    }
-
-    /**
-     * @author Starlev
-     * @reason Removes redundant no-op shift left by zero.
-     */
-    @Overwrite
-    public static int x(long packed) {
-        return (int) (packed >> 42);
-    }
-
-    /**
-     * @author Starlev
-     * @reason Direct bitwise translation from a packed BlockPos to a packed SectionPos without
-     *         unpacking coordinates or method calls: section coords are the block coords >> 4,
-     *         which for the packed layout reduces to field-aligned masks and shifts.
-     */
-    @Overwrite
-    public static long blockToSection(long blockPosLong) {
-        return (blockPosLong & -4398046511104L)
-                |  ((blockPosLong << 4)         & 4398045462528L)
-                | (((blockPosLong << 52) >> 56) & 1048575L);
-    }
-
-    /**
-     * @author Starlev
      * @reason Fast single-axis offsets; EAST/WEST become direct 64-bit adds because the X field
      *         occupies the top bits of the packed value.
      */
@@ -127,7 +94,7 @@ public abstract class MixinSectionPos {
         int maxZ = blockToSectionCoord(z + 1);
 
         if (minX == maxX && minY == maxY && minZ == maxZ) {
-            consumer.accept(asLong(minX, minY, minZ));
+            consumer.accept(SectionPos.asLong(minX, minY, minZ));
         } else {
             for (int curX = minX; curX <= maxX; ++curX) {
                 long xPart = ((long) curX & 4194303L) << 42;
