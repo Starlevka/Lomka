@@ -1,6 +1,6 @@
 ﻿# Contributing to Lomka
 
-Thanks for your interest in Lomka. This guide targets the **0.5.x** release line (**0.5.2**) and explains how to report issues, propose optimizations and submit pull requests across all 17 build variants.
+Thanks for your interest in Lomka. This guide targets **Lomka 0.5.x** and explains how to report issues, propose optimizations and submit pull requests across the build variants defined in `settings.gradle.kts`.
 
 ## Table of Contents
 1. [Code of Conduct](#code-of-conduct)
@@ -32,7 +32,7 @@ No dedicated conduct email is set up, use GitHub Issues for now. If you prefer a
 ## Before You Start
 
 * Lomka is `LGPL-3.0-only`, contributions use the same license.
-* Lomka is built with **Stonecutter 0.9.7**: all sources live in one tree and compile directly for `1.21.11-fabric` (the VCS version). The other 16 variants are generated from the same sources by per-version swaps, constants and conditionals.
+* Lomka is built with **Stonecutter 0.9.7**: all sources live in one tree and compile directly for `1.21.11-fabric` (the VCS version). The other variants are generated from the same sources by per-version swaps, constants and conditionals.
 * Search existing [issues](https://github.com/Starlevka/Lomka/issues) to avoid duplicates.
 
 ## Reporting Issues
@@ -45,7 +45,7 @@ Use the templates in `.github/ISSUE_TEMPLATE/`:
 
 Include:
 
-1. Lomka version (`mod version` + `MC version` + `loader`, e.g. `0.5.2 1.21.11-fabric`).
+1. Lomka version (`mod version` + `MC version` + `loader`, e.g. `0.5.5 1.21.11-fabric`).
 2. Steps to reproduce, expected vs actual behavior.
 3. Full log (`logs/latest.log`) and, for performance, a short Spark / `/debug` profile or `F3` screenshot.
 4. If a patch is suspected, bisect it with `config/lomka-mixins.properties` (see [Runtime Mixin Configuration](#runtime-mixin-configuration)) and mention which toggles change the behavior.
@@ -61,7 +61,7 @@ Hot paths prefer `@Overwrite`; for Iris compat use cancellable `HEAD` `@Inject` 
 
 ## AI-Assisted Contributions
 
-AI-assisted PRs are welcome. Just verify the change (quick test or `srcnav.py` check) and note that it was AI-assisted. Keep your `@author` on the optimization.
+AI-assisted PRs are welcome. Verify the generated code against the actual Minecraft sources for each affected version and test the change; do not rely on guessed class names, method signatures or behavior. Obtain the game sources yourself as described in [Development Setup](#development-setup), and note that the contribution was AI-assisted. Keep your `@author` on the optimization.
 
 ## Development Setup
 
@@ -69,7 +69,7 @@ AI-assisted PRs are welcome. Just verify the change (quick test or `srcnav.py` c
 * `gradle.properties` tuning: 2G G1GC heap, `org.gradle.parallel=false`, 2 workers, configuration cache off — keep these unless you have a reason.
 * **Build:**
   ```bash
-  ./gradlew buildAllVariants      # all 17 variants -> build/libs/<project>/
+  ./gradlew buildAllVariants      # build all configured variants
   ./gradlew :1.21.11-fabric:build # single variant
   ./gradlew licenseHeaders        # add/update the LGPL-3.0-only header
   ```
@@ -81,16 +81,12 @@ AI-assisted PRs are welcome. Just verify the change (quick test or `srcnav.py` c
   ./gradlew :1.20.1-forge:runClient  # client of any specific variant
   ```
   The active version is tracked in `.sc_active_version` at the repo root; run directories live in `versions/<ver>-<loader>/run/`.
-* **Inspect MC sources** (decompiled, all versions + the mod itself):
-  ```bash
-  py -3 scripts/srcnav.py find <name> [version]
-  py -3 scripts/srcnav.py search <regex> [version] --max N --ctx N
-  py -3 scripts/srcnav.py lines <name> [range] [version]
-  py -3 scripts/srcnav.py method <name> <regex> [version]
-  py -3 scripts/srcnav.py diff <name> <v1> <v2>
-  py -3 scripts/srcnav.py dirs
-  ```
-  Version tokens: `1.20.1`, `1.21`, `1.21.4`, `1.21.6`, `1.21.9`, `1.21.11`, `26.1`, `26.2`, `mod` (Lomka sources), `compat` (COMPABILITY).
+* **Inspect Minecraft sources:** obtain or generate the game sources yourself for each version affected by your change. Decompiled Minecraft sources and maintainer-local inspection tools are not included in this repository and are not prerequisites supplied by a clone.
+  * Use your loader's development tooling to generate or attach Minecraft sources in the IDE, or use a decompiler on your locally obtained game JAR. Consult the documentation for the loader/plugin version used by the target build; source-generation tasks differ between toolchains.
+  * Use **Mojang official mappings**, matching this project, and inspect the exact Minecraft version declared for the target variant in `stonecutter.properties.toml`. Do not assume that the base version's methods and behavior are identical in other versions.
+  * Search and compare the relevant classes and methods with your IDE, a text-search tool or a diff viewer. For compatibility work, obtain the other mod's sources from its upstream repository and check the applicable version and license.
+  * Keep downloaded/decompiled game sources and local tooling outside the tracked source tree. Do not commit Minecraft JARs, decompiled game code or local absolute paths. In the PR, identify the versions, classes and methods you inspected and include your test results.
+* **Testing artifacts:** use the built mod from `versions/<ver>-<loader>/build/libs/`. Do not use root `build/libs/` or intermediate development artifacts for in-game verification.
 
 Base version is `1.21.11-fabric`. Sources compile directly for it; everything else is derived.
 
@@ -101,7 +97,7 @@ The variant → build script mapping is defined in `settings.gradle.kts`:
 | Variants | Build script | Pipeline |
 |---|---|---|
 | `1.20.1/1.21/1.21.4/1.21.6/1.21.9/1.21.11-fabric` | `build.fabric-o.gradle.kts` | `fabric-loom-remap`: compile (intermediary) → remap (Mojang), double pipeline |
-| `26.1/26.2-fabric` | `build.fabric-m.gradle.kts` | `fabric-loom`: single compile on Mojang mappings |
+| `26.1/26.2/26.3-fabric` | `build.fabric-m.gradle.kts` | `fabric-loom`: single compile on Mojang mappings |
 | `1.20.1-forge` | `build.forge.gradle.kts` | `moddev.legacyforge` + explicit `annotationProcessor("org.mixinpowered:mixin:0.8.5:processor")` |
 | all `*-neoforge` | `build.neoforge.gradle.kts` | `neoforge moddev`, single pass, Access Transformer based |
 
@@ -169,14 +165,14 @@ net.minecraft.core.MixinCursor3D = false
 
 * Run the affected variant in-game: `./gradlew :<ver>-<loader>:runClient`. For rendering changes, check at least one pre-1.21.6 (legacy pipeline) and one 26.x (new GPU-state pipeline) version.
 * Bisect suspected patches with `config/lomka-mixins.properties` toggles instead of commenting code out.
-* Compare vanilla semantics across versions with `srcnav.py diff` before rewriting shared logic.
+* Compare the relevant methods in your locally prepared Minecraft sources across affected versions before rewriting shared logic. Use an IDE or diff viewer and record any version-specific behavior in the PR.
 * Big changes: run `./gradlew buildAllVariants` once before opening the PR so cross-version compile breaks surface early.
 
 ## Versioning & Changelog
 
 * The mod version lives in `stonecutter.properties.toml` (`mod.version`) and is swapped into all templates — never hardcode it in Java.
 * Add a `CHANGELOG.md` entry under a new `[x.y.z]` heading (sections in use: `Performance`, `Bug Fixes`, `New`, `Removed`, `Changed`), noting the affected version range per change like `(all versions)`, `(<1.21.4)`, `(>=26.1)`.
-* Publishing is done by the maintainer via `py -3 scripts/publish.py --build --modrinth --curseforge` (supports `--dry-run`, `--variants`, `--skip-existing`, `--changelog`, tokens via `MODRINTH_TOKEN`/`CURSEFORGE_TOKEN`).
+* Releases are published by the maintainer. Contributors do not need publishing tools or platform API tokens; submit source changes and verification results through a pull request.
 
 ## Pull Request Process
 
