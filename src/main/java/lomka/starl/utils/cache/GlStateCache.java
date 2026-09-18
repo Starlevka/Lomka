@@ -19,51 +19,40 @@
 
 package lomka.starl.utils.cache;
 
-import java.util.Arrays;
-
 /**
- * Backing store for the GL viewport/scissor/polygon/fbo dedup in MixinGlStateManager. Lives outside the
- * mixin so both the injected handlers and the window-resize reset operate on one shared copy
- * (a mixin class and its merged duplicate keep separate statics).
+ * Last values pushed to the driver for the GL viewport/scissor/polygon/fbo dedup in
+ * MixinGlStateManager. Lives outside the mixin so the injected handlers and the window-resize
+ * reset in MixinWindow address one shared copy (a mixin class and its merged duplicate keep
+ * separate statics).
  *
- * Indices 0-3: viewport x/y/w/h. Indices 4-7: scissor box x/y/w/h.
- * Indices 8-9: polygon mode face/mode. Indices 10-11: bound read/write framebuffer ids.
- * MIN_VALUE means unknown.
+ * {@link #UNKNOWN} means "not pushed yet", so the first call of a session always reaches the driver.
  */
 public final class GlStateCache {
 
     private GlStateCache() {}
 
-    public static final int VIEWPORT_X   = 0;
-    public static final int VIEWPORT_Y   = 1;
-    public static final int VIEWPORT_W   = 2;
-    public static final int VIEWPORT_H   = 3;
-    public static final int SCISSOR_X    = 4;
-    public static final int SCISSOR_Y    = 5;
-    public static final int SCISSOR_W    = 6;
-    public static final int SCISSOR_H    = 7;
-    public static final int POLYGON_FACE = 8;
-    public static final int POLYGON_MODE = 9;
-    public static final int FBO_READ     = 10;
-    public static final int FBO_WRITE    = 11;
+    public static final int UNKNOWN = Integer.MIN_VALUE;
 
-    private static final int[] STATE = new int[12];
+    public static int viewportX   = UNKNOWN;
+    public static int viewportY   = UNKNOWN;
+    public static int viewportW   = UNKNOWN;
+    public static int viewportH   = UNKNOWN;
+    public static int scissorX    = UNKNOWN;
+    public static int scissorY    = UNKNOWN;
+    public static int scissorW    = UNKNOWN;
+    public static int scissorH    = UNKNOWN;
+    public static int polygonFace = UNKNOWN;
+    public static int polygonMode = UNKNOWN;
+    public static int fboRead     = UNKNOWN;
+    public static int fboWrite    = UNKNOWN;
 
-    static {
-        reset();
-    }
-
+    /**
+     * Forgets every cached value, so the next call of each state reaches the driver again.
+     */
     public static void reset() {
-        Arrays.fill(STATE, Integer.MIN_VALUE);
-    }
-
-    public static int get(int index) {
-        return STATE[index];
-    }
-
-    public static void set(int index, int value) {
-        STATE[index] = value;
+        viewportX = viewportY = viewportW = viewportH = UNKNOWN;
+        scissorX = scissorY = scissorW = scissorH = UNKNOWN;
+        polygonFace = polygonMode = UNKNOWN;
+        fboRead = fboWrite = UNKNOWN;
     }
 }
-
-

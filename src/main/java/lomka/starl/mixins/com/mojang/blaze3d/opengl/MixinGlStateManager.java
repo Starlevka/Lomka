@@ -68,14 +68,12 @@ public class MixinGlStateManager {
             cancellable = true
     )
     private static void lomka$cacheViewport(int x, int y, int width, int height, CallbackInfo ci) {
-        if (x != GlStateCache.get(GlStateCache.VIEWPORT_X)
-                || y      != GlStateCache.get(GlStateCache.VIEWPORT_Y)
-                || width  != GlStateCache.get(GlStateCache.VIEWPORT_W)
-                || height != GlStateCache.get(GlStateCache.VIEWPORT_H)) {
-            GlStateCache.set(GlStateCache.VIEWPORT_X, x);
-            GlStateCache.set(GlStateCache.VIEWPORT_Y, y);
-            GlStateCache.set(GlStateCache.VIEWPORT_W, width);
-            GlStateCache.set(GlStateCache.VIEWPORT_H, height);
+        if (((x     ^ GlStateCache.viewportX) | (y      ^ GlStateCache.viewportY)
+           | (width ^ GlStateCache.viewportW) | (height ^ GlStateCache.viewportH)) != 0) {
+            GlStateCache.viewportX = x;
+            GlStateCache.viewportY = y;
+            GlStateCache.viewportW = width;
+            GlStateCache.viewportH = height;
         } else {
             ci.cancel();
         }
@@ -90,14 +88,12 @@ public class MixinGlStateManager {
             cancellable = true
     )
     private static void lomka$cacheScissorBox(int x, int y, int width, int height, CallbackInfo ci) {
-        if (x != GlStateCache.get(GlStateCache.SCISSOR_X)
-                || y      != GlStateCache.get(GlStateCache.SCISSOR_Y)
-                || width  != GlStateCache.get(GlStateCache.SCISSOR_W)
-                || height != GlStateCache.get(GlStateCache.SCISSOR_H)) {
-            GlStateCache.set(GlStateCache.SCISSOR_X, x);
-            GlStateCache.set(GlStateCache.SCISSOR_Y, y);
-            GlStateCache.set(GlStateCache.SCISSOR_W, width);
-            GlStateCache.set(GlStateCache.SCISSOR_H, height);
+        if (((x     ^ GlStateCache.scissorX) | (y      ^ GlStateCache.scissorY)
+           | (width ^ GlStateCache.scissorW) | (height ^ GlStateCache.scissorH)) != 0) {
+            GlStateCache.scissorX = x;
+            GlStateCache.scissorY = y;
+            GlStateCache.scissorW = width;
+            GlStateCache.scissorH = height;
         } else {
             ci.cancel();
         }
@@ -112,10 +108,9 @@ public class MixinGlStateManager {
             cancellable = true
     )
     private static void lomka$cachePolygonMode(int face, int mode, CallbackInfo ci) {
-        if (face != GlStateCache.get(GlStateCache.POLYGON_FACE)
-         || mode != GlStateCache.get(GlStateCache.POLYGON_MODE)) {
-            GlStateCache.set(GlStateCache.POLYGON_FACE, face);
-            GlStateCache.set(GlStateCache.POLYGON_MODE, mode);
+        if (((face ^ GlStateCache.polygonFace) | (mode ^ GlStateCache.polygonMode)) != 0) {
+            GlStateCache.polygonFace = face;
+            GlStateCache.polygonMode = mode;
         } else {
             ci.cancel();
         }
@@ -131,26 +126,22 @@ public class MixinGlStateManager {
             cancellable = true
     )
     private static void lomka$cacheBindFramebuffer(int target, int framebuffer, CallbackInfo ci) {
-        boolean known = false;
+        boolean bound   = false;
         boolean changed = false;
 
         if (target == 36008 || target == 36160) {
-            known = true;
-            if (GlStateCache.get(GlStateCache.FBO_READ) != framebuffer) {
-                GlStateCache.set(GlStateCache.FBO_READ, framebuffer);
-                changed = true;
-            }
+            bound = true;
+            changed |= GlStateCache.fboRead != framebuffer;
+            GlStateCache.fboRead = framebuffer;
         }
 
         if (target == 36009 || target == 36160) {
-            known = true;
-            if (GlStateCache.get(GlStateCache.FBO_WRITE) != framebuffer) {
-                GlStateCache.set(GlStateCache.FBO_WRITE, framebuffer);
-                changed = true;
-            }
+            bound = true;
+            changed |= GlStateCache.fboWrite != framebuffer;
+            GlStateCache.fboWrite = framebuffer;
         }
 
-        if (known && !changed) {
+        if (bound && !changed) {
             ci.cancel();
         }
     }
@@ -163,12 +154,12 @@ public class MixinGlStateManager {
             at = @At("TAIL")
     )
     private static void lomka$clearFboCache(int framebuffer, CallbackInfo ci) {
-        if (GlStateCache.get(GlStateCache.FBO_READ) == framebuffer) {
-            GlStateCache.set(GlStateCache.FBO_READ, 0);
+        if (GlStateCache.fboRead == framebuffer) {
+            GlStateCache.fboRead = 0;
         }
 
-        if (GlStateCache.get(GlStateCache.FBO_WRITE) == framebuffer) {
-            GlStateCache.set(GlStateCache.FBO_WRITE, 0);
+        if (GlStateCache.fboWrite == framebuffer) {
+            GlStateCache.fboWrite = 0;
         }
     }
     //?}

@@ -120,6 +120,7 @@
     ,"net.minecraft.server.packs.resources.MixinFallbackResourceManager"
     ,"net.minecraft.server.packs.resources.MixinMultiPackResourceManager"
     ,"net.minecraft.server.packs.MixinVanillaPackResources"
+    ,"net.minecraft.network.MixinVecDeltaCodec"
     /*? if >=1.21 { */
     ,"net.minecraft.network.MixinCompressionDecoder"
     ,"net.minecraft.util.MixinArrayListDeque"
