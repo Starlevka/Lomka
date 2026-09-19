@@ -50,11 +50,16 @@
     /*? if >=1.21.9 && <26.1 { */
     ,"net.minecraft.client.renderer.MixinGameRenderer"
     /*?} */
-    /*? if >=1.21.11 { */
+    /*? if <1.21.9 { */
+    ,"net.minecraft.client.gui.MixinStringRenderOutput"
+    /*?} */
+    /*? if >=1.21.9 { */
     ,"net.minecraft.client.gui.MixinFont"
     ,"net.minecraft.client.gui.MixinGlyphSource"
     ,"net.minecraft.client.gui.font.MixinFontSet"
     ,"net.minecraft.client.gui.font.MixinSource"
+    /*?} */
+    /*? if >=1.21.11 { */
     ,"net.minecraft.client.resources.model.MixinBuilder"
     /*?} */
     /*? if >=1.21.11 && <26.3 { */
@@ -120,7 +125,7 @@
     ,"net.minecraft.server.packs.resources.MixinFallbackResourceManager"
     ,"net.minecraft.server.packs.resources.MixinMultiPackResourceManager"
     ,"net.minecraft.server.packs.MixinVanillaPackResources"
-    ,"net.minecraft.network.MixinVecDeltaCodec"
+    ,"net.minecraft.network.protocol.game.MixinVecDeltaCodec"
     /*? if >=1.21 { */
     ,"net.minecraft.network.MixinCompressionDecoder"
     ,"net.minecraft.util.MixinArrayListDeque"

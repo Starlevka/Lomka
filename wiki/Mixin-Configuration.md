@@ -88,10 +88,11 @@ version simply does not exist in your jar the config loader ignores it with an
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.client.gui.font.MixinFontSet` | Clears cached glyph advances on font rebuild so widths never go stale | 1.21.11+ |
-| `net.minecraft.client.gui.font.MixinSource` | Int2Float advance cache for glyph sources | 1.21.11+ |
-| `net.minecraft.client.gui.MixinFont` | Routes text width lookups through cached glyph advances | 1.21.11+ |
-| `net.minecraft.client.gui.MixinGlyphSource` | Adds a cached per-codepoint advance lookup to glyph sources | 1.21.11+ |
+| `net.minecraft.client.gui.font.MixinFontSet` | Clears cached glyph advances on font rebuild so widths never go stale | 1.21.9+ |
+| `net.minecraft.client.gui.font.MixinSource` | Int2Float advance cache for glyph sources | 1.21.9+ |
+| `net.minecraft.client.gui.MixinFont` | Routes text width lookups through cached glyph advances | 1.21.9+ |
+| `net.minecraft.client.gui.MixinGlyphSource` | Adds a cached per-codepoint advance lookup to glyph sources | 1.21.9+ |
+| `net.minecraft.client.gui.MixinStringRenderOutput` | One-slot FontSet memo per laid-out string on the legacy text sink | 1.20.1-1.21.8 |
 
 ## Models mixins
 
@@ -167,14 +168,6 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.util.MixinUtil` | Cached OS/arch detection, array-backed shuffles, allocation-free URI scheme checks and single-step codepoint offsets | all |
 | `net.minecraft.util.MixinArrayListDeque` | Power-of-two deque indexing without modulo | 1.21+ |
 
-## Presets
-
-Ready-to-paste `config/lomka-mixins.properties` blocks for common trade-offs (advanced users):
-
-* **Higher RAM / lower stutter:** disables caches that hold static memory (`AutoStorageIndexBuffer` x4, `ByteBufferBuilder` 8MB, `PoseStack` pool, etc.). Use if `<4GB` / `iGPU` + `native OOM`.
-* **Lower FPS / higher compat:** disables hot-path CPU opts (`GlStateManager`, `VertexConsumer`, `Direction LUT`, `Mth`, etc.). Use if `Iris/Sodium` artifacts or vanilla parity debugging.
-
-Full blocks are in `wiki/Performance-Presets.md` — just copy-paste into `config/lomka-mixins.properties`. Comments must be on their own line (`#` at line start); `key=false # comment` on the same line triggers `WARN is not true/false`.
 
 ## Accessor mixin
 
