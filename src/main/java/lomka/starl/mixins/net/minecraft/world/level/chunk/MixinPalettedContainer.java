@@ -19,6 +19,7 @@
 
 package lomka.starl.mixins.net.minecraft.world.level.chunk;
 
+import lomka.starl.duck.IPalettedContainer;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -26,7 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(PalettedContainer.class)
-public abstract class MixinPalettedContainer<T> {
+public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
 
     @Shadow private volatile PalettedContainer.Data<T> data;
 
@@ -67,6 +68,34 @@ public abstract class MixinPalettedContainer<T> {
             this.lomka$uniformValue = value;
             this.lomka$uniformData = d;
         }
+
+        return value;
+    }
+
+    /*
+     * Uniform-value probe for consumers that would otherwise sample a whole section
+     * (MixinHeightmap, see IPalettedContainer). The answer is parked in the same
+     * (value, volatile Data) pair the hot path uses, so it warms the cache instead of
+     * duplicating it: the volatile Data store publishes the plain value store, and a
+     * later get() on the same container is served from it. Heterogeneous containers
+     * return null and are never cached - the same discipline as get().
+     */
+    @Override
+    @Unique
+    public Object lomka$uniformValue() {
+        PalettedContainer.Data<T> d = this.data;
+
+        if (this.lomka$uniformData == d) {
+            return this.lomka$uniformValue;
+        }
+
+        if (d.storage().getBits() != 0 || d.palette().getSize() != 1) {
+            return null;
+        }
+
+        T value = d.palette().valueFor(0);
+        this.lomka$uniformValue = value;
+        this.lomka$uniformData = d;
 
         return value;
     }

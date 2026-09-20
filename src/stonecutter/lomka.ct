@@ -32,6 +32,9 @@ accessible method net/minecraft/client/Camera$NearPlane <init> (Lnet/minecraft/w
 
 accessible class net/minecraft/world/level/chunk/PalettedContainer$Data
 
+accessible field net/minecraft/world/level/levelgen/Xoroshiro128PlusPlus seedLo J
+accessible field net/minecraft/world/level/levelgen/Xoroshiro128PlusPlus seedHi J
+
 #? if <1.21.9 {
 accessible method net/minecraft/client/gui/Font getFontSet (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/gui/font/FontSet;
 #?}

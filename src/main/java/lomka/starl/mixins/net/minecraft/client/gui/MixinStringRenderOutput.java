@@ -66,9 +66,9 @@ public abstract class MixinStringRenderOutput {
         method = "accept",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/Font;getFontSet(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/gui/font/FontSet;",
-            require = 0
-        )
+            target = "Lnet/minecraft/client/gui/Font;getFontSet(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/gui/font/FontSet;"
+        ),
+        require = 0
     )
     private FontSet lomka$memoFontSet(Font font, ResourceLocation name) {
         FontSet cached = this.lomka$lastFontSet;

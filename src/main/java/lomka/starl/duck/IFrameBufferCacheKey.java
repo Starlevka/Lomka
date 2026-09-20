@@ -19,6 +19,6 @@
 
 package lomka.starl.duck;
 
-public interface IFrameBufferCache {
+public interface IFrameBufferCacheKey {
     void lomka$reset(int[] data, int hash);
 }

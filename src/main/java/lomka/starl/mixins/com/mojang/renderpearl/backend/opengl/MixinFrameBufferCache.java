@@ -24,7 +24,7 @@ import com.mojang.renderpearl.backend.opengl.FrameBufferAttachment;
 import com.mojang.renderpearl.backend.opengl.FrameBufferCache;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.List;
-import lomka.starl.duck.IFrameBufferCache;
+import lomka.starl.duck.IFrameBufferCacheKey;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -112,7 +112,7 @@ public abstract class MixinFrameBufferCache {
             hash = hash * 31 + mip;
         }
 
-        ((IFrameBufferCache) (Object) this.lomka$probeKey).lomka$reset(data, hash);
+        ((IFrameBufferCacheKey) (Object) this.lomka$probeKey).lomka$reset(data, hash);
         int fbo = this.cache.getInt(this.lomka$probeKey);
 
         if (fbo != 0) {

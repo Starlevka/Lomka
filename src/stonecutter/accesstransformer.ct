@@ -36,6 +36,14 @@ public net.minecraft.client.Camera$NearPlane <init>(Lnet/minecraft/world/phys/Ve
 public net.minecraft.world.level.chunk.PalettedContainer$Data
 
 #? if <1.21 {
+public net.minecraft.world.level.levelgen.Xoroshiro128PlusPlus f_190089_ # seedLo
+public net.minecraft.world.level.levelgen.Xoroshiro128PlusPlus f_190090_ # seedHi
+#?} else {
+public net.minecraft.world.level.levelgen.Xoroshiro128PlusPlus seedLo # J
+public net.minecraft.world.level.levelgen.Xoroshiro128PlusPlus seedHi # J
+#?}
+
+#? if <1.21 {
 public net.minecraft.client.gui.Font m_92863_(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/gui/font/FontSet;
 #?} else {
 public net.minecraft.client.gui.Font getFontSet(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/gui/font/FontSet;

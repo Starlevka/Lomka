@@ -102,6 +102,20 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.client.resources.model.MixinMaterial` | Caches the material hash instead of allocating an Object[] per sprite lookup | 1.20.1-1.21.11 |
 | `net.minecraft.client.model.MixinModel` | Indexed loop instead of Iterator in resetPose; no per-entity allocation | 1.21.9+ |
 
+## Animation mixins
+
+| Key | Description | Versions |
+|---|---|---|
+| `net.minecraft.client.animation.MixinKeyframeAnimation` | Reuses the scratch vector that 1.21.9 made per-call (24 B/frame, measured) and skips zero-scale clips on the per-frame animation path; the iterator, the `ifStarted` Consumer and the search callback all measure 0 B/frame, so they stay vanilla | 1.21.6+ |
+| `net.minecraft.client.animation.MixinEntry` | Bridge to the private `Entry` record through the `IKeyframeAnimationEntry` duck, so `MixinKeyframeAnimation` can hand it its own scratch vector; the search is vanilla's (an inlined replica bought 0 B/frame and was ~9% slower per search) | 1.21.6+ |
+
+The zero-scale skip is value-identical to vanilla for every input; two bit-level corners are
+pinned by fuzzing and accepted. A pose component already holding `-0.0F` is normalized to
+`+0.0F` by vanilla's additive zero write (sign of zero only, the skip keeps `-0.0F`), and
+duplicate head keyframe timestamps hit exactly (`seconds == ts[0] == ts[1]`) let vanilla write
+NaN where the skip does not; such content is broken at any scale, so it is unreachable on
+well-formed animations. Nothing else diverges, not at the bit level.
+
 ## Client rendering and logic mixins
 
 | Key | Description | Versions |
@@ -131,9 +145,11 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.world.level.block.state.MixinBlockStateBase` | Returns cached collision shapes, bypassing virtual dispatch | all |
 | `net.minecraft.world.level.block.state.MixinBlockStateBaseCache` | Caches face-sturdiness checks in a volatile long bitmask, refreshing it when the backing array is replaced | all |
 | `net.minecraft.world.level.chunk.status.MixinChunkStatus` | Caches the status progression list with volatile publication for worldgen threads | 1.21+ |
-| `net.minecraft.world.level.chunk.MixinPalettedContainer` | Uniform-section fast path via `volatile Data` identity (zero-bit palette) | all |
+| `net.minecraft.world.level.chunk.MixinPalettedContainer` | Uniform-section fast path via `volatile Data` identity (zero-bit palette); also answers the `IPalettedContainer` uniform-value probe used by `MixinHeightmap` | all |
+| `net.minecraft.world.level.levelgen.MixinHeightmap` | Chunk priming without the per-Y `ChunkAccess#getBlockState` walk and the per-column scratch state (a fresh iterator per column in vanilla up to 26.2; 26.3 allocates nothing per column but still walks Y by Y): flat arrays, active-type bitmask, section-local scans and O(1) resolution of uniform sections | all |
 | `net.minecraft.world.level.MixinLevel` | `ThreadLocal` scratch list for `getEntities(Entity,AABB,Predicate)` — hottest entity query | all |
 | `net.minecraft.world.level.levelgen.MixinLegacyRandomSource` | Plain-field RNG draw instead of a CAS per call; seed installation keeps the vanilla thread guard. Concurrent misuse of `next` no longer throws. | all |
+| `net.minecraft.world.level.levelgen.MixinXoroshiroRandomSource` | Reseeds the live Xoroshiro generator in place instead of installing a fresh object on every `setFeatureSeed`/`setDecorationSeed` (decoration reseeds once per structure and per placed feature, per chunk); the drawn sequence stays identical | all |
 | `net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape` | Reusable index lists in shape merge loops; `join` accumulates contiguous bit runs into bulk `BitSet.set(from, to)` writes | all |
 | `net.minecraft.world.phys.shapes.MixinVoxelShape` | Caches the computed AABB list so raycasts (crosshair `clip()` runs every frame) stop allocating per call | all |
 | `net.minecraft.world.phys.MixinAABB` | Allocation-free `clip` paths: no `double[1]` box, no per-iteration `AABB.move` in the `Iterable` variant | all |

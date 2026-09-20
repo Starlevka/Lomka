@@ -27,6 +27,8 @@
     ,"com.mojang.blaze3d.buffers.MixinStd140SizeCalculator"
     ,"com.mojang.blaze3d.buffers.MixinStd140Builder"
     ,"com.mojang.blaze3d.platform.MixinLighting"
+    ,"net.minecraft.client.animation.MixinEntry"
+    ,"net.minecraft.client.animation.MixinKeyframeAnimation"
     ,"net.minecraft.client.renderer.texture.MixinTextureAtlas"
     /*?} */
     /*? if <26.3 { */
@@ -117,6 +119,8 @@
     ,"net.minecraft.world.level.chunk.MixinPalettedContainer"
     ,"net.minecraft.world.level.MixinLevel"
     ,"net.minecraft.world.level.levelgen.MixinLegacyRandomSource"
+    ,"net.minecraft.world.level.levelgen.MixinXoroshiroRandomSource"
+    ,"net.minecraft.world.level.levelgen.MixinHeightmap"
     ,"net.minecraft.world.level.lighting.MixinLayerLightSectionStorage"
     ,"net.minecraft.world.level.lighting.MixinLeveledPriorityQueue"
     ,"net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape"
