@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.5.5] - 2026-09-24
+
+### Performance
+- New KeyframeAnimation mixin: scratch `Vector3f` reused per animation instead of `new Vector3f()` per `apply()` (24 B/frame, measured), indexed entry walk instead of iterator, exact zero-scale early-out. (1.21.6+) **NEW**
+- New Entry bridge mixin: `IKeyframeAnimationEntry` duck to the private `KeyframeAnimation$Entry` record so the caller scratch vector flows into vanilla `apply()` search/interpolation stay vanilla. (1.21.6+) **NEW**
+- New Heightmap mixin: `primeHeightmaps` rewritten without the per-Y `ChunkAccess#getBlockState` walk flat `Heightmap[]`/`Predicate[]` pair, int bitmask for pending types, section-local scans, `O(1)` skip of null/`hasOnlyAir` sections and one predicate test per uniform section. Bit-identical, no per-column alloc. (all versions) **NEW**
+- New PalettedContainer probe: `lomka$uniformValue()` answers the Heightmap uniform-section check via the same `(value, volatile Data)` pair as the hot `get()` path, heterogeneous containers return null and are never cached. (all versions) **NEW**
+- New XoroshiroRandomSource mixin: `setSeed` reseeds the live `Xoroshiro128PlusPlus` in place (`seedLo`/`seedHi` writes + `gaussianSource.reset()`) instead of `new Xoroshiro128PlusPlus(...)` per `setFeatureSeed`/`setDecorationSeed` one generator alloc saved per structure/feature per chunk, sequence bit-identical. (all versions) **NEW**
+- New StringRenderOutput mixin: one-slot `FontSet` memo per laid-out string consecutive codepoints of a styled run skip the font-map walk, identity hit with `equals` fallback. Ported from Collections Of Optimizations by Misanthropy (LGPL v3). (1.19.2-1.21.8) **NEW**
+- New VecDeltaCodec mixin: zero-delta fast path returns `Vec3.ZERO` instead of `subtract` + new `Vec3` one alloc saved per unchanged tracker delta. Ported from Collections Of Optimizations by Misanthropy (LGPLv3, with authority), priority 999 for CoO compat. (all versions) **NEW**
+- PoseStack on 1.19.2 (Mojang math): per-stack scratch `Matrix4f`/`Matrix3f` reuse instead of vanilla per-call allocations in `mulPose(Quaternion)`; bit-identical. (1.19.2) **NEW**
+- Font mixins (`MixinFont`, `MixinGlyphSource`, `MixinFontSet`, `MixinSource`) widened down to 1.21.9+ (were 1.21.11+). (1.21.9+) **NEW from OLD**
+- GlStateCache rework: `int[] STATE` + `get`/`set` replaced with plain public static fields; viewport/scissor/polygon compare via single XOR-OR, FBO read/write via direct field compare no array bounds checks / interface dispatch on the dedup path. (all versions) **REWORK**
+
+### Bug Fixes
+- Util `sanitizeName` parity fix: now runs `toLowerCase(ROOT)` on the whole string first (handles length-changing lowercases like U+0130) and only then patches rejected chars previous version lowercased per-char. Zero-alloc fast path for all-valid input kept.
+- Util `offsetByCodepoints` bounds fix: out-of-range single steps return `i` unchanged instead of clamping to `len`/`0`.
+
+### Removed
+- Removed low-value/parity-risky Util overwrites: `getPlatform`/`isAarch64` OS-arch cache, `makeDescriptionId`, `findNextInIterable`/`findPreviousInIterable`, `parseAndValidateUntrustedUri`.
+- Removed `wiki/Performance-Presets.md` and its README/wiki links (stale RAM/FPS preset blocks).
+- Renamed `IFrameBufferCache` -> `IFrameBufferCacheKey`.
+
+### Changed
+- New supported version: **1.19.2** (Fabric + Forge) `stonecutter.properties.toml`, `settings.gradle.kts`, `deps.minecraft_min`/`max` ranges, `[20,)` Forge range for `<1.21`, JOML 1.10.5 shim, `MixinCamera`/`MixinClientLevel`/`MixinFriendlyByteBuf`/`MixinPoseStack` version branches, AT/CT gating.
+
 ## [0.5.4] - 2026-09-17
 
 ### Performance

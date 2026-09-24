@@ -147,11 +147,15 @@ sealed class Loader(val id: String) {
 				}
 				else -> "[${ctx.currentMcVersion}]"
 			}
-			val forgeVersionRange = "[${ctx.currentMcVersion},)"
+			val forgeMajor = ctx.forgeMajor.ifBlank {
+				if (ctx.stonecutter.eval(ctx.currentMcVersion, "<1.20")) "43" else "47"
+			}
+			val loaderVersionRange = "[$forgeMajor,)"
+			val forgeVersionRange = "[$forgeMajor,)"
 
 			return buildString {
 				appendLine("modLoader = \"javafml\"")
-				appendLine("loaderVersion = \"[47,)\"")
+				appendLine("loaderVersion = \"${loaderVersionRange}\"")
 				appendLine("license = \"LGPL-3.0-only\"")
 				appendLine()
 				appendLine("[[mods]]")
