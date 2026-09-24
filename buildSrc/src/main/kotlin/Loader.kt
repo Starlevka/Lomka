@@ -78,18 +78,21 @@ sealed class Loader(val id: String) {
 		override val modManifestPath = "META-INF/neoforge.mods.toml"
 
 		override fun generateManifest(ctx: Context): String {
-			val mcVersionRange = if (ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion)) {
-				val maxVersion = ctx.minecraftMaxVersion
-				if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
-					"[${ctx.stonecutterVersion},)"
-				} else {
-					"[${ctx.stonecutterVersion},${maxVersion}]"
+			val mcVersionRange = when {
+				ctx.hasMinecraftMin -> "[${ctx.minecraftMinVersion},${ctx.minecraftMaxVersion}]"
+				ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion) -> {
+					val maxVersion = ctx.minecraftMaxVersion
+					if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
+						"[${ctx.stonecutterVersion},)"
+					} else {
+						"[${ctx.stonecutterVersion},${maxVersion}]"
+					}
 				}
-			} else {
-				"[${ctx.currentMcVersion}]"
+				else -> "[${ctx.currentMcVersion}]"
 			}
 			val neoforgeVersionRange = when {
 				ctx.currentMcVersion.startsWith("26.") -> "[${ctx.stonecutterVersion},)"
+				ctx.stonecutter.eval(ctx.currentMcVersion, "<1.21") -> "[20,)"
 				ctx.stonecutter.eval(ctx.currentMcVersion, "<1.21.10") -> "[21.0,)"
 				else -> "[${ctx.currentMcVersion.removePrefix("1.")}-beta,)"
 			}
@@ -132,21 +135,27 @@ sealed class Loader(val id: String) {
 		)
 
 		override fun generateManifest(ctx: Context): String {
-			val mcVersionRange = if (ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion)) {
-				val maxVersion = ctx.minecraftMaxVersion
-				if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
-					"[${ctx.stonecutterVersion},)"
-				} else {
-					"[${ctx.stonecutterVersion},${maxVersion}]"
+			val mcVersionRange = when {
+				ctx.hasMinecraftMin -> "[${ctx.minecraftMinVersion},${ctx.minecraftMaxVersion}]"
+				ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion) -> {
+					val maxVersion = ctx.minecraftMaxVersion
+					if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
+						"[${ctx.stonecutterVersion},)"
+					} else {
+						"[${ctx.stonecutterVersion},${maxVersion}]"
+					}
 				}
-			} else {
-				"[${ctx.currentMcVersion}]"
+				else -> "[${ctx.currentMcVersion}]"
 			}
-			val forgeVersionRange = "[${ctx.currentMcVersion},)"
+			val forgeMajor = ctx.forgeMajor.ifBlank {
+				if (ctx.stonecutter.eval(ctx.currentMcVersion, "<1.20")) "43" else "47"
+			}
+			val loaderVersionRange = "[$forgeMajor,)"
+			val forgeVersionRange = "[$forgeMajor,)"
 
 			return buildString {
 				appendLine("modLoader = \"javafml\"")
-				appendLine("loaderVersion = \"[47,)\"")
+				appendLine("loaderVersion = \"${loaderVersionRange}\"")
 				appendLine("license = \"LGPL-3.0-only\"")
 				appendLine()
 				appendLine("[[mods]]")

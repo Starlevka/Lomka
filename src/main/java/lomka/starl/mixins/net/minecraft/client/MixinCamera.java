@@ -29,8 +29,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
+//? if <1.19.3 {
+/*import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
+*///?} else {
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+//?}
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -44,7 +49,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinCamera {
 
     @Shadow private Vec3 position;
+    //? if <1.19.3 {
+    /*@Shadow @Final private Quaternion rotation;
+    *///?} else {
     @Shadow @Final private Quaternionf rotation;
+    //?}
     @Shadow protected abstract void setPosition(double d, double e, double f);
     @Shadow @Final private Vector3f forwards;
     //? if >=1.21.11 {
@@ -57,7 +66,10 @@ public abstract class MixinCamera {
     @Shadow @Final private Vector3f left;
     @Shadow @Final private Vector3f up;
 
+    // JOML Vector3f on 1.19.3+; must not instantiate on 1.19.2 (no JOML at runtime).
+    //? if >=1.19.3 {
     @Unique private final Vector3f lomka$moveVector = new Vector3f();
+    //?}
 
     @Unique private double lomka$npFwdX, lomka$npFwdY, lomka$npFwdZ;
     @Unique private double lomka$npLftX, lomka$npLftY, lomka$npLftZ;
@@ -219,10 +231,17 @@ public abstract class MixinCamera {
             }
         }
 
+        //? if <1.19.3 {
+        /*float rw  = this.rotation.r();
+        float rx  = this.rotation.i();
+        float ry  = this.rotation.j();
+        float rz  = this.rotation.k();
+        *///?} else {
         float rw  = this.rotation.w();
         float rx  = this.rotation.x();
         float ry  = this.rotation.y();
         float rz  = this.rotation.z();
+        //?}
         double px = this.position.x;
         double py = this.position.y;
         double pz = this.position.z;

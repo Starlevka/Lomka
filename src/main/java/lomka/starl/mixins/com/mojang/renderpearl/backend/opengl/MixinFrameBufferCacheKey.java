@@ -20,7 +20,7 @@
 package lomka.starl.mixins.com.mojang.renderpearl.backend.opengl;
 
 import com.mojang.renderpearl.backend.opengl.FrameBufferCache;
-import lomka.starl.duck.IFrameBufferCache;
+import lomka.starl.duck.IFrameBufferCacheKey;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(FrameBufferCache.CacheKey.class)
-public abstract class MixinFrameBufferCacheKey implements IFrameBufferCache {
+public abstract class MixinFrameBufferCacheKey implements IFrameBufferCacheKey {
 
     @Shadow @Mutable @Final private int[] data;
     @Shadow @Mutable @Final private int   hash;

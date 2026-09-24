@@ -33,11 +33,11 @@ fun Project.lomkaPlatform(loader: Loader) {
 		dependencies {
 			when (loader) {
 				Loader.FabricO, Loader.FabricM -> {
-					required("minecraft") {
-						val mcMin = sc.current.version
-						val mcMax = runCatching { prop("deps.minecraft_max") }.getOrNull()
-						fabricLikeVersionRange = if (mcMax != null) ">=$mcMin <=$mcMax" else ">=$mcMin"
-					}
+				required("minecraft") {
+					val mcMin = runCatching { prop("deps.minecraft_min") }.getOrNull() ?: sc.current.version
+					val mcMax = runCatching { prop("deps.minecraft_max") }.getOrNull()
+					fabricLikeVersionRange = if (mcMax != null) ">=$mcMin <=$mcMax" else ">=$mcMin"
+				}
 					required("fabricloader") {
 						fabricLikeVersionRange = ">=${prop("deps.fabric-loader")}"
 					}

@@ -24,16 +24,12 @@ import net.minecraft.util.Util;
 //?} else {
 /*import net.minecraft.Util;
 *///?}
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,9 +40,7 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
 import net.minecraft.CharPredicate;
-import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
-import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
@@ -54,44 +48,8 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(Util.class)
 public abstract class MixinUtil {
 
-    @Unique private static final Util.OS lomka$CACHED_OS = lomka$detectPlatform();
-
-    //? if >=1.21.6 {
-    @Unique private static final boolean lomka$IS_AARCH64 = "aarch64".equals(System.getProperty("os.arch").toLowerCase(Locale.ROOT));
-    //?}
-
     @Unique private static final Predicate<?> lomka$ALWAYS_TRUE  = object -> true;
     @Unique private static final Predicate<?> lomka$ALWAYS_FALSE = object -> false;
-
-    @Unique
-    private static Util.OS lomka$detectPlatform() {
-        String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-        if (s.contains("win"))                            return Util.OS.WINDOWS;
-        if (s.contains("mac"))                            return Util.OS.OSX;
-        if (s.contains("solaris") || s.contains("sunos")) return Util.OS.SOLARIS;
-        if (s.contains("linux")   || s.contains("unix"))  return Util.OS.LINUX;
-                                                          return Util.OS.UNKNOWN;
-    }
-
-    /**
-     * @author Starlev
-     * @reason Caches OS detection result in a static final field; avoids repeated System.getProperty lookups and String allocations.
-     */
-    @Overwrite
-    public static Util.OS getPlatform() {
-        return lomka$CACHED_OS;
-    }
-
-    /**
-     * @author Starlev
-     * @reason Caches architecture detection result; avoids repeated System.getProperty lookups and String allocations.
-     */
-    //? if >=1.21.6 {
-    @Overwrite
-    public static boolean isAarch64() {
-        return lomka$IS_AARCH64;
-    }
-    //?}
 
     /**
      * @author Starlev
@@ -104,56 +62,34 @@ public abstract class MixinUtil {
 
     /**
      * @author Starlev
-     * @reason Eliminates stream pipeline and intermediate Character.toString allocations; provides zero-alloc fast-path for valid strings.
+     * @reason Keeps vanilla's exact pipeline semantics - {@code toLowerCase(Locale.ROOT)} runs on the whole
+     *         string first (it can change length, e.g. U+0130 lowercases to two chars) and the predicate then
+     *         tests every resulting char - but drops the boxed {@code chars().mapToObj()} stream: one scan
+     *         finds the first rejected char, and only a containing case copies to a char[] and patches the
+     *         substitutes in place. All-valid input returns the lowercased string directly.
      */
     @Overwrite
     public static String sanitizeName(String s, CharPredicate charpredicate) {
-        int len = s.length();
-        if (len == 0) {
-            return s;
-        }
-        boolean needsSanitize = false;
+        String lower = s.toLowerCase(Locale.ROOT);
+        int len = lower.length();
+        int firstInvalid = -1;
         for (int i = 0; i < len; ++i) {
-            char c = s.charAt(i);
-            char lower = Character.toLowerCase(c);
-            if (c != lower || !charpredicate.test(lower)) {
-                needsSanitize = true;
+            if (!charpredicate.test(lower.charAt(i))) {
+                firstInvalid = i;
                 break;
             }
         }
-        if (!needsSanitize) {
-            return s;
+        if (firstInvalid < 0) {
+            return lower;
         }
-        char[] chars = new char[len];
-        for (int i = 0; i < len; ++i) {
-            char lower = Character.toLowerCase(s.charAt(i));
-            chars[i] = charpredicate.test(lower) ? lower : '_';
+        char[] chars = lower.toCharArray();
+        chars[firstInvalid] = '_';
+        for (int i = firstInvalid + 1; i < len; ++i) {
+            if (!charpredicate.test(chars[i])) {
+                chars[i] = '_';
+            }
         }
         return new String(chars);
-    }
-
-    /**
-     * @author Starlev
-     * @reason Pre-sizes StringBuilder and avoids String#replace allocation when path contains no slashes.
-     */
-    @Overwrite
-    public static String makeDescriptionId(String s, @Nullable Identifier identifier) {
-        if (identifier == null) {
-            return s + ".unregistered_sadface";
-        }
-        String path = identifier.getPath();
-        String namespace = identifier.getNamespace();
-        int slash = path.indexOf('/');
-        if (slash != -1) {
-            path = path.replace('/', '.');
-        }
-        return new StringBuilder(s.length() + namespace.length() + path.length() + 2)
-                .append(s)
-                .append('.')
-                .append(namespace)
-                .append('.')
-                .append(path)
-                .toString();
     }
 
     /**
@@ -301,76 +237,6 @@ public abstract class MixinUtil {
 
     /**
      * @author Starlev
-     * @reason Eliminates Iterator allocation for List instances; uses direct indexed traversal with wrap-around.
-     */
-    @Overwrite
-    public static <T> T findNextInIterable(Iterable<T> iterable, @Nullable T t) {
-        if (iterable instanceof List<T> list) {
-            if (list.isEmpty()) {
-                return list.iterator().next();
-            }
-            T first = list.get(0);
-            if (t != null) {
-                int size = list.size();
-                for (int i = 0; i < size; ++i) {
-                    if (list.get(i) == t) {
-                        return (i + 1 < size) ? list.get(i + 1) : first;
-                    }
-                }
-            }
-            return first;
-        }
-        Iterator<T> iterator = iterable.iterator();
-        T object = iterator.next();
-        if (t != null) {
-            T object1 = object;
-            while (object1 != t) {
-                if (iterator.hasNext()) {
-                    object1 = iterator.next();
-                }
-            }
-            if (iterator.hasNext()) {
-                return iterator.next();
-            }
-        }
-        return object;
-    }
-
-    /**
-     * @author Starlev
-     * @reason Eliminates Iterator allocation for List instances; uses indexed traversal and wrap-around.
-     */
-    @Overwrite
-    public static <T> T findPreviousInIterable(Iterable<T> iterable, @Nullable T t) {
-        if (iterable instanceof List<T> list) {
-            int size = list.size();
-            if (size == 0) {
-                return null;
-            }
-            for (int i = 0; i < size; ++i) {
-                if (list.get(i) == t) {
-                    return (i == 0) ? (size > 1 ? list.get(size - 1) : t) : list.get(i - 1);
-                }
-            }
-            return list.get(size - 1);
-        }
-        Iterator<T> iterator = iterable.iterator();
-        T object;
-        T object1 = null;
-        for (; iterator.hasNext(); object1 = object) {
-            object = iterator.next();
-            if (object == t) {
-                if (object1 == null) {
-                    object1 = iterator.hasNext() ? Iterators.getLast(iterator) : t;
-                }
-                break;
-            }
-        }
-        return object1;
-    }
-
-    /**
-     * @author Starlev
      * @reason Eliminates stream/lambda collector in sequence future; fast-paths already completed futures.
      */
     @Overwrite
@@ -409,7 +275,7 @@ public abstract class MixinUtil {
             return result;
         });
     }
-    
+
     /**
      * @author Starlev
      * @reason Direct primitive array swapping during shuffle for ObjectArrayList; bypasses virtual get/set and bounds checking (legacy 1.20.1).
@@ -473,25 +339,6 @@ public abstract class MixinUtil {
 
     /**
      * @author Starlev
-     * @reason Replaces toLowerCase and Set lookup with equalsIgnoreCase; avoids String allocation.
-     */
-    //? if >=1.21 {
-    @Overwrite
-    public static URI parseAndValidateUntrustedUri(String s) throws URISyntaxException {
-        URI uri = new URI(s);
-        String scheme = uri.getScheme();
-        if (scheme == null) {
-            throw new URISyntaxException(s, "Missing protocol in URI: " + s);
-        }
-        if (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https")) {
-            throw new URISyntaxException(s, "Unsupported protocol in URI: " + s);
-        }
-        return uri;
-    }
-    //?}
-
-    /**
-     * @author Starlev
      * @reason Specializes single cursor steps (j == 1 or -1) in text fields; avoids loop overhead for non-surrogate text.
      */
     @Overwrite
@@ -501,7 +348,9 @@ public abstract class MixinUtil {
             return i;
         }
         if (j == 1) {
-            if (i >= len) return len;
+            if (i >= len) {
+                return i;
+            }
             char c = s.charAt(i++);
             if (Character.isHighSurrogate(c) && i < len && Character.isLowSurrogate(s.charAt(i))) {
                 ++i;
@@ -509,7 +358,9 @@ public abstract class MixinUtil {
             return i;
         }
         if (j == -1) {
-            if (i <= 0) return 0;
+            if (i <= 0) {
+                return i;
+            }
             char c = s.charAt(--i);
             if (Character.isLowSurrogate(c) && i > 0 && Character.isHighSurrogate(s.charAt(i - 1))) {
                 --i;

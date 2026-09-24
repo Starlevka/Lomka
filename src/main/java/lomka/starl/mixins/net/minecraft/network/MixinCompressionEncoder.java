@@ -72,9 +72,7 @@ public abstract class MixinCompressionEncoder {
 			if (input.length < i) {
 				input = this.lomka$inputBuf = new byte[Math.max(i, 8192)];
 			} else if (input.length > 65536 && input.length > i * 4) {
-				// Shrink runaway buffer (e.g. 8MB after one huge chunk packet) back to max(8KB, i*2)
 				int target = Math.max(8192, i * 2);
-				// Round to power-of-two to keep future grows amortized
 				target = Integer.highestOneBit(target - 1) << 1;
 				input = this.lomka$inputBuf = new byte[target];
 			}

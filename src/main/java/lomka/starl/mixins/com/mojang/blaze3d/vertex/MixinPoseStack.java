@@ -20,7 +20,13 @@
 package lomka.starl.mixins.com.mojang.blaze3d.vertex;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+//? if <1.19.3 {
+/*import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Quaternion;
+*///?} else {
 import lomka.starl.utils.math.AxisPoseRotate;
+//?}
 //? if >=1.21.6 {
 import org.joml.Quaternionfc;
 //?} else {
@@ -29,6 +35,9 @@ import org.joml.Quaternionfc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+//? if <1.19.3 {
+/*import org.spongepowered.asm.mixin.Unique;
+*///?}
 
 /**
  * Quaternion pose rotation fast path. Matrix {@code mulPose} scratch optimization
@@ -43,13 +52,33 @@ public abstract class MixinPoseStack {
     /*@Shadow @org.spongepowered.asm.mixin.Final private java.util.Deque<PoseStack.Pose> poseStack;
     *///?}
 
+    //? if <1.19.3 {
+    /*@Unique private final Matrix4f lomka$scratch4 = new Matrix4f();
+    @Unique private final Matrix3f lomka$scratch3 = new Matrix3f();
+    *///?}
+
     /**
      * @author Starlev
      * @reason Pure X/Y/Z quaternions (Axis.XP/YP/ZP path) recover sin/cos via double-angle identities
      *         sin(θ)=2xw, cos(θ)=w²-x² and apply sparse column updates matching JOML rotateX/Y/Z, avoiding full
      *         3D quaternion matrix multiply. General quaternions fall back to JOML rotate.
+     *         On 1.19.2 (Mojang math) reuses per-stack scratch matrices instead of vanilla's
+     *         per-call Matrix4f/Matrix3f allocations; bit-identical (identity product is exact).
      */
-    //? if >=1.21.6 {
+    //? if <1.19.3 {
+    /*@Overwrite
+    public void mulPose(Quaternion q) {
+        PoseStack.Pose pose = this.poseStack.getLast();
+        Matrix4f scratch4 = this.lomka$scratch4;
+        scratch4.setIdentity();
+        scratch4.multiply(q);
+        pose.pose().multiply(scratch4);
+        Matrix3f scratch3 = this.lomka$scratch3;
+        scratch3.setIdentity();
+        scratch3.mul(q);
+        pose.normal().mul(scratch3);
+    }
+    *///?} else if >=1.21.6 {
     @Overwrite
     public void mulPose(Quaternionfc q) {
         PoseStack.Pose pose = this.last();

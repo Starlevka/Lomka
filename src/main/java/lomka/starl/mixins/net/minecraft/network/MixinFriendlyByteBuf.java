@@ -119,7 +119,7 @@ public abstract class MixinFriendlyByteBuf {
         if (map instanceof HashMap) {
             @SuppressWarnings("unchecked")
             LomkaMapHelper<K, V> h = (LomkaMapHelper<K, V>) this.lomka$mapHelper;
-            h.buf = (FriendlyByteBuf) (Object) this;
+            h.buf    = (FriendlyByteBuf) (Object) this;
             h.keyEnc = streamencoder;
             h.valEnc = streamencoder1;
             //? if >=1.21 {
@@ -127,7 +127,7 @@ public abstract class MixinFriendlyByteBuf {
             //?} else {
             /*((HashMap<K, V>) map).forEach(h);*/
             //?}
-            h.buf = null;
+            h.buf    = null;
             h.keyEnc = null;
             h.valEnc = null;
         } else {
@@ -146,6 +146,7 @@ public abstract class MixinFriendlyByteBuf {
         }
     }
 
+    //? if >=1.19.3 {
     /**
      * @author Starlev
      * @reason Replaces BitSet + toByteArray() with sparse-aware packing: iterate
@@ -155,7 +156,7 @@ public abstract class MixinFriendlyByteBuf {
      */
     @Overwrite
     public <E extends Enum<E>> void writeEnumSet(EnumSet<E> enumset, Class<E> oclass) {
-        int len = oclass.getEnumConstants().length;
+        int len       = oclass.getEnumConstants().length;
         int byteCount = (len + 7) >> 3;
         if (enumset.isEmpty()) {
             for (int i = 0; i < byteCount; ++i) {
@@ -190,11 +191,11 @@ public abstract class MixinFriendlyByteBuf {
     @Overwrite
     public <E extends Enum<E>> EnumSet<E> readEnumSet(Class<E> oclass) {
         E[] aenum = oclass.getEnumConstants();
-        int len = aenum.length;
+        int len       = aenum.length;
         int byteCount = (len + 7) >> 3;
         EnumSet<E> enumset = EnumSet.noneOf(oclass);
         for (int i = 0; i < byteCount; ++i) {
-            int b = this.readByte() & 255;
+            int b     = this.readByte() & 255;
             int start = i << 3;
             while (b != 0) {
                 int bit = Integer.numberOfTrailingZeros(b);
@@ -205,6 +206,7 @@ public abstract class MixinFriendlyByteBuf {
         }
         return enumset;
     }
+    //?}
 
     /**
      * @author Starlev

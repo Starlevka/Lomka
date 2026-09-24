@@ -36,7 +36,8 @@ body:
       description: Which Minecraft version did this happen on?
       multiple: true
       options:
-        - 1.20.1
+        - 1.19.2
+        - 1.20-1.20.1
         - 1.21-1.21.1
         - 1.21.4
         - 1.21.6-1.21.8
@@ -44,6 +45,7 @@ body:
         - 1.21.11
         - 26.1-26.1.2
         - 26.2
+        - 26.3
     validations:
       required: true
 

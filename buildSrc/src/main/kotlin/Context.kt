@@ -27,6 +27,23 @@ class Context(
 		optional("deps.minecraft_max", currentMcVersion)
 	}
 
+	val hasMinecraftMin: Boolean by lazy {
+		runCatching { stonecutter.properties.get<String>("deps.minecraft_min") }
+			.getOrNull()?.isNotBlank() == true
+	}
+
+	val minecraftMinVersion: String by lazy {
+		optional("deps.minecraft_min", currentMcVersion)
+	}
+
+	val forgeVersion: String by lazy {
+		optional("deps.forge", "")
+	}
+
+	val forgeMajor: String by lazy {
+		forgeVersion.substringAfterLast('-').substringBefore('.')
+	}
+
 	val modId: String by lazy { require("mod.id") }
 	val modName: String by lazy { require("mod.name") }
 	val modGroup: String by lazy { require("mod.group") }

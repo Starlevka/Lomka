@@ -32,11 +32,18 @@ accessible method net/minecraft/client/Camera$NearPlane <init> (Lnet/minecraft/w
 
 accessible class net/minecraft/world/level/chunk/PalettedContainer$Data
 
+accessible field net/minecraft/world/level/levelgen/Xoroshiro128PlusPlus seedLo J
+accessible field net/minecraft/world/level/levelgen/Xoroshiro128PlusPlus seedHi J
+
+#? if <1.21.9 {
+accessible method net/minecraft/client/gui/Font getFontSet (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/gui/font/FontSet;
+#?}
+
 accessible class net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry filterAll (Ljava/util/Collection;)V
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry resources ()Lnet/minecraft/server/packs/PackResources;
 
-#? if <1.21.5 {
+#? if >=1.19.3 && <1.21.5 {
 accessible method com/mojang/blaze3d/vertex/PoseStack$Pose <init> (Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
 #?}
 #? if >=1.21 {

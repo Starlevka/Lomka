@@ -33,7 +33,7 @@ An open source mod with mix of small optimizations for your Minecraft. **Fewer s
 ## Versions
 **1.21.11 is the main version.** It carries the full set of optimizations and gets the most testing.
 
-Other supported versions (1.20.1-26.2) are ports of the same or with the less of features set.
+Other supported versions (1.19.2-26.3) are ports of the same or with the less of features set.
 
 ## FAQ
 **I see performance drops with Lomka installed**
@@ -46,11 +46,8 @@ Still bad? Report it (link below).
 
 Yes, it is.
 
-**Will be added in the future more forge support?**
 
-No, only for 1.20.1 at the moment.
-
-**Will be mod backports below Minecraft version 1.20.1?**
+**Will be mod backports below Minecraft version 1.19.2?**
 
 No. The mod closely follows modern Minecraft internals. Surely, it is possible but not really needed.
 
@@ -61,7 +58,7 @@ Sure. Lomka is free and open source. Check out how it goes on your modpack first
 ## Configuration
 Lomka has no in-game GUI. Instead, on first launch it creates `config/lomka-mixins.properties` with basic mixin configuration.
 
-The full list of mixins with descriptions lives in the [wiki](https://github.com/Starlevka/Lomka/wiki/Configuration). Advanced presets (RAM and FPS presets) are in [Performance-Presets](https://github.com/Starlevka/Lomka/wiki/Presets).
+The full list of mixins with descriptions lives in the [wiki](https://github.com/Starlevka/Lomka/wiki/Configuration).
 
 ## Compatibility
 This should work fine with most mods (like Sodium, Lithium, Iris, FerriteCore, ModernFix, ImmediatelyFast and even VulkanMod) but no guarantees at all.

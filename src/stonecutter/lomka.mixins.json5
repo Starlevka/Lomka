@@ -27,6 +27,8 @@
     ,"com.mojang.blaze3d.buffers.MixinStd140SizeCalculator"
     ,"com.mojang.blaze3d.buffers.MixinStd140Builder"
     ,"com.mojang.blaze3d.platform.MixinLighting"
+    ,"net.minecraft.client.animation.MixinEntry"
+    ,"net.minecraft.client.animation.MixinKeyframeAnimation"
     ,"net.minecraft.client.renderer.texture.MixinTextureAtlas"
     /*?} */
     /*? if <26.3 { */
@@ -50,11 +52,16 @@
     /*? if >=1.21.9 && <26.1 { */
     ,"net.minecraft.client.renderer.MixinGameRenderer"
     /*?} */
-    /*? if >=1.21.11 { */
+    /*? if <1.21.9 { */
+    ,"net.minecraft.client.gui.MixinStringRenderOutput"
+    /*?} */
+    /*? if >=1.21.9 { */
     ,"net.minecraft.client.gui.MixinFont"
     ,"net.minecraft.client.gui.MixinGlyphSource"
     ,"net.minecraft.client.gui.font.MixinFontSet"
     ,"net.minecraft.client.gui.font.MixinSource"
+    /*?} */
+    /*? if >=1.21.11 { */
     ,"net.minecraft.client.resources.model.MixinBuilder"
     /*?} */
     /*? if >=1.21.11 && <26.3 { */
@@ -95,7 +102,6 @@
   "main": [
     "accessor.InvokerBlockBehaviour"
     ,"net.minecraft.util.thread.MixinBlockableEventLoop"
-    ,"net.minecraft.util.MixinByIdMap"
     ,"net.minecraft.util.MixinMth"
     ,"net.minecraft.util.MixinARGB"
     ,"net.minecraft.util.MixinUtil"
@@ -112,14 +118,20 @@
     ,"net.minecraft.world.level.chunk.MixinPalettedContainer"
     ,"net.minecraft.world.level.MixinLevel"
     ,"net.minecraft.world.level.levelgen.MixinLegacyRandomSource"
-    ,"net.minecraft.world.level.lighting.MixinLayerLightSectionStorage"
-    ,"net.minecraft.world.level.lighting.MixinLeveledPriorityQueue"
+    ,"net.minecraft.world.level.levelgen.MixinXoroshiroRandomSource"
+    ,"net.minecraft.world.level.levelgen.MixinHeightmap"
     ,"net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape"
     ,"net.minecraft.world.phys.shapes.MixinVoxelShape"
     ,"net.minecraft.world.phys.MixinAABB"
-    ,"net.minecraft.server.packs.resources.MixinFallbackResourceManager"
     ,"net.minecraft.server.packs.resources.MixinMultiPackResourceManager"
+    ,"net.minecraft.network.protocol.game.MixinVecDeltaCodec"
+    /*? if >=1.19.3 { */
+    ,"net.minecraft.world.level.lighting.MixinLayerLightSectionStorage"
+    ,"net.minecraft.world.level.lighting.MixinLeveledPriorityQueue"
+    ,"net.minecraft.server.packs.resources.MixinFallbackResourceManager"
     ,"net.minecraft.server.packs.MixinVanillaPackResources"
+    ,"net.minecraft.util.MixinByIdMap"
+    /*?} */
     /*? if >=1.21 { */
     ,"net.minecraft.network.MixinCompressionDecoder"
     ,"net.minecraft.util.MixinArrayListDeque"
