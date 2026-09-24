@@ -43,7 +43,7 @@ accessible class net/minecraft/server/packs/resources/FallbackResourceManager$Pa
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry filterAll (Ljava/util/Collection;)V
 accessible method net/minecraft/server/packs/resources/FallbackResourceManager$PackEntry resources ()Lnet/minecraft/server/packs/PackResources;
 
-#? if <1.21.5 {
+#? if >=1.19.3 && <1.21.5 {
 accessible method com/mojang/blaze3d/vertex/PoseStack$Pose <init> (Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
 #?}
 #? if >=1.21 {

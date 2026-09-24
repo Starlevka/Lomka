@@ -54,4 +54,7 @@ repositories {
 dependencies {
 	annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
 	compileOnly("org.jspecify:jspecify:1.0.0")
+	if (sc.current.parsed < "1.19.3") {
+		compileOnly("org.joml:joml:1.10.5")
+	}
 }

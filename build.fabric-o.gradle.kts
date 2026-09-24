@@ -41,6 +41,9 @@ dependencies {
 	minecraft("com.mojang:minecraft:${prop("deps.minecraft")}")
 	mappings(loom.layered { officialMojangMappings() })
 	modImplementation("net.fabricmc:fabric-loader:${prop("deps.fabric-loader")}")
+	if (sc.current.parsed < "1.19.3") {
+		compileOnly("org.joml:joml:1.10.5")
+	}
 	if (sc.current.parsed < "1.21.11") {
 		compileOnly("org.jspecify:jspecify:1.0.0")
 	}

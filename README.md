@@ -33,7 +33,7 @@ An open source mod with mix of small optimizations for your Minecraft. **Fewer s
 ## Versions
 **1.21.11 is the main version.** It carries the full set of optimizations and gets the most testing.
 
-Other supported versions (1.20.1-26.2) are ports of the same or with the less of features set.
+Other supported versions (1.19.2-26.3) are ports of the same or with the less of features set.
 
 ## FAQ
 **I see performance drops with Lomka installed**
@@ -47,7 +47,7 @@ Still bad? Report it (link below).
 Yes, it is.
 
 
-**Will be mod backports below Minecraft version 1.20.1?**
+**Will be mod backports below Minecraft version 1.19.2?**
 
 No. The mod closely follows modern Minecraft internals. Surely, it is possible but not really needed.
 

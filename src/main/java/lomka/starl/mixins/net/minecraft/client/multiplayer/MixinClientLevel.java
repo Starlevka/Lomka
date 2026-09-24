@@ -30,7 +30,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.util.profiling.Profiler;
 //?}
 import net.minecraft.client.multiplayer.ClientLevel;
+//? if <1.19.3 {
+import net.minecraft.core.Registry;
+//?} else {
 import net.minecraft.core.registries.BuiltInRegistries;
+//?}
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -84,7 +88,11 @@ public abstract class MixinClientLevel {
     private static String lomka$entityName(EntityType<?> type) {
         String name = lomka$TYPE_NAMES.get(type);
         if (name == null) {
+            //? if <1.19.3 {
+            /*name = Registry.ENTITY_TYPE.getKey(type).toString();
+            *///?} else {
             name = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
+            //?}
             lomka$TYPE_NAMES.put(type, name);
         }
         return name;
