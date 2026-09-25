@@ -77,8 +77,26 @@ public abstract class MixinTextureAtlas {
     *///?}
 
     //? if >=1.21.6 {
+    /**
+     * @author Starlev
+     * @reason Ticks animation frames with a plain indexed loop, avoiding the vanilla iterator
+     *         allocation on the per-frame atlas animation path.
+     */
     //? if <1.21.11 {
-    //?} else {
+    /*@Shadow private List<TextureAtlasSprite.Ticker> animatedTextures;
+    @Shadow @Nullable private GpuTexture texture;
+
+    @Overwrite
+    public void cycleAnimationFrames() {
+        GpuTexture tex = this.texture;
+        if (tex != null) {
+            List<TextureAtlasSprite.Ticker> list = this.animatedTextures;
+            for (int i = 0, n = list.size(); i < n; i++) {
+                list.get(i).tickAndUpload(tex);
+            }
+        }
+    }
+    *///?} else {
     @Shadow private List<SpriteContents.AnimationState> animatedTexturesStates;
     @Shadow private GpuTextureView[] mipViews;
     @Shadow private int maxMipLevel;

@@ -37,11 +37,23 @@ Supported game versions: **1.19.2 · 1.20-1.20.1 · 1.21-1.21.1 · 1.21.4 · 1.2
 
 ## Shared helpers
 
-Only two helpers live outside mixins in `lomka.starl.utils`; since 0.5.x the former
-pure-math/LUT classes (MthCalcs, ColorCalcs, WorldCalcs, VertexMaths, ColorsCache,
-ClockWiseCache) were inlined directly into the mixins that used them:
-- `cache/GlStateCache` — GL state dedup, shared by `MixinGlStateManager`, reset by `MixinWindow` on resize
-- `math/AxisPoseRotate` — PoseStack scratch math for `MixinPoseStack` / `MixinPose`
+Non-mixin code lives in three places:
+
+- `lomka.starl.utils` — the only two helpers outside mixins; since 0.5.x the former
+  pure-math/LUT classes (MthCalcs, ColorCalcs, WorldCalcs, VertexMaths, ColorsCache,
+  ClockWiseCache) were inlined directly into the mixins that used them:
+  - `cache/GlStateCache` — GL state dedup, shared by `MixinGlStateManager`, reset by `MixinWindow` on resize
+  - `math/AxisPoseRotate` — PoseStack scratch math for `MixinPoseStack` / `MixinPose`
+- `lomka.starl.duck` — bridge interfaces implemented by one mixin so another mixin can
+  call into the vanilla class without an accessor:
+  - `IBitSetDiscreteVoxelShape` (`lomka$storage` / `lomka$index` / `lomka$setBounds`) — implemented and consumed by `MixinBitSetDiscreteVoxelShape`
+  - `IFrameBufferCacheKey` (`lomka$reset`) — implemented by `MixinFrameBufferCacheKey`, consumed by `MixinFrameBufferCache` for the zero-alloc probe key
+  - `IGlyphSource` (`getAdvance` + `lomka$clear`) — advance cache behind `MixinSource` / `MixinGlyphSource`, read by `MixinFont`, cleared by `MixinFontSet`
+  - `IHeightmap` (`lomka$setHeightAt`) — implemented and consumed by `MixinHeightmap` (`primeHeightmaps`)
+  - `IKeyframeAnimationEntry` (`lomka$apply` with caller scratch vector) — implemented by `MixinEntry`, consumed by `MixinKeyframeAnimation`
+  - `IPalettedContainer` (`lomka$uniformValue`) — implemented by `MixinPalettedContainer`, consumed by `MixinHeightmap` for the uniform-section check
+- `lomka.starl.config.LomkaMixinPlugin` — the `plugin` from `lomka.mixins.json5`; reads
+  `config/lomka-mixins.properties` and answers `shouldApplyMixin` (never imports Minecraft classes)
 
 In the tables below, **Versions** shows which builds contain the patch: `all` means
 every supported version, `1.21.6+` means that version and newer, and ranges like
@@ -73,12 +85,12 @@ version simply does not exist in your jar the config loader ignores it with an
 | `com.mojang.blaze3d.platform.MixinWindow` | Invalidates `cache/GlStateCache` on window/framebuffer resize | all |
 | `com.mojang.blaze3d.platform.MixinLighting` | Caches light UBO slices; skips unchanged GPU uploads | 1.21.6+ |
 | `com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer` | Grows the shared index buffer x4 with a warm start; fewer mid-frame stalls | all |
-| `com.mojang.blaze3d.vertex.MixinPoseStack` | Pooled matrix-stack push/pop and sparse rotate via `math/AxisPoseRotate`; on 1.19.2 (Mojang math) per-stack scratch matrices instead of per-call allocations | 1.19.2-26.2 |
+| `com.mojang.blaze3d.vertex.MixinPoseStack` | Sparse X/Y/Z quaternion rotate via `math/AxisPoseRotate` without full matrix multiply; on 1.19.2 (Mojang math) per-stack scratch matrices instead of per-call allocations | 1.19.2-26.2 |
 | `com.mojang.blaze3d.vertex.MixinPose` | Scratch matrix reuse in mulPose for display entities | 1.21-1.21.11 |
 | `com.mojang.blaze3d.vertex.MixinBufferBuilder` | Fast ARGB-to-ABGR color packing while feeding vertices | 1.21+ |
 | `com.mojang.blaze3d.vertex.MixinByteBufferBuilder` | Inlined `reserve` fast path and 8 MB growth steps for mesh building buffers (low priority, stays compatible with VulkanMod) | 1.21+ |
 | `com.mojang.blaze3d.vertex.MixinVertexConsumer` | Direct FMA pose transforms; on 1.21.11+, bulk quad writes hoist matrix loads and unroll all four vertices | 1.21+ |
-| `com.mojang.blaze3d.vertex.MixinVertexFormat` | Reuses precomputed mask/offset arrays on the hot path | 1.21-26.1 |
+| `com.mojang.blaze3d.vertex.MixinVertexFormat` | Caches hashCode once per instance instead of recomputing mask/offset hash | 1.21-26.1 |
 | `com.mojang.blaze3d.vertex.MixinMultiple` | Direct indexed loops for multi-consumer fan-out instead of per-vertex lambdas | 1.19.2-26.1 |
 | `com.mojang.blaze3d.vertex.MixinVertexBuffer` | Caches the GL primitive mode per buffer | 1.19.2-1.21.4 |
 | `com.mojang.blaze3d.vertex.MixinVertexFormatElement` | Precomputed hashCode for format map lookups | 1.19.2-1.20.1 |
@@ -92,7 +104,6 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.client.gui.font.MixinSource` | Int2Float advance cache for glyph sources | 1.21.9+ |
 | `net.minecraft.client.gui.MixinFont` | Routes text width lookups through cached glyph advances | 1.21.9+ |
 | `net.minecraft.client.gui.MixinGlyphSource` | Adds a cached per-codepoint advance lookup to glyph sources | 1.21.9+ |
-| `net.minecraft.client.gui.MixinStringRenderOutput` | One-slot FontSet memo per laid-out string on the legacy text sink | 1.19.2-1.21.8 |
 
 ## Models mixins
 
@@ -100,21 +111,8 @@ version simply does not exist in your jar the config loader ignores it with an
 |---|---|---|
 | `net.minecraft.client.resources.model.MixinBuilder` | Fewer allocations and map lookups during block-model baking | 1.21.11+ |
 | `net.minecraft.client.resources.model.MixinMaterial` | Caches the material hash instead of allocating an Object[] per sprite lookup | 1.19.2-1.21.11 |
+| `com.mojang.math.MixinTransformation` | Inverts the stored matrix directly into a destination matrix, avoiding a defensive copy | 1.20+ |
 | `net.minecraft.client.model.MixinModel` | Indexed loop instead of Iterator in resetPose; no per-entity allocation | 1.21.9+ |
-
-## Animation mixins
-
-| Key | Description | Versions |
-|---|---|---|
-| `net.minecraft.client.animation.MixinKeyframeAnimation` | Reuses the scratch vector that 1.21.9 made per-call (24 B/frame, measured) and skips zero-scale clips on the per-frame animation path; the iterator, the `ifStarted` Consumer and the search callback all measure 0 B/frame, so they stay vanilla | 1.21.6+ |
-| `net.minecraft.client.animation.MixinEntry` | Bridge to the private `Entry` record through the `IKeyframeAnimationEntry` duck, so `MixinKeyframeAnimation` can hand it its own scratch vector; the search is vanilla's (an inlined replica bought 0 B/frame and was ~9% slower per search) | 1.21.6+ |
-
-The zero-scale skip is value-identical to vanilla for every input; two bit-level corners are
-pinned by fuzzing and accepted. A pose component already holding `-0.0F` is normalized to
-`+0.0F` by vanilla's additive zero write (sign of zero only, the skip keeps `-0.0F`), and
-duplicate head keyframe timestamps hit exactly (`seconds == ts[0] == ts[1]`) let vanilla write
-NaN where the skip does not; such content is broken at any scale, so it is unreachable on
-well-formed animations. Nothing else diverges, not at the bit level.
 
 ## Client rendering and logic mixins
 
@@ -128,9 +126,11 @@ well-formed animations. Nothing else diverges, not at the bit level.
 | `net.minecraft.client.renderer.MixinLightmap` | Zero-allocation direct UBO writing for lightmap updates | 26.1+ |
 | `net.minecraft.client.renderer.MixinLightmapRenderStateExtractor` | Cached vectors avoid per-frame allocations in lightmap state extraction | 26.1+ |
 | `net.minecraft.client.renderer.MixinLightTexture` | Zero-allocation lightmap texture updates | 1.20.1-1.21 · 1.21.6-1.21.11 |
-| `net.minecraft.client.renderer.texture.MixinTextureAtlas` | Animation ticking and batched render-pass uploads with a cached GPU device on 1.21.11+; registered but has no active patches on 1.21.6-1.21.10 | 1.21.6+ |
+| `net.minecraft.client.renderer.texture.MixinTextureAtlas` | Indexed animation-frame ticking without the per-frame iterator on 1.21.6-1.21.10; animation ticking and batched render-pass uploads with a cached GPU device on 1.21.11+ | 1.21.6+ |
 | `net.minecraft.client.MixinMinecraft` | Removes `Thread.yield()` from the frame loop | 1.19.2-1.21.11 |
 | `net.minecraft.client.MixinCamera` | Vector-based camera math without temporary allocations | 1.19.2-1.21.11 |
+| `net.minecraft.client.animation.MixinKeyframeAnimation` | Reuses the scratch vector that 1.21.9 made per-call (24 B/frame, measured) and skips zero-scale clips on the per-frame animation path; the iterator, the `ifStarted` Consumer and the search callback all measure 0 B/frame, so they stay vanilla | 1.21.6+ |
+| `net.minecraft.client.animation.MixinEntry` | Bridge to the private `Entry` record through the `IKeyframeAnimationEntry` duck, so `MixinKeyframeAnimation` can hand it its own scratch vector; the search is vanilla's (an inlined replica bought 0 B/frame and was ~9% slower per search) | 1.21.6+ |
 
 ## World logic mixins
 
@@ -153,8 +153,9 @@ well-formed animations. Nothing else diverges, not at the bit level.
 | `net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape` | Reusable index lists in shape merge loops; `join` accumulates contiguous bit runs into bulk `BitSet.set(from, to)` writes | all |
 | `net.minecraft.world.phys.shapes.MixinVoxelShape` | Caches the computed AABB list so raycasts (crosshair `clip()` runs every frame) stop allocating per call | all |
 | `net.minecraft.world.phys.MixinAABB` | Allocation-free `clip` paths: no `double[1]` box, no per-iteration `AABB.move` in the `Iterable` variant | all |
-| `net.minecraft.world.level.lighting.MixinLeveledPriorityQueue` | Packs light queue entries into SpatialLongSet | 1.20+ |
-| `net.minecraft.world.level.lighting.MixinLayerLightSectionStorage` | Single reusable consumer instead of per-block lambda allocation | 1.20+ |
+| `net.minecraft.world.phys.MixinVec3` | Reciprocal-multiply `normalize` (one division + three multiplications instead of three divisions, near-zero guard preserved) | all |
+| `net.minecraft.world.level.lighting.MixinLeveledPriorityQueue` | Packs light queue entries into SpatialLongSet | 1.20.1+ |
+| `net.minecraft.world.level.lighting.MixinLayerLightSectionStorage` | Single reusable consumer instead of per-block lambda allocation | 1.20.1+ |
 
 ## Network mixins
 
@@ -163,14 +164,15 @@ well-formed animations. Nothing else diverges, not at the bit level.
 | `net.minecraft.network.MixinFriendlyByteBuf` | Indexed list writes, reusable BiConsumer for HashMap writes, and sparse EnumSet bit packing/unpacking without BitSet temporaries | all |
 | `net.minecraft.network.MixinCompressionEncoder` | Reuses the input buffer between packet compressions | all |
 | `net.minecraft.network.MixinCompressionDecoder` | Direct-buffer inflate path for compressed packets | 1.21+ |
+| `net.minecraft.network.protocol.game.MixinVecDeltaCodec` | Zero-delta fast path returning `Vec3.ZERO` instead of subtract + allocation (CoO port, priority 999 defers to CoO) | all |
 
 ## Resource packs mixins
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.server.packs.resources.MixinFallbackResourceManager` | Builds a base-to-metadata index after pack filtering to avoid per-file metadata identifier allocations; caches the logger | 1.20+ |
+| `net.minecraft.server.packs.resources.MixinFallbackResourceManager` | Builds a base-to-metadata index after pack filtering to avoid per-file metadata identifier allocations; caches the logger | 1.20.1+ |
 | `net.minecraft.server.packs.resources.MixinMultiPackResourceManager` | Skips redundant TreeMap copies with one namespace manager | all |
-| `net.minecraft.server.packs.MixinVanillaPackResources` | Fast namespace/path resolution and cached pack.mcmeta | 1.20+ |
+| `net.minecraft.server.packs.MixinVanillaPackResources` | Fast namespace/path resolution and cached pack.mcmeta | 1.20.1+ |
 
 ## Utils mixins
 
@@ -178,10 +180,10 @@ well-formed animations. Nothing else diverges, not at the bit level.
 |---|---|---|
 | `net.minecraft.util.thread.MixinBlockableEventLoop` | No captured-lambda allocation on async task submission (`main` - all environments) | all |
 | `net.minecraft.util.MixinLightCoordsUtil` | Early-out for zero-emission light coordinates | 26.1+ |
-| `net.minecraft.util.MixinByIdMap` | Leaner sparse/continuous id maps | 1.20+ |
+| `net.minecraft.util.MixinByIdMap` | Leaner sparse/continuous id maps | 1.20.1+ |
 | `net.minecraft.util.MixinMth` | numberOfLeadingZeros-based ceillog2 and similar math shortcuts | all |
 | `net.minecraft.util.MixinARGB` | Flat LUT lookup instead of float division in color helpers | all |
-| `net.minecraft.util.MixinUtil` | Cached OS/arch detection, array-backed shuffles, allocation-free URI scheme checks and single-step codepoint offsets | all |
+| `net.minecraft.util.MixinUtil` | Zero-alloc `getEpochMillis`/`sanitizeName`, branch-efficient `growByHalf`, fastutil shuffle specializations, index lookups, single-step codepoint offsets and cached `allOf`/`anyOf` | all |
 | `net.minecraft.util.MixinArrayListDeque` | Power-of-two deque indexing without modulo | 1.21+ |
 
 

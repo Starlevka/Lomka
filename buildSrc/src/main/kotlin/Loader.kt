@@ -17,7 +17,8 @@ sealed class Loader(val id: String) {
 			val contact = mutableMapOf<String, String>()
 			if (ctx.sourcesUrl.isNotBlank()) contact["sources"] = ctx.sourcesUrl
 			if (ctx.issuesUrl.isNotBlank()) contact["issues"] = ctx.issuesUrl
-			if (ctx.homepageUrl.isNotBlank()) contact["homepage"] = ctx.homepageUrl
+			if (ctx.modrinthUrl.isNotBlank()) contact["homepage"] = ctx.modrinthUrl
+			if (ctx.curseforgeUrl.isNotBlank()) contact["curseforge"] = ctx.curseforgeUrl
 
 			val depends = ctx.extension.dependencies.required.associate { it.modid.get() to it.fabricLikeVersionRange.get() }
 
@@ -37,6 +38,11 @@ sealed class Loader(val id: String) {
 				appendLine("  \"description\": ${jsonStr(ctx.description)},")
 				appendLine("  \"icon\": ${jsonStr("assets/${ctx.modId}/icon.png")},")
 				appendLine("  \"license\": \"LGPL-3.0-only\",")
+				if (ctx.credits.isNotBlank()) {
+					appendLine("  \"custom\": {")
+					appendLine("    \"lomka:credits\": ${jsonStr(ctx.credits)}")
+					appendLine("  },")
+				}
 				appendLine("  \"environment\": \"*\",")
 				appendLine("  \"accessWidener\": ${jsonStr("${ctx.stonecutterVersion}.accesswidener")},")
 				appendLine("  \"entrypoints\": {")
@@ -96,17 +102,22 @@ sealed class Loader(val id: String) {
 				ctx.stonecutter.eval(ctx.currentMcVersion, "<1.21.10") -> "[21.0,)"
 				else -> "[${ctx.currentMcVersion.removePrefix("1.")}-beta,)"
 			}
+			val displayUrl = ctx.modrinthUrl
 
 			return buildString {
 				appendLine("modLoader = \"javafml\"")
 				appendLine("loaderVersion = \"[4,)\"")
 				appendLine("license = \"LGPL-3.0-only\"")
+				if (ctx.issuesUrl.isNotBlank()) appendLine("issueTrackerURL = ${tomlStr(ctx.issuesUrl)}")
 				appendLine()
 				appendLine("[[mods]]")
 				appendLine("modId = \"${ctx.modId}\"")
 				appendLine("version = \"${ctx.baseVersion}\"")
 				appendLine("displayName = \"${ctx.modName}\"")
 				appendLine("authors = \"${ctx.authors.firstOrNull() ?: "Starlev"}\"")
+				if (displayUrl.isNotBlank()) appendLine("displayURL = ${tomlStr(displayUrl)}")
+				if (ctx.curseforgeUrl.isNotBlank()) appendLine("modUrl = ${tomlStr(ctx.curseforgeUrl)}")
+				if (ctx.credits.isNotBlank()) appendLine("credits = ${tomlStr(ctx.credits)}")
 				appendLine("description = \"\"\"${ctx.description}\"\"\"")
 				appendLine("logoFile = \"assets/${ctx.modId}/icon.png\"")
 				appendLine()
@@ -152,17 +163,22 @@ sealed class Loader(val id: String) {
 			}
 			val loaderVersionRange = "[$forgeMajor,)"
 			val forgeVersionRange = "[$forgeMajor,)"
+			val displayUrl = ctx.modrinthUrl
 
 			return buildString {
 				appendLine("modLoader = \"javafml\"")
 				appendLine("loaderVersion = \"${loaderVersionRange}\"")
 				appendLine("license = \"LGPL-3.0-only\"")
+				if (ctx.issuesUrl.isNotBlank()) appendLine("issueTrackerURL = ${tomlStr(ctx.issuesUrl)}")
 				appendLine()
 				appendLine("[[mods]]")
 				appendLine("modId = \"${ctx.modId}\"")
 				appendLine("version = \"${ctx.baseVersion}\"")
 				appendLine("displayName = \"${ctx.modName}\"")
 				appendLine("authors = \"${ctx.authors.firstOrNull() ?: "Starlev"}\"")
+				if (displayUrl.isNotBlank()) appendLine("displayURL = ${tomlStr(displayUrl)}")
+				if (ctx.curseforgeUrl.isNotBlank()) appendLine("modUrl = ${tomlStr(ctx.curseforgeUrl)}")
+				if (ctx.credits.isNotBlank()) appendLine("credits = ${tomlStr(ctx.credits)}")
 				appendLine("description = \"\"\"${ctx.description}\"\"\"")
 				appendLine("logoFile = \"assets/${ctx.modId}/icon.png\"")
 				appendLine()
@@ -198,4 +214,26 @@ sealed class Loader(val id: String) {
 	}
 }
 
-private fun jsonStr(s: String): String = "\"${s.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+private fun jsonStr(s: String): String = buildString {
+	append('"')
+	s.forEach { c ->
+		when (c) {
+			'\\' -> append("\\\\")
+			'"' -> append("\\\"")
+			'\u0008' -> append("\\b")
+			'\t' -> append("\\t")
+			'\n' -> append("\\n")
+			'\u000C' -> append("\\f")
+			'\r' -> append("\\r")
+			else -> if (c.code < 0x20) {
+				append("\\u")
+				append(c.code.toString(16).padStart(4, '0'))
+			} else {
+				append(c)
+			}
+		}
+	}
+	append('"')
+}
+
+private fun tomlStr(s: String): String = jsonStr(s)

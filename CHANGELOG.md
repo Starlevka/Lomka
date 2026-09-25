@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.6] - 2026-09-25
+
+### Performance
+- New `Transformation#inverse` mixin: inverts the stored JOML matrix directly into a fresh destination matrix, removing the defensive matrix copy. (1.20+) **NEW**
+- New `TextureAtlas#cycleAnimationFrames` overwrite: replaces the animation-frame iterator with a direct indexed loop. (1.21.6-1.21.10) **NEW**
+- New `Vec3#normalize` mixin: replaces three divisions with one reciprocal and three multiplications. Results may differ from vanilla by up to 1 ULP; on 1.19.2-1.21.1, the zero-result threshold also changes from `1e-4` to `1e-5`. (all versions) **NEW**
+
+### Bug Fixes
+- Hardened control-character escaping in generated Fabric JSON and Forge/NeoForge TOML metadata.
+
+### Removed
+- Removed `MixinStringRenderOutput` and its one-slot `FontSet` memo. (1.19.2-1.21.8)
+
+### Changed
+- Expanded generated Fabric, Forge, and NeoForge metadata with CurseForge and attribution credits; Forge/NeoForge now also expose the Modrinth page and issue tracker, while Fabric keeps its Modrinth homepage.
+- Updated README attribution and runtime mixin-configuration documentation for the added and removed patches.
+
 ## [0.5.5] - 2026-09-24
 
 ### Performance

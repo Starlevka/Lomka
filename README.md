@@ -72,3 +72,13 @@ Found something that only happens with Lomka?
 2. Still there? Post it on [the issue tracker](https://github.com/Starlevka/Lomka/issues) with an optional log attached.
 
 Please don't report Lomka-related crashes to other mod authors, because Lomka's mixins are cruel that could break unrelated systems.
+
+## Credits
+
+Lomka was created by Starlev and contributors.
+
+- `VecDeltaCodec` zero-delta path adapted from Collections Of Optimizations by Misanthropy (LGPL-3.0).
+- FMA `lerp` implementations adapted from SuperFastMath by Elias (MIT).
+- `Vec3i` PhiMix hashing credits efficient_hashing by ZZZank (CC0-1.0).
+- The legacy hardware-blit presentation path references the approach popularized by VulkanMod and Tritium.
+- Sodium, Lithium, ModernFix, FerriteCore, C2ME, ImmediatelyFast, Iris, Vitrail, and quick-pack are compatibility references, not claimed source-level ports.
