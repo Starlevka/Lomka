@@ -17,29 +17,35 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-package lomka.starl.mixins.net.minecraft.util.thread;
+package lomka.starl.mixins.net.minecraft.world.phys;
 
-import net.minecraft.util.thread.BlockableEventLoop;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(BlockableEventLoop.class)
-public abstract class MixinBlockableEventLoop {
+@Mixin(Vec3.class)
+public class MixinVec3 {
 
-    @Shadow protected abstract boolean scheduleExecutables();
+    @Shadow @Final public double x;
+    @Shadow @Final public double y;
+    @Shadow @Final public double z;
 
     /**
      * @author Starlev
-     * @reason Uses leaner runAsync(runnable, this) instead of vanilla's supplyAsync(supplier, this),
-     *         skipping the extra capturing-lambda allocation on the async submission path. Internal
-     *         vanilla call sites that block on submitAsync(...).join() route through this overwrite
-     *         too, so behavior stays uniform.
+     * @reason One division plus three multiplications instead of three divisions; the
+     *         near-zero guard is preserved exactly. The product form can differ from
+     *         vanilla by 1 ulp on some inputs (double rounding instead of single);
+     *         accepted: direction use sites only consume the unit direction.
      */
     @Overwrite
-    private CompletableFuture<Void> submitAsync(Runnable runnable) {
-        return CompletableFuture.runAsync(runnable, (Executor) this);
+    public Vec3 normalize() {
+        double d0 = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        if (d0 < 9.999999747378752E-6D) {
+            return Vec3.ZERO;
+        }
+        double inv = 1.0D / d0;
+        return new Vec3(this.x * inv, this.y * inv, this.z * inv);
     }
 }

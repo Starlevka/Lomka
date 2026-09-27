@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.6.0] - 2026-09-27
+
+### Performance
+- New `IntArrayTag` and `LongArrayTag` mixins, where vanilla reads these arrays element by element, so every int costs four and every long eight `read()` calls on a `DataInputStream`. The array is now read in 8 KB blocks through a big-endian `ByteBuffer`. The bulk path only triggers on `DataInputStream` inputs, so in practice it accelerates server-side disk reads (chunk NBT with its `Heightmaps` long arrays, player data, `level.dat`, saved data, structure templates). **NEW**
+- New `Vec3#normalize` mixin: replaces three divisions with one reciprocal and three multiplications. Results may differ from vanilla by up to 1 ULP. (1.21.4+) **NEW**
+- New `ARGB#multiply` overwrite that folds the four per-channel `/255` integer divisions into exact reciprocal multiplies, which runs on every entity's model tint each frame. Results are bit-identical to vanilla. (all versions) **NEW**
+- New `MixinSoundEngine` channel-handle pool. Playing a sound no longer makes the client thread `join()` a hand-off to the sound executor, so a sound plays as soon as its handle is already acquired. (all versions) **NEW**
+
+### Bug Fixes
+- Register common optimizations under the standard `mixins` key so they actually run. The key was spelled `main`, which Mixin does not read, so every common patch (`Mth`, `ARGB`, `BlockPos`, `Direction`, `AABB`, `PalettedContainer`, `Heightmap`, NBT tags, ...) **was silently dropped in every release from 0.3.0 to 0.5.5**. Only the `client` section was live, so the mod has been running at roughly half its intended patch set for its entire published history. **CRITICAL**
+- Fixed a startup crash of the 1.19.2 Forge variant: the generated manifest declared `minecraft` as `[1.19,1.19.2]`, and Forge's version parser rejects a range with identical boundaries, so the mod failed to load at all. Now `[1.19.2]`.
+- Fixed a crash of the Forge mod list on 1.19.2, where the generated manifest pointed `logoFile` at `assets/lomka/icon.png`, and 1.19.2 feeds that value to `AbstractPackResources#getRootResource(String)`, which throws `IllegalArgumentException` on any name containing `/`, so clicking the mod in the mod list always crashed. The Forge manifest now uses a bare `logo.png` at the jar root, which both 1.19.2 and 1.20.1 resolve.
+- Fixed missing mixin visibility and 26.3 API drift that aborted the launch on several versions (`MixinBitSetDiscreteVoxelShape`, `MixinPalettedContainer`, `MixinArrayListDeque`, `MixinUtil`, `MixinDirection`, `MixinFriendlyByteBuf`).
+- Fixed `MixinTextureAtlas` on 1.21.6-1.21.10: the texture field is inherited from `AbstractTexture`, so `@Shadow` could not resolve it and aborted the launch. A new `accessor.AbstractTextureAccessor` bridge reads it through the superclass. (1.21.6-1.21.10)
+- Fixed `MixinCompressionDecoder` dropping the connection: `ByteBuf#internalNioBuffer` is absent from `AbstractByteBuf` and from `AbstractUnpooledSlicedByteBuf`, and the only available guard is `nioBufferCount()`, so a refused buffer would throw inside the packet decoder. The call is now wrapped in a non-throwing `try`/`catch` that falls back to `nioBuffer`. (1.21+)
+- Fixed a Forge/NeoForge-only `IllegalClassLoadError`: helper types nested inside mixins produce classes in the `lomka.starl.mixins.*` package, which ModLauncher's Mixin plugin refuses to load.
+- Fix version-specific NBT overwrite signatures and returnable PalettedContainer callbacks.
+- Restore vanilla defensive translation copies to preserve display interpolation.
+- Restrict the 1.19.2 artifacts to Minecraft 1.19.2; later versions use incompatible math APIs.
+- Hardened control-character escaping in generated Fabric JSON and Forge/NeoForge TOML metadata.
+
+### Removed
+- Removed `MixinStringRenderOutput` and its one-slot `FontSet` memo. (1.19.2-1.21.8)
+- Removed `MixinLevel`, `MixinBlockableEventLoop`, `MixinClientLevel` and the Vulkan buffers `MixinDirect` patch.
+- Removed the reentrant `FriendlyByteBuf.writeMap` helper and unsafe `Util`/`Mth` overwrites.
+- Removed `MixinBlockStateBase` and `MixinMultiPackResourceManager` on 1.19.2.
+- Removed `MixinVanillaPackResources` on 1.19.2 and 26.3.
+- Removed the `Direction#getApproximateNearest` on 1.21.4+ overwrite: Sodium (Fabric) and Embeddium (Forge/NeoForge) already replace the vanilla dot-product loop with the same three-abs-compare chain. Our version was bit-exact where theirs is not (NaN / $\pm\infty$ / lone-`Float.MIN_VALUE` inputs), but paid for that exactness with extra ALU ops on the finite path.
+- Removed `MixinLeveledPriorityQueue`: it swapped the priority-queue sets for fastutil `SpatialLongSet`, whose 4x4x4 outer key packing only holds for light positions, but the same queue backs `DynamicGraphMinFixedPoint` with `ChunkPos` keys. Distinct chunks collapsed into one bucket, the distance-update fixpoint never converged, and world generation or saving hung with the server thread at 100% CPU in `DistanceManager.runAllUpdates`. All versions affected.
+
+### Changed
+- Reorganized the shared helper packages: `DirectionTables` moved to `utils/constants/` and `ResourceEntry` to `utils/pack/`, next to `GlStateCache` in `utils/cache/`, replacing the catch-all `utils/misc/`. Internal only, no behavior change. (all versions)
+- `MixinPalettedContainer` caches the uniform-section value in a `volatile Data` reference plus a plain value field, published by the volatile store, and invalidates it in `read` / `onResize`. The `set` / `getAndSet` / `getAndSetUnchecked` hooks were dropped as provably redundant, since zero-bit storage validates writes as no-ops.
+- `MixinBuilder` restores the 26.1+ `addAll` culled-face transfer.
+- `MixinPose` uses thread-local scratch matrices.
+- Renamed the `Transformation#inverse` mixin class from `MixinTransformation` to `MixinTransformationInverse` (same target, same overwrite). This is also its runtime config key, so an existing `com.mojang.math.MixinTransformation` entry is now reported as an unknown key - rename it to `com.mojang.math.MixinTransformationInverse`.
+- Expanded generated Fabric, Forge, and NeoForge metadata with CurseForge and attribution credits; Forge/NeoForge now also expose the Modrinth page and issue tracker, while Fabric keeps its Modrinth homepage.
+- Updated README attribution and runtime mixin-configuration documentation for the added and removed patches.
+
 ## [0.5.5] - 2026-09-24
 
 ### Performance

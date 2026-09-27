@@ -128,9 +128,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-// Replaces the per-call lambda allocation + Consumer.accept() dispatch of
-// VertexMultiConsumer.Multiple#forEach with direct indexed array loops.
-// Legacy vertex format API.
 @Mixin(targets = "com.mojang.blaze3d.vertex.VertexMultiConsumer$Multiple")
 public abstract class MixinMultiple implements VertexConsumer {
 

@@ -63,9 +63,12 @@ fun Project.lomkaPlatform(loader: Loader) {
 		// (wired by the legacyforge mixin extension) is only loaded when the config
 		// references it explicitly - without this key Mixin logs "No refMap loaded"
 		// and every @Inject/@ModifyConstant fails on obfuscated targets.
-		mixinsJson.writeText(
-			mixinsJson.readText().replaceFirst("{", "{\n  \"refmap\": \"lomka.refmap.json\",")
-		)
+		// The json5 template already declares the key for <1.21, so only fill it in when absent -
+		// writing it unconditionally emitted the key twice in the packaged config.
+		val text = mixinsJson.readText()
+		if (!text.contains("\"refmap\"")) {
+			mixinsJson.writeText(text.replaceFirst("{", "{\n  \"refmap\": \"lomka.refmap.json\","))
+		}
 	}
 	mainSourceSet.resources.srcDir(mixinsJson.parentFile)
 
@@ -79,6 +82,17 @@ fun Project.lomkaPlatform(loader: Loader) {
 		// Ship the project license text inside every jar so Modrinth/CurseForge scanners
 		// and end users can verify the terms without visiting the repository.
 		from(rootProject.file("LICENSE"))
+
+		if (loader == Loader.Forge) {
+			// mods.toml's logoFile has to be a bare filename: 1.19.2 feeds it to
+			// AbstractPackResources#getRootResource(String), which throws IllegalArgumentException
+			// on any name containing '/', crashing the Forge mod list on selection. The root-level
+			// copy is what 1.19.2 resolves; assets/lomka/icon.png stays for Fabric/NeoForge.
+			from(rootProject.file("src/main/resources/assets/${prop("mod.id")}/icon.png")) {
+				into("")
+				rename { "logo.png" }
+			}
+		}
 	}
 
 	excludeUnlistedMixins(mainSources, mixinsJson)

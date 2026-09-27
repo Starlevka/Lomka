@@ -27,6 +27,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 //?}
+//? if >=1.21.6 && <1.21.11 {
+/*import lomka.starl.mixins.accessor.AbstractTextureAccessor;
+*///?}
 import net.minecraft.client.renderer.texture.SpriteContents;
 //? if <1.21.11 {
 /*import net.minecraft.resources.Identifier;
@@ -77,8 +80,25 @@ public abstract class MixinTextureAtlas {
     *///?}
 
     //? if >=1.21.6 {
+    /**
+     * @author Starlev
+     * @reason Ticks animation frames with a plain indexed loop, avoiding the vanilla iterator
+     *         allocation on the per-frame atlas animation path.
+     */
     //? if <1.21.11 {
-    //?} else {
+    /*@Shadow private List<TextureAtlasSprite.Ticker> animatedTextures;
+
+    @Overwrite
+    public void cycleAnimationFrames() {
+        GpuTexture tex = ((AbstractTextureAccessor) (Object) this).lomka$texture();
+        if (tex != null) {
+            List<TextureAtlasSprite.Ticker> list = this.animatedTextures;
+            for (int i = 0, n = list.size(); i < n; i++) {
+                list.get(i).tickAndUpload(tex);
+            }
+        }
+    }
+    *///?} else {
     @Shadow private List<SpriteContents.AnimationState> animatedTexturesStates;
     @Shadow private GpuTextureView[] mipViews;
     @Shadow private int maxMipLevel;

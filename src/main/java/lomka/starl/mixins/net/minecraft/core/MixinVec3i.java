@@ -26,14 +26,14 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(Vec3i.class)
+@Mixin(value = Vec3i.class, priority = 999) // EfficientHashing compatibility
 public abstract class MixinVec3i {
 
     @Shadow private int x;
     @Shadow private int y;
     @Shadow private int z;
 
-    // 2^32 * phi, phi=(sqrt(5)-1)/2 – from zank.mods.efficient_hashing.PhiMix (by ZZZank)
+    // 2^32 * phi, phi=(sqrt(5)-1)/2 from zank.mods.efficient_hashing.PhiMix by ZZZank (LGPL-3.0-only)
     @Unique private static final int HASH = 0x9E3779B9;
 
     /**
@@ -67,15 +67,15 @@ public abstract class MixinVec3i {
     }
 
     /**
-     * @author Starlev
+     * @author ZZZank (original idea, EfficientHashing), Starlev (Lomka port)
      * @reason Vanilla hash (x + 31y + 961z) is a weak degree-2 polynomial: for a dense 64^3 block
      *         region it spans only ~63.5k distinct values (measured 254k colliding pairs among
      *         200k keys, bucket depth up to 8), and its low bits degenerate to (x - y + z) for
      *         small coordinates. Replaced with a bijective phi-mix chain mix(mix(x) + y) + z
-     *         based on zank.mods.efficient_hashing.PhiMix (ZZZank, CC0 1.0) – mix(t)=t*PHI ^ (t*PHI>>>16), PHI=0x9E3779B9:
-     *         zero colliding pairs on every measured block-region set at comparable cost
-     *         (~2 imul + 2 shift/xor). Kept additive in z on purpose so z-runs spread perfectly
-     *         across power-of-two tables.
+     *         based on zank.mods.efficient_hashing.PhiMix (ZZZank, LGPL-3.0-only)
+     *         mix(t)=t*PHI ^ (t*PHI>>>16), PHI=0x9E3779B9: zero colliding pairs on every measured
+     *         block-region set at comparable cost (~2 imul + 2 shift/xor). Kept additive in z on purpose
+     *         so z-runs spread perfectly across power-of-two tables.
      */
     @Overwrite
     @Override

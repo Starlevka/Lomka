@@ -51,8 +51,10 @@ class Context(
 	val description: String by lazy { optional("mod.description") }
 
 	val sourcesUrl: String by lazy { optional("mod.sources_url", "") }
-	val homepageUrl: String by lazy { optional("mod.homepage_url", "") }
 	val issuesUrl: String by lazy { optional("mod.issues_url", "$sourcesUrl/issues") }
+	val modrinthUrl: String by lazy { optional("mod.modrinth_url", "") }
+	val curseforgeUrl: String by lazy { optional("mod.curseforge_url", "") }
+	val credits: String by lazy { optional("mod.credits", "") }
 
 	val authors: List<String> by lazy {
 		runCatching {

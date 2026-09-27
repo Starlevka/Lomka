@@ -29,6 +29,9 @@ import org.joml.Vector3f;
 *///?}
 //? if >=1.21.11 {
 import net.minecraft.client.model.geom.builders.UVPair;
+import org.joml.Matrix3x2fc;
+import org.joml.Matrix4fc;
+import org.joml.Vector3fc;
 //?}
 //? if >=1.21.11 && <26.1 {
 import net.minecraft.client.renderer.LightTexture;
@@ -39,14 +42,9 @@ import net.minecraft.util.ARGB;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
 //?}
-//? if >=1.21.11 {
-import org.joml.Matrix3x2fc;
-import org.joml.Matrix4fc;
-import org.joml.Vector3fc;
-//?}
 //? if >=1.21.6 && <1.21.11 {
-import org.joml.Matrix3x2f;
-//?}
+/*import org.joml.Matrix3x2f;
+*///?}
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

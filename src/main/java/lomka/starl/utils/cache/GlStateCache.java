@@ -50,9 +50,9 @@ public final class GlStateCache {
      * Forgets every cached value, so the next call of each state reaches the driver again.
      */
     public static void reset() {
-        viewportX = viewportY = viewportW = viewportH = UNKNOWN;
-        scissorX = scissorY = scissorW = scissorH = UNKNOWN;
-        polygonFace = polygonMode = UNKNOWN;
-        fboRead = fboWrite = UNKNOWN;
+        viewportX   = viewportY   = viewportW = viewportH = UNKNOWN;
+        scissorX    = scissorY    = scissorW  = scissorH  = UNKNOWN;
+        polygonFace = polygonMode                         = UNKNOWN;
+        fboRead     = fboWrite                            = UNKNOWN;
     }
 }

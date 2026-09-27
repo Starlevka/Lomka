@@ -19,11 +19,11 @@
 
 package lomka.starl.mixins.net.minecraft.util;
 
+import java.util.AbstractList;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import net.minecraft.util.ArrayListDeque;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,13 +32,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(ArrayListDeque.class)
-public class MixinArrayListDeque<T> {
+public abstract class MixinArrayListDeque<T> extends AbstractList<T> {
 
     @Shadow private Object[] contents;
     @Shadow private int head;
     @Shadow private int size;
-
-    @Shadow @Dynamic private transient int modCount;
 
     @Unique
     private void lomka$incModCount() {
@@ -51,7 +49,7 @@ public class MixinArrayListDeque<T> {
      * when the backing array length is a power of two.
      */
     @ModifyVariable(method = "<init>(I)V", at = @At("HEAD"), argsOnly = true)
-    private int lomka$roundToPowerOfTwo(int capacity) {
+    private static int lomka$roundToPowerOfTwo(int capacity) {
         return capacity <= 1 ? 1 : Integer.highestOneBit(capacity - 1) << 1;
     }
 

@@ -1,13 +1,15 @@
 mod.id = "lomka"
 mod.name = "Lomka"
 mod.group = "lomka.starl"
-mod.version = "0.5.5"
+mod.version = "0.6.0"
 mod.description = "Mix of small optimizations for your Minecraft"
 mod.authors = "Starlev"
 mod.license.name = "LGPL-3.0-only"
 mod.sources_url = "https://github.com/Starlevka/Lomka"
-mod.homepage_url = "https://modrinth.com/mod/lomka"
 mod.issues_url = "https://github.com/Starlevka/Lomka/issues"
+mod.modrinth_url = "https://modrinth.com/mod/lomka"
+mod.curseforge_url = "https://www.curseforge.com/minecraft/mc-mods/lomka"
+mod.credits = "Includes adaptations from Collections Of Optimizations (LGPL-3.0-only) by Misanthropy; Vec3i PhiMix hashing credits EfficientHashing (LGPL-3.0-only) by ZZZank."
 
 [fabric]
 deps.fabric-loader = "0.19.0"
@@ -15,7 +17,7 @@ deps.fabric-loader = "0.19.0"
 [fabric."1.19.2"]
 deps.minecraft = "1.19.2"
 deps.minecraft_min = "1.19"
-deps.minecraft_max = "1.19.4"
+deps.minecraft_max = "1.19.2"
 
 [fabric."1.20.1"]
 deps.minecraft = "1.20.1"
@@ -59,7 +61,7 @@ deps.forge = "1.20.1-47.4.10"
 [forge."1.19.2"]
 deps.minecraft = "1.19.2"
 deps.minecraft_min = "1.19"
-deps.minecraft_max = "1.19.4"
+deps.minecraft_max = "1.19.2"
 deps.forge = "1.19.2-43.2.0"
 
 [forge."1.20.1"]
@@ -103,4 +105,4 @@ deps.neoforge = "26.2.0.7-beta"
 
 [neoforge."26.3"]
 deps.minecraft = "26.3"
-deps.neoforge = "26.3.0.0-beta"
+deps.neoforge = "26.3.0.16-beta"

@@ -73,7 +73,7 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
      *         than introducing a new one.
      */
     @Overwrite
-    static BitSetDiscreteVoxelShape join(DiscreteVoxelShape discretevoxelshape, DiscreteVoxelShape discretevoxelshape1, IndexMerger indexmerger, IndexMerger indexmerger1, IndexMerger indexmerger2, BooleanOp booleanop) {
+    public static BitSetDiscreteVoxelShape join(DiscreteVoxelShape discretevoxelshape, DiscreteVoxelShape discretevoxelshape1, IndexMerger indexmerger, IndexMerger indexmerger1, IndexMerger indexmerger2, BooleanOp booleanop) {
         BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(indexmerger.size() - 1, indexmerger1.size() - 1, indexmerger2.size() - 1);
         IBitSetDiscreteVoxelShape IBit = (IBitSetDiscreteVoxelShape) (Object) bitsetdiscretevoxelshape;
         int[] aint = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};

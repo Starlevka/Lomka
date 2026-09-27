@@ -28,7 +28,10 @@ neoForge {
 	}
 }
 
-sourceSets["main"].resources.srcDir(atFile.parentFile)
+// See build.forge.gradle.kts: the loader reads META-INF/accesstransformer.cfg from the jar, so
+// the resources root must be at/ (atFile.parentFile.parentFile), not at/META-INF - otherwise the
+// file is packaged at the jar root and NeoForge ignores the whole transformer.
+sourceSets["main"].resources.srcDir(atFile.parentFile.parentFile)
 
 tasks.named<ProcessResources>("processResources") {
 	exclude("aw/**")

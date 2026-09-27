@@ -76,9 +76,10 @@ AI-assisted PRs are welcome. Verify the generated code against the actual Minecr
   `licenseHeaders` also runs automatically before every variant's `compileJava`, so headers self-heal on build.
 * **Run:**
   ```bash
-  ./gradlew runActiveClient       # client of the active Stonecutter version
-  ./gradlew runActiveServer       # server of the active Stonecutter version
-  ./gradlew :1.20.1-forge:runClient  # client of any specific variant
+  ./gradlew runActiveClient            # client of the active Stonecutter version
+  ./gradlew runActiveServer            # server of the active Stonecutter version
+   ./gradlew :1.20.1-forge:runClient   # client of any specific variant
+   ./gradlew runClientAll              # every configured variant sequentially, auto-close after 40s, stops on crash
   ```
   The active version is tracked in `.sc_active_version` at the repo root; run directories live in `versions/<ver>-<loader>/run/`.
 * **Inspect Minecraft sources:** obtain or generate the game sources yourself for each version affected by your change. Decompiled Minecraft sources and maintainer-local inspection tools are not included in this repository and are not prerequisites supplied by a clone.
@@ -96,9 +97,9 @@ The variant → build script mapping is defined in `settings.gradle.kts`:
 
 | Variants | Build script | Pipeline |
 |---|---|---|
-| `1.20.1/1.21/1.21.4/1.21.6/1.21.9/1.21.11-fabric` | `build.fabric-o.gradle.kts` | `fabric-loom-remap`: compile (intermediary) → remap (Mojang), double pipeline |
+| `1.19.2/1.20.1/1.21/1.21.4/1.21.6/1.21.9/1.21.11-fabric` | `build.fabric-o.gradle.kts` | `fabric-loom-remap`: compile (intermediary) → remap (Mojang), double pipeline |
 | `26.1/26.2/26.3-fabric` | `build.fabric-m.gradle.kts` | `fabric-loom`: single compile on Mojang mappings |
-| `1.20.1-forge` | `build.forge.gradle.kts` | `moddev.legacyforge` + explicit `annotationProcessor("org.mixinpowered:mixin:0.8.5:processor")` |
+| `1.19.2/1.20.1-forge` | `build.forge.gradle.kts` | `moddev.legacyforge` + explicit `annotationProcessor("org.mixinpowered:mixin:0.8.5:processor")` |
 | all `*-neoforge` | `build.neoforge.gradle.kts` | `neoforge moddev`, single pass, Access Transformer based |
 
 Fabric loader `>= 0.19.0`, no Fabric API dependency. Mappings: Mojang official everywhere.
@@ -111,8 +112,10 @@ src/main/java/lomka/
   starl/config/         # LomkaMixinPlugin (runtime toggles)
   starl/duck/           # duck interfaces (IBitSetDiscreteVoxelShape, IGlyphSource)
   starl/mixins/         # mirrors MC internal structure; accessor/ for @Accessor/@Invoker
-  starl/utils/cache/    # GlStateCache
+  starl/utils/cache/    # GlStateCache, UniformSection (PalettedContainer uniform-value holder)
+  starl/utils/constants/ # DirectionTables (Direction clockwise/counter-clockwise LUTs)
   starl/utils/math/     # AxisPoseRotate (shared helpers only; since 0.5.x math is inlined in mixins)
+  starl/utils/pack/     # ResourceEntry (resolved pack entry for FallbackResourceManager)
 src/stonecutter/        # templates: lomka.mixins.json5, lomka.ct (Fabric AW), accesstransformer.ct (NeoForge/Forge AT)
 buildSrc/               # build logic (LomkaPlatform.kt: excludeUnlistedMixins, AT/AW wiring)
 versions/<ver>-<loader>/ # build + run dirs only, no sources

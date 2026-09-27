@@ -49,18 +49,19 @@ public abstract class MixinPose {
 
     @Shadow abstract void computeNormalMatrix();
 
-    @Unique private static final Matrix3f lomka$SCRATCH_NORMAL = new Matrix3f();
+    @Unique private static final ThreadLocal<Matrix3f> lomka$SCRATCH_NORMAL = ThreadLocal.withInitial(Matrix3f::new);
 
     @Overwrite
     public void mulPose(Matrix4fc m) {
         this.pose.mul(m);
         if (!MatrixUtil.isPureTranslation(m)) {
             if (MatrixUtil.isOrthonormal(m)) {
-                lomka$SCRATCH_NORMAL.set(
+                Matrix3f scratch = lomka$SCRATCH_NORMAL.get();
+                scratch.set(
                         m.m00(), m.m01(), m.m02(),
                         m.m10(), m.m11(), m.m12(),
                         m.m20(), m.m21(), m.m22());
-                this.normal.mul(lomka$SCRATCH_NORMAL);
+                this.normal.mul(scratch);
             } else {
                 this.computeNormalMatrix();
             }
@@ -73,7 +74,7 @@ public abstract class MixinPose {
 
     @Shadow @Final private java.util.Deque<PoseStack.Pose> poseStack;
 
-    @Unique private static final Matrix3f lomka$scratchNormal = new Matrix3f();
+    @Unique private static final ThreadLocal<Matrix3f> lomka$scratchNormal = ThreadLocal.withInitial(Matrix3f::new);
 
     @Overwrite
     public void mulPose(Matrix4f m) {
@@ -81,11 +82,12 @@ public abstract class MixinPose {
         pose.pose().mul(m);
         if (!MatrixUtil.isPureTranslation(m)) {
             if (MatrixUtil.isOrthonormal(m)) {
-                lomka$scratchNormal.set(
+                Matrix3f scratch = lomka$scratchNormal.get();
+                scratch.set(
                         m.m00(), m.m01(), m.m02(),
                         m.m10(), m.m11(), m.m12(),
                         m.m20(), m.m21(), m.m22());
-                pose.normal().mul(lomka$scratchNormal);
+                pose.normal().mul(scratch);
             } else {
                 pose.normal().set(pose.pose()).invert().transpose();
                 pose.trustedNormals = false;
