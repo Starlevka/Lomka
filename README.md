@@ -1,7 +1,8 @@
-![Lomka icon](https://cdn.modrinth.com/data/cached_images/5e22062d6564d104d3742aa7ec947aa2d394a2da_0.webp)
 <div align="center">
   
-<sub><i>The project code was created with help of Artificial Intelligence.</i></sub>
+<sub>![Lomka icon](https://cdn.modrinth.com/data/cached_images/5e22062d6564d104d3742aa7ec947aa2d394a2da_0.webp)
+
+<i>The project code was created with help of Artificial Intelligence.</i></sub>
 </div>
 <div align="center">
 <a href="https://modrinth.com/mod/lomka"><img alt="Available on Modrinth" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/modrinth_vector.svg"></a>
