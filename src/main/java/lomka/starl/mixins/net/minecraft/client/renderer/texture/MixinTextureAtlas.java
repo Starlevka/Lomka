@@ -27,6 +27,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 //?}
+//? if >=1.21.6 && <1.21.11 {
+/*import lomka.starl.mixins.accessor.AbstractTextureAccessor;
+*///?}
 import net.minecraft.client.renderer.texture.SpriteContents;
 //? if <1.21.11 {
 /*import net.minecraft.resources.Identifier;
@@ -84,11 +87,10 @@ public abstract class MixinTextureAtlas {
      */
     //? if <1.21.11 {
     /*@Shadow private List<TextureAtlasSprite.Ticker> animatedTextures;
-    @Shadow @Nullable private GpuTexture texture;
 
     @Overwrite
     public void cycleAnimationFrames() {
-        GpuTexture tex = this.texture;
+        GpuTexture tex = ((AbstractTextureAccessor) (Object) this).lomka$texture();
         if (tex != null) {
             List<TextureAtlasSprite.Ticker> list = this.animatedTextures;
             for (int i = 0, n = list.size(); i < n; i++) {

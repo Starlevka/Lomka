@@ -163,7 +163,7 @@ public final class LomkaMixinPlugin implements IMixinConfigPlugin {
                     new java.io.InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
             List<String> out = new ArrayList<>();
 
-            for (String section : new String[] {"client", "main"}) {
+            for (String section : new String[] {"client", "mixins", "server"}) {
                 var array = root.getAsJsonArray(section);
                 if (array != null) {
                     array.forEach(entry -> out.add(entry.getAsString()));

@@ -1,5 +1,15 @@
 @file:Suppress("unused")
 
+/**
+ * Maven range for a pinned MC version, or a closed range when the variant spans several.
+ *
+ * A range with identical boundaries (`[1.19.2,1.19.2]`) is rejected by Forge's
+ * MavenVersionAdapter ("Range cannot have identical boundaries") and aborts mod loading,
+ * so an exact pin has to be spelled as the single-element form `[1.19.2]`.
+ */
+private fun exactOrRange(min: String, max: String): String =
+	if (min == max) "[$min]" else "[$min,$max]"
+
 sealed class Loader(val id: String) {
 	abstract val jarTask: String
 	abstract val sourcesJarTask: String
@@ -85,7 +95,7 @@ sealed class Loader(val id: String) {
 
 		override fun generateManifest(ctx: Context): String {
 			val mcVersionRange = when {
-				ctx.hasMinecraftMin -> "[${ctx.minecraftMinVersion},${ctx.minecraftMaxVersion}]"
+				ctx.hasMinecraftMin -> exactOrRange(ctx.minecraftMinVersion, ctx.minecraftMaxVersion)
 				ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion) -> {
 					val maxVersion = ctx.minecraftMaxVersion
 					if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
@@ -97,7 +107,11 @@ sealed class Loader(val id: String) {
 				else -> "[${ctx.currentMcVersion}]"
 			}
 			val neoforgeVersionRange = when {
-				ctx.currentMcVersion.startsWith("26.") -> "[${ctx.stonecutterVersion},)"
+				// 26.x NeoForge is still beta-only. Every 26.x release carries a "-beta" qualifier,
+				// and Maven orders a qualified version below the same version without one, so a
+				// floor of plain "26.x" rejects 26.x.0.0-beta - the first and lowest build of the
+				// line - and the loader then refuses to start with "requires neoforge 26.x or above".
+				ctx.currentMcVersion.startsWith("26.") -> "[${ctx.stonecutterVersion}.0-beta,)"
 				ctx.stonecutter.eval(ctx.currentMcVersion, "<1.21") -> "[20,)"
 				ctx.stonecutter.eval(ctx.currentMcVersion, "<1.21.10") -> "[21.0,)"
 				else -> "[${ctx.currentMcVersion.removePrefix("1.")}-beta,)"
@@ -147,7 +161,7 @@ sealed class Loader(val id: String) {
 
 		override fun generateManifest(ctx: Context): String {
 			val mcVersionRange = when {
-				ctx.hasMinecraftMin -> "[${ctx.minecraftMinVersion},${ctx.minecraftMaxVersion}]"
+				ctx.hasMinecraftMin -> exactOrRange(ctx.minecraftMinVersion, ctx.minecraftMaxVersion)
 				ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion) -> {
 					val maxVersion = ctx.minecraftMaxVersion
 					if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
@@ -180,7 +194,12 @@ sealed class Loader(val id: String) {
 				if (ctx.curseforgeUrl.isNotBlank()) appendLine("modUrl = ${tomlStr(ctx.curseforgeUrl)}")
 				if (ctx.credits.isNotBlank()) appendLine("credits = ${tomlStr(ctx.credits)}")
 				appendLine("description = \"\"\"${ctx.description}\"\"\"")
-				appendLine("logoFile = \"assets/${ctx.modId}/icon.png\"")
+				// 1.19.2 loads the mod logo through AbstractPackResources#getRootResource(String),
+				// which rejects any name containing '/' ("Root resources can only be filenames, not
+				// paths"), so a path-style value throws the moment the entry is selected in the mod
+				// list. The jar-root copy wired up in LomkaPlatform is referenced by bare filename;
+				// 1.20.1+ takes varargs and accepts either form, so both Forge variants share this.
+				appendLine("logoFile = \"logo.png\"")
 				appendLine()
 				appendLine("[[mixins]]")
 				appendLine("config = \"${ctx.modId}.mixins.json\"")

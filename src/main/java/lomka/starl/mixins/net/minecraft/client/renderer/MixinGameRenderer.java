@@ -46,10 +46,10 @@ public abstract class MixinGameRenderer {
     @Overwrite
     private void extractCamera(float f) {
         CameraRenderState state = this.levelRenderState.cameraRenderState;
-        state.initialized = this.mainCamera.isInitialized();
-        state.pos = this.mainCamera.position();
+        state.initialized       = this.mainCamera.isInitialized();
+        state.pos               = this.mainCamera.position();
         //? if >=1.21.11 {
-        state.blockPos = this.mainCamera.blockPosition();
+        state.blockPos  = this.mainCamera.blockPosition();
         state.entityPos = this.mainCamera.entity().getPosition(f);
         //?} else {
         /*state.blockPos = this.mainCamera.getBlockPosition();

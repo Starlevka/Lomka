@@ -116,11 +116,12 @@ public class MixinGlStateManager {
         }
     }
 
-    //? if <1.21.2 {
     /**
      * Mirrors Mojang's 1.21.2+ framebuffer-bind dedup onto older versions; cancels unchanged binds.
+     * Reset of the cached FBO mirrors when a framebuffer is deleted.
      */
-    @Inject(
+    //? if <1.21.2 {
+    /*@Inject(
             method = "_glBindFramebuffer",
             at = @At("HEAD"),
             cancellable = true
@@ -146,9 +147,6 @@ public class MixinGlStateManager {
         }
     }
 
-    /**
-     * Resets the cached FBO mirrors when a framebuffer is deleted.
-     */
     @Inject(
             method = "_glDeleteFramebuffers",
             at = @At("TAIL")
@@ -162,5 +160,5 @@ public class MixinGlStateManager {
             GlStateCache.fboWrite = 0;
         }
     }
-    //?}
+    *///?}
 }

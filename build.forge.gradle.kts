@@ -34,7 +34,11 @@ mixin {
 	config("lomka.mixins.json")
 }
 
-mainSourceSet.resources.srcDir(atFile.parentFile)
+// The loader only picks the access transformer up from META-INF/accesstransformer.cfg inside
+// the jar. atFile itself is generated as at/META-INF/accesstransformer.cfg, so the resources
+// root has to be at/ - adding at/META-INF would flatten the file to the jar root, where Forge
+// silently ignores it and every widened member stays private at runtime.
+mainSourceSet.resources.srcDir(atFile.parentFile.parentFile)
 
 tasks.named<ProcessResources>("processResources") {
 	exclude("aw/**")

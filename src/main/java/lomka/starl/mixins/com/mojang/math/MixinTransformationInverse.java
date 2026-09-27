@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Transformation.class)
-public abstract class MixinTransformation {
+public abstract class MixinTransformationInverse {
 
     @Shadow @Final private static Transformation IDENTITY;
 
@@ -42,8 +42,8 @@ public abstract class MixinTransformation {
 
     /**
      * @author Starlev
-     * @reason Inverts the stored matrix directly into a fresh destination matrix,
-     *         avoiding the defensive matrix copy made before inversion.
+     * @reason Inverts the stored matrix straight into the destination instead of
+     *         taking the defensive copy vanilla hands out first.
      */
     @Overwrite
     public Transformation inverse() {
@@ -52,10 +52,10 @@ public abstract class MixinTransformation {
         }
 
         //? if <1.21.6 {
-        Matrix4f result = this.matrix.invert(new Matrix4f());
+        /*Matrix4f result = this.matrix.invert(new Matrix4f());*/
         //? } else {
-        /*Matrix4f result = this.matrix.invertAffine(new Matrix4f());
-        *///?}
+        Matrix4f result = this.matrix.invertAffine(new Matrix4f());
+        //?}
         return result.isFinite() ? new Transformation(result) : null;
     }
 }

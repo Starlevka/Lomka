@@ -23,10 +23,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
 import net.minecraft.network.FriendlyByteBuf;
 //? if >=1.21 {
 import net.minecraft.network.codec.StreamEncoder;
@@ -34,7 +31,6 @@ import net.minecraft.network.codec.StreamEncoder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(FriendlyByteBuf.class)
 public abstract class MixinFriendlyByteBuf {
@@ -46,25 +42,7 @@ public abstract class MixinFriendlyByteBuf {
     //?}
     @Shadow public abstract byte readByte();
 
-    @Unique private final LomkaMapHelper lomka$mapHelper = new LomkaMapHelper();
-
-    @Unique
-    private static final class LomkaMapHelper<K, V> implements BiConsumer<K, V> {
-        FriendlyByteBuf buf;
-        //? if >=1.21 {
-        StreamEncoder<? super FriendlyByteBuf, K> keyEnc;
-        StreamEncoder<? super FriendlyByteBuf, V> valEnc;
-        @Override public void accept(K k, V v) {
-            this.keyEnc.encode(this.buf, k);
-            this.valEnc.encode(this.buf, v);
-        }
-        //?} else {
-        /*FriendlyByteBuf.Writer<K> keyEnc;
-        FriendlyByteBuf.Writer<V> valEnc;
-        @Override public void accept(K k, V v) { this.keyEnc.accept(this.buf, k); this.valEnc.accept(this.buf, v); }*/
-        //?}
-    }
-
+    //? if <26.3 {
     /**
      * @author Starlev
      * @reason Avoids Iterator allocation for List+RandomAccess collections
@@ -101,50 +79,7 @@ public abstract class MixinFriendlyByteBuf {
             }
         }
     }
-
-    /**
-     * @author Starlev
-     * @reason Replaces per-call capturing lambda with a cached BiConsumer that
-     *         still uses HashMap.forEach's internal table walk (no Entry iterator).
-     *         For non-HashMap maps falls back to entrySet loop. Saves one lambda
-     *         allocation per packet while keeping the fast internal iteration.
-     */
-    @Overwrite
-    //? if >=1.21 {
-    public <K, V> void writeMap(Map<K, V> map, StreamEncoder<? super FriendlyByteBuf, K> streamencoder, StreamEncoder<? super FriendlyByteBuf, V> streamencoder1) {
-    //?} else {
-    /*public <K, V> void writeMap(Map<K, V> map, FriendlyByteBuf.Writer<K> streamencoder, FriendlyByteBuf.Writer<V> streamencoder1) {*/
     //?}
-        this.writeVarInt(map.size());
-        if (map instanceof HashMap) {
-            @SuppressWarnings("unchecked")
-            LomkaMapHelper<K, V> h = (LomkaMapHelper<K, V>) this.lomka$mapHelper;
-            h.buf    = (FriendlyByteBuf) (Object) this;
-            h.keyEnc = streamencoder;
-            h.valEnc = streamencoder1;
-            //? if >=1.21 {
-            ((HashMap<K, V>) map).forEach(h);
-            //?} else {
-            /*((HashMap<K, V>) map).forEach(h);*/
-            //?}
-            h.buf    = null;
-            h.keyEnc = null;
-            h.valEnc = null;
-        } else {
-            for (Map.Entry<K, V> entry : map.entrySet()) {
-                //? if >=1.21 {
-                streamencoder.encode((FriendlyByteBuf) (Object) this, entry.getKey());
-                //?} else {
-                /*streamencoder.accept((FriendlyByteBuf) (Object) this, entry.getKey());*/
-                //?}
-                //? if >=1.21 {
-                streamencoder1.encode((FriendlyByteBuf) (Object) this, entry.getValue());
-                //?} else {
-                /*streamencoder1.accept((FriendlyByteBuf) (Object) this, entry.getValue());*/
-                //?}
-            }
-        }
-    }
 
     //? if >=1.19.3 {
     /**
@@ -208,6 +143,7 @@ public abstract class MixinFriendlyByteBuf {
     }
     //?}
 
+    //? if <26.3 {
     /**
      * @author Starlev
      * @reason Pre-sizes the backing array to the declared element count to
@@ -245,4 +181,5 @@ public abstract class MixinFriendlyByteBuf {
             this.writeVarInt(intlist.getInt(i));
         }
     }
+    //?}
 }

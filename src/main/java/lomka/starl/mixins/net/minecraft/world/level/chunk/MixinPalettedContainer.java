@@ -25,6 +25,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PalettedContainer.class)
 public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
@@ -32,54 +36,39 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
     @Shadow private volatile PalettedContainer.Data<T> data;
 
     /*
-     * Uniform-section cache as a (value, data) pair. The value is written with a
-     * plain store and published by the volatile store of the matching Data
-     * reference; readers acquire on the volatile Data load, so the pair is always
-     * observed consistently. Only uniform sections (zero-bit storage + single-entry
-     * palette) are cached; heterogeneous sections never allocate.
+     * Uniform-section cache as a (value, Data) pair with no allocation: the value is stored
+     * plainly and published by the volatile store of the matching Data reference, so a reader
+     * that acquires on the volatile Data load always observes a consistent pair. Only uniform
+     * sections (zero-bit storage + single-entry palette) are cached; heterogeneous ones never
+     * allocate and fall through to the vanilla lookup.
+     *
+     * Identity is a valid key because a uniform section cannot change value under a stable Data:
+     * ZeroBitStorage#set/getAndSet are validated no-ops that require value 0, so any real change
+     * overflows the palette and routes through PaletteResize#onResize, which installs a fresh
+     * Data. The one exception is read(), whose createOrReuseData returns the *same* Data when
+     * the incoming bit count maps to the current Configuration and then overwrites palette and
+     * raw storage in place - hence the explicit hook below. onResize stays as a second guard.
+     * The set/getAndSet/getAndSetUnchecked hooks this mixin used to carry were provably
+     * redundant (zero-bit storage cannot be written) and cost an injected call per block write.
      */
     @Unique private volatile PalettedContainer.Data<T> lomka$uniformData;
     @Unique private T lomka$uniformValue;
 
-    /**
-     * @author Starlev
-     * @reason Uniform-section fast path. A palette holding exactly one entry with
-     *         zero-bit storage (air, deep stone, ocean water) is provably immutable for the
-     *         lifetime of its Data record: any new distinct value overflows SingleValuePalette
-     *         and routes through PaletteResize#onResize, which swaps this.data for a fresh
-     *         identity. Such sections resolve with one volatile load plus a reference identity
-     *         check and a plain value load, skipping the quadrimorphic Palette#valueFor
-     *         dispatch (Single/Linear/Hash/Global palettes defeat JIT inlining) and
-     *         BitStorage#get bit arithmetic on the hottest read path in the game (collision,
-     *         lighting, chunk meshing, ticking). Non-uniform sections fall through to the
-     *         exact vanilla path.
-     */
-    @Overwrite
-    protected T get(int index) {
-        PalettedContainer.Data<T> d = this.data;
-
-        if (this.lomka$uniformData == d) {
-            return this.lomka$uniformValue;
-        }
-
-        T value = d.palette().valueFor(d.storage().get(index));
-
-        if (d.storage().getBits() == 0 && d.palette().getSize() == 1) {
-            this.lomka$uniformValue = value;
-            this.lomka$uniformData = d;
-        }
-
-        return value;
+    @Unique
+    private void lomka$invalidateUniform() {
+        this.lomka$uniformData = null;
     }
 
-    /*
-     * Uniform-value probe for consumers that would otherwise sample a whole section
-     * (MixinHeightmap, see IPalettedContainer). The answer is parked in the same
-     * (value, volatile Data) pair the hot path uses, so it warms the cache instead of
-     * duplicating it: the volatile Data store publishes the plain value store, and a
-     * later get() on the same container is served from it. Heterogeneous containers
-     * return null and are never cached - the same discipline as get().
-     */
+    @Inject(method = "read", at = @At("HEAD"))
+    private void lomka$invalidateBeforeRead(CallbackInfo ci) {
+        this.lomka$invalidateUniform();
+    }
+
+    @Inject(method = "onResize", at = @At("HEAD"))
+    private void lomka$invalidateBeforeResize(CallbackInfoReturnable<Integer> cir) {
+        this.lomka$invalidateUniform();
+    }
+
     @Override
     @Unique
     public Object lomka$uniformValue() {
@@ -96,6 +85,35 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
         T value = d.palette().valueFor(0);
         this.lomka$uniformValue = value;
         this.lomka$uniformData = d;
+
+        return value;
+    }
+
+    /**
+     * @author Starlev
+     * @reason Caches the value of zero-bit uniform palettes (air, deep stone, ocean water) so a
+     *         read costs one volatile load plus a reference identity check and a plain value
+     *         load, skipping the quadrimorphic Palette#valueFor dispatch and BitStorage#get bit
+     *         arithmetic. Non-uniform sections take the exact vanilla path.
+     *         Declared public even though vanilla's is protected: Mixin resolves the target
+     *         signature as PUBLIC and rejects an @Overwrite that would reduce it, which aborts
+     *         the launch with "cannot reduce visibility of PUBLIC target method".
+     *         (Measured figures live in scripts/bench, not in source comments.)
+     */
+    @Overwrite
+    public T get(int index) {
+        PalettedContainer.Data<T> d = this.data;
+
+        if (this.lomka$uniformData == d) {
+            return this.lomka$uniformValue;
+        }
+
+        T value = d.palette().valueFor(d.storage().get(index));
+
+        if (d.storage().getBits() == 0 && d.palette().getSize() == 1) {
+            this.lomka$uniformValue = value;
+            this.lomka$uniformData = d;
+        }
 
         return value;
     }

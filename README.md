@@ -15,14 +15,18 @@ An open source mod with mix of small optimizations for your Minecraft. **Fewer s
 
 ## Optimizations
 - Faster hot-path math and color engine
+- Faster texture atlas animation and light engine updates
 - Less garbage in render and tick loops
 - Caching where vanilla repeats work
-- Faster block collision scans
+- Faster block collision scans and a cached block-sturdiness bitmask
 - Cached voxel shape AABBs and allocation-free raycasts
+- Bulk NBT array reads for world, player and structure data on the server side (chunks, heightmaps, saves load in blocks instead of per-element stream calls)
+- Faster heightmap priming for world generation
 - Cached font glyph advances for faster text rendering
+- Playing a sound no longer waits for the sound thread
 - Fewer native buffer reallocations (audio streaming and mesh building)
-- Lighting and texture atlases faster light engine and chunk tracking
-- Faster entity queries and uniform palette lookups
+- Faster block and section traversal, plus in-place worldgen RNG reseeds (also, check incompatibilities list)
+- Cached uniform palette lookups
 - Zero-alloc framebuffer and GPU uniform caching (26.3 renderpearl backend)
 - Cheaper resource scanning and metadata reads
 - Leaner network buffers (without affecting your connection)
@@ -38,14 +42,13 @@ Other supported versions (1.19.2-26.3) are ports of the same or with the less of
 ## FAQ
 **I see performance drops with Lomka installed**
 
-Update to the latest build for your MC version first. Try out Lomka's best versions: **0.2.0**, **0.2.1**, **0.4.x** and **0.5.x**
+Update to the latest build for your MC version first. Try out Lomka's best versions: **0.2.0**, **0.2.1**, (**0.4.x**, **0.5.x**) and **0.6.x**
 
 Still bad? Report it (link below).
 
 **Is it server-side compatible?**
 
 Yes, it is.
-
 
 **Will be mod backports below Minecraft version 1.19.2?**
 
@@ -77,8 +80,7 @@ Please don't report Lomka-related crashes to other mod authors, because Lomka's 
 
 Lomka was created by Starlev and contributors.
 
+Also, other mods credits for their's effecient work!
 - `VecDeltaCodec` zero-delta path adapted from Collections Of Optimizations by Misanthropy (LGPL-3.0).
-- FMA `lerp` implementations adapted from SuperFastMath by Elias (MIT).
 - `Vec3i` PhiMix hashing credits efficient_hashing by ZZZank (CC0-1.0).
-- The legacy hardware-blit presentation path references the approach popularized by VulkanMod and Tritium.
-- Sodium, Lithium, ModernFix, FerriteCore, C2ME, ImmediatelyFast, Iris, Vitrail, and quick-pack are compatibility references, not claimed source-level ports.
+- The legacy hardware-blit presentation path references from Tritium (MIT), but popularized in VulkanMod (LGPL-3.0-only).

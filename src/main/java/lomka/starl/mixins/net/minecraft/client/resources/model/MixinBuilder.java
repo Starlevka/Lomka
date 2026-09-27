@@ -147,8 +147,8 @@ public class MixinBuilder {
             this.lomka$fastCulledFaces[idx] = list = new ArrayList<>(incoming.size());
         }
         list.addAll(incoming);
-    }*/
-    //?}
+    }
+    *///?}
 
     @Unique
     private List<BakedQuad> lomka$getList(Direction dir) {

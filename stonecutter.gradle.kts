@@ -1,5 +1,7 @@
 @file:OptIn(dev.kikugie.stonecutter.StonecutterExperimentalAPI::class)
 
+import java.util.concurrent.TimeUnit
+
 plugins {
 	alias(libs.plugins.stonecutter)
 	alias(libs.plugins.fabric.loom).apply(false)
@@ -18,6 +20,76 @@ tasks.register("runActiveServer") {
 	group = "stonecutter"
 	description = "Run server of the active Stonecutter version"
 	dependsOn(stonecutter.current!!.project + ":runServer")
+}
+
+tasks.register("runClientAll") {
+	group = "verification"
+	description = "Run every configured client variant sequentially, stopping on the first crash"
+	doLast {
+		val variants = rootProject.subprojects
+			.filter { it != rootProject && it.tasks.findByName("runClient") != null }
+			.map { it.path.removePrefix(":") }
+
+		if (variants.isEmpty()) {
+			throw GradleException("No Stonecutter client variants found")
+		}
+
+		val timeoutSeconds = providers.gradleProperty("lomkaRunClientAllTimeoutSeconds")
+			.orNull?.toLongOrNull() ?: 40L
+		if (timeoutSeconds <= 0L) {
+			throw GradleException("lomkaRunClientAllTimeoutSeconds must be positive")
+		}
+
+		val windows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+		val wrapper = rootProject.layout.projectDirectory
+			.file(if (windows) "gradlew.bat" else "gradlew")
+			.asFile
+		val dryRun = providers.gradleProperty("lomkaRunClientAllDryRun").isPresent
+
+		fun stop(process: Process) {
+			process.descendants().toList().forEach { it.destroy() }
+			process.destroy()
+			if (!process.waitFor(40, TimeUnit.SECONDS)) {
+				process.descendants().toList().forEach { it.destroyForcibly() }
+				process.destroyForcibly()
+			}
+		}
+
+		variants.forEachIndexed { index, variant ->
+			logger.lifecycle("[runClientAll] ${index + 1}/${variants.size}: $variant")
+			val arguments = listOf("--no-daemon", "--console=plain", ":$variant:runClient")
+			if (dryRun) {
+				logger.lifecycle("[runClientAll] dry run: ${wrapper.absolutePath} ${arguments.joinToString(" ")}")
+				return@forEachIndexed
+			}
+
+			val command = if (windows) {
+				listOf("cmd.exe", "/c", wrapper.absolutePath) + arguments
+			} else {
+				listOf(wrapper.absolutePath) + arguments
+			}
+			val process = ProcessBuilder(command)
+				.directory(rootProject.projectDir)
+				.inheritIO()
+				.start()
+			var finished = false
+			try {
+				finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
+				if (!finished) {
+					logger.lifecycle("[runClientAll] $variant reached the ${timeoutSeconds}s limit; stopping client")
+					stop(process)
+				} else if (process.exitValue() != 0) {
+					throw GradleException("[runClientAll] $variant crashed with exit code ${process.exitValue()}")
+				} else {
+					logger.lifecycle("[runClientAll] $variant exited cleanly")
+				}
+			} finally {
+				if (!finished && process.isAlive) {
+					stop(process)
+				}
+			}
+		}
+	}
 }
 
 stonecutter parameters {

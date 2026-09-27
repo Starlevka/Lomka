@@ -32,8 +32,8 @@ import net.minecraft.world.level.dimension.DimensionType;
 //? if <26.2 {
 import org.joml.Vector3f;
 //?} else {
-import org.joml.Vector3fc;
-//?}
+/*import org.joml.Vector3fc;
+*///?}
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

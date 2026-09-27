@@ -5,8 +5,8 @@ at runtime via `config/lomka-mixins.properties`.
 
 ## How it works
 
-The config file is created empty on first launch. Every line you add forces a single
-patch on or off:
+The config file is created on first launch with a short notice and no entries. Every line
+you add forces a single patch on or off:
 
 ```properties
 # fully qualified mixin name=true|false
@@ -23,7 +23,7 @@ Rules:
 - Only `true` / `1` enable. Anything else (including typos like `flase`) disables the
   patch; non-boolean garbage is reported in the log.
 - Keys that do not exist in your installed build are ignored and reported as unknown.
-- Disabled patches are summarized at startup:
+- Disabled patches are summarized at startup (a warning, like the unknown-key report):
   `[Lomka/MixinConfig] Disabled 2 mixin(s): MixinCursor3D, MixinFont`
 - Deleting the file restores the all-enabled default on next launch.
 
@@ -39,11 +39,14 @@ Supported game versions: **1.19.2 · 1.20-1.20.1 · 1.21-1.21.1 · 1.21.4 · 1.2
 
 Non-mixin code lives in three places:
 
-- `lomka.starl.utils` — the only two helpers outside mixins; since 0.5.x the former
+- `lomka.starl.utils` — the four shared helpers outside mixins. The former
   pure-math/LUT classes (MthCalcs, ColorCalcs, WorldCalcs, VertexMaths, ColorsCache,
-  ClockWiseCache) were inlined directly into the mixins that used them:
+  ClockWiseCache) were inlined directly into the mixins that used them back in 0.5.x;
+  what remains is grouped by role:
   - `cache/GlStateCache` — GL state dedup, shared by `MixinGlStateManager`, reset by `MixinWindow` on resize
+  - `constants/DirectionTables` — flat clockwise/counter-clockwise `Direction` LUTs, read by `MixinDirection`
   - `math/AxisPoseRotate` — PoseStack scratch math for `MixinPoseStack` / `MixinPose`
+  - `pack/ResourceEntry` — resolved pack entry (source, byte supplier, fallback index) for `MixinFallbackResourceManager`
 - `lomka.starl.duck` — bridge interfaces implemented by one mixin so another mixin can
   call into the vanilla class without an accessor:
   - `IBitSetDiscreteVoxelShape` (`lomka$storage` / `lomka$index` / `lomka$setBounds`) — implemented and consumed by `MixinBitSetDiscreteVoxelShape`
@@ -69,6 +72,7 @@ version simply does not exist in your jar the config loader ignores it with an
 | `com.mojang.blaze3d.audio.MixinListener` | Reuses a cached orientation array for listener updates | 1.21+ |
 | `net.minecraft.client.sounds.MixinJOrbisAudioStream` | Reuses ogg decode output containers during streamed audio | 1.21+ |
 | `net.minecraft.client.sounds.MixinChunkedSampleByteBuf` | Single growing buffer for streamed sounds | 1.21+ |
+| `net.minecraft.client.sounds.MixinSoundEngine` | Serves an already acquired channel handle from a small pool so playing a sound no longer waits for the sound thread | all |
 
 ## Blaze3D mixins
 
@@ -86,7 +90,7 @@ version simply does not exist in your jar the config loader ignores it with an
 | `com.mojang.blaze3d.platform.MixinLighting` | Caches light UBO slices; skips unchanged GPU uploads | 1.21.6+ |
 | `com.mojang.blaze3d.systems.MixinAutoStorageIndexBuffer` | Grows the shared index buffer x4 with a warm start; fewer mid-frame stalls | all |
 | `com.mojang.blaze3d.vertex.MixinPoseStack` | Sparse X/Y/Z quaternion rotate via `math/AxisPoseRotate` without full matrix multiply; on 1.19.2 (Mojang math) per-stack scratch matrices instead of per-call allocations | 1.19.2-26.2 |
-| `com.mojang.blaze3d.vertex.MixinPose` | Scratch matrix reuse in mulPose for display entities | 1.21-1.21.11 |
+| `com.mojang.blaze3d.vertex.MixinPose` | Thread-local scratch matrix reuse in `mulPose` for display entities | 1.21-1.21.11 |
 | `com.mojang.blaze3d.vertex.MixinBufferBuilder` | Fast ARGB-to-ABGR color packing while feeding vertices | 1.21+ |
 | `com.mojang.blaze3d.vertex.MixinByteBufferBuilder` | Inlined `reserve` fast path and 8 MB growth steps for mesh building buffers (low priority, stays compatible with VulkanMod) | 1.21+ |
 | `com.mojang.blaze3d.vertex.MixinVertexConsumer` | Direct FMA pose transforms; on 1.21.11+, bulk quad writes hoist matrix loads and unroll all four vertices | 1.21+ |
@@ -94,7 +98,6 @@ version simply does not exist in your jar the config loader ignores it with an
 | `com.mojang.blaze3d.vertex.MixinMultiple` | Direct indexed loops for multi-consumer fan-out instead of per-vertex lambdas | 1.19.2-26.1 |
 | `com.mojang.blaze3d.vertex.MixinVertexBuffer` | Caches the GL primitive mode per buffer | 1.19.2-1.21.4 |
 | `com.mojang.blaze3d.vertex.MixinVertexFormatElement` | Precomputed hashCode for format map lookups | 1.19.2-1.20.1 |
-| `com.mojang.blaze3d.vulkan.MixinDirect` | Persistent mapping for host-visible Vulkan buffers | 26.2+ |
 
 ## GUI mixins
 
@@ -111,14 +114,13 @@ version simply does not exist in your jar the config loader ignores it with an
 |---|---|---|
 | `net.minecraft.client.resources.model.MixinBuilder` | Fewer allocations and map lookups during block-model baking | 1.21.11+ |
 | `net.minecraft.client.resources.model.MixinMaterial` | Caches the material hash instead of allocating an Object[] per sprite lookup | 1.19.2-1.21.11 |
-| `com.mojang.math.MixinTransformation` | Inverts the stored matrix directly into a destination matrix, avoiding a defensive copy | 1.20+ |
+| `com.mojang.math.MixinTransformationInverse` | Inverts the stored matrix straight into the destination instead of taking the defensive copy first | 1.20+ |
 | `net.minecraft.client.model.MixinModel` | Indexed loop instead of Iterator in resetPose; no per-entity allocation | 1.21.9+ |
 
 ## Client rendering and logic mixins
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.client.multiplayer.MixinClientLevel` | Caches entity-type names used by the tick profiler | 1.19.2-1.21.11 |
 | `net.minecraft.client.renderer.MixinDynamicUniformStorage` | Caches ring-buffer getter and reuses uniform slice records | 1.21.6-26.2 |
 | `net.minecraft.client.renderer.MixinDynamicGpuDataStorageMapped` | `renderpearl` successor: caches `currentBuffer()` and dedupes `GpuBufferSlice` for `DynamicGpuData` | 26.3 |
 | `net.minecraft.client.renderer.MixinGameRenderer` | Reuses the camera render-state quaternion instead of per-frame allocation | 1.21.9-1.21.11 |
@@ -126,7 +128,7 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.client.renderer.MixinLightmap` | Zero-allocation direct UBO writing for lightmap updates | 26.1+ |
 | `net.minecraft.client.renderer.MixinLightmapRenderStateExtractor` | Cached vectors avoid per-frame allocations in lightmap state extraction | 26.1+ |
 | `net.minecraft.client.renderer.MixinLightTexture` | Zero-allocation lightmap texture updates | 1.20.1-1.21 · 1.21.6-1.21.11 |
-| `net.minecraft.client.renderer.texture.MixinTextureAtlas` | Indexed animation-frame ticking without the per-frame iterator on 1.21.6-1.21.10; animation ticking and batched render-pass uploads with a cached GPU device on 1.21.11+ | 1.21.6+ |
+| `net.minecraft.client.renderer.texture.MixinTextureAtlas` | Indexed animation-frame ticking without the per-frame iterator on 1.21.6-1.21.10 (reads the inherited texture through `accessor.AbstractTextureAccessor`); animation ticking and batched render-pass uploads with a cached GPU device on 1.21.11+ | 1.21.6+ |
 | `net.minecraft.client.MixinMinecraft` | Removes `Thread.yield()` from the frame loop | 1.19.2-1.21.11 |
 | `net.minecraft.client.MixinCamera` | Vector-based camera math without temporary allocations | 1.19.2-1.21.11 |
 | `net.minecraft.client.animation.MixinKeyframeAnimation` | Reuses the scratch vector that 1.21.9 made per-call (24 B/frame, measured) and skips zero-scale clips on the per-frame animation path; the iterator, the `ifStarted` Consumer and the search callback all measure 0 B/frame, so they stay vanilla | 1.21.6+ |
@@ -140,30 +142,28 @@ version simply does not exist in your jar the config loader ignores it with an
 | `net.minecraft.core.MixinDirect` | Linear scan for tiny holder sets instead of building a Set | all |
 | `net.minecraft.core.MixinSectionPos` | Fast packed section offsets, direct around-and-at-block traversal, and allocation-free stream traversal | all |
 | `net.minecraft.core.MixinVec3i` | Raw-Vec3i `get(Axis)` via enum switch and int-exact `distManhattan` | all |
-| `net.minecraft.core.MixinDirection` | Direction rotation via an inlined flat LUT instead of nested enum-switch; branch-free `getApproximateNearest` on 1.21.4+ | all |
+| `net.minecraft.core.MixinDirection` | Direction rotation via a flat LUT in `constants/DirectionTables` instead of nested enum-switch | all |
 | `net.minecraft.core.MixinBlockPos` | Incremental stepped counters in `betweenClosed` instead of div/mod per block; byte-identical X→Y→Z order | all |
-| `net.minecraft.world.level.block.state.MixinBlockStateBase` | Returns cached collision shapes, bypassing virtual dispatch | all |
+| `net.minecraft.world.level.block.state.MixinBlockStateBase` | Returns cached collision shapes, bypassing virtual dispatch | 1.20.1+ |
 | `net.minecraft.world.level.block.state.MixinBlockStateBaseCache` | Caches face-sturdiness checks in a volatile long bitmask, refreshing it when the backing array is replaced | all |
 | `net.minecraft.world.level.chunk.status.MixinChunkStatus` | Caches the status progression list with volatile publication for worldgen threads | 1.21+ |
-| `net.minecraft.world.level.chunk.MixinPalettedContainer` | Uniform-section fast path via `volatile Data` identity (zero-bit palette); also answers the `IPalettedContainer` uniform-value probe used by `MixinHeightmap` | all |
+| `net.minecraft.world.level.chunk.MixinPalettedContainer` | Uniform-section fast path via a volatile-published `(Data, value)` pair with mutation invalidation; also answers the `IPalettedContainer` uniform-value probe used by `MixinHeightmap` | all |
 | `net.minecraft.world.level.levelgen.MixinHeightmap` | Chunk priming without the per-Y `ChunkAccess#getBlockState` walk and the per-column scratch state (a fresh iterator per column in vanilla up to 26.2; 26.3 allocates nothing per column but still walks Y by Y): flat arrays, active-type bitmask, section-local scans and O(1) resolution of uniform sections | all |
-| `net.minecraft.world.level.MixinLevel` | `ThreadLocal` scratch list for `getEntities(Entity,AABB,Predicate)` — hottest entity query | all |
 | `net.minecraft.world.level.levelgen.MixinLegacyRandomSource` | Plain-field RNG draw instead of a CAS per call; seed installation keeps the vanilla thread guard. Concurrent misuse of `next` no longer throws. | all |
 | `net.minecraft.world.level.levelgen.MixinXoroshiroRandomSource` | Reseeds the live Xoroshiro generator in place instead of installing a fresh object on every `setFeatureSeed`/`setDecorationSeed` (decoration reseeds once per structure and per placed feature, per chunk); the drawn sequence stays identical | all |
 | `net.minecraft.world.phys.shapes.MixinBitSetDiscreteVoxelShape` | Reusable index lists in shape merge loops; `join` accumulates contiguous bit runs into bulk `BitSet.set(from, to)` writes | all |
 | `net.minecraft.world.phys.shapes.MixinVoxelShape` | Caches the computed AABB list so raycasts (crosshair `clip()` runs every frame) stop allocating per call | all |
 | `net.minecraft.world.phys.MixinAABB` | Allocation-free `clip` paths: no `double[1]` box, no per-iteration `AABB.move` in the `Iterable` variant | all |
-| `net.minecraft.world.phys.MixinVec3` | Reciprocal-multiply `normalize` (one division + three multiplications instead of three divisions, near-zero guard preserved) | all |
-| `net.minecraft.world.level.lighting.MixinLeveledPriorityQueue` | Packs light queue entries into SpatialLongSet | 1.20.1+ |
+| `net.minecraft.world.phys.MixinVec3` | Reciprocal-multiply `normalize` (one division + three multiplications instead of three divisions, near-zero guard preserved) | 1.21.4+ |
 | `net.minecraft.world.level.lighting.MixinLayerLightSectionStorage` | Single reusable consumer instead of per-block lambda allocation | 1.20.1+ |
 
 ## Network mixins
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.network.MixinFriendlyByteBuf` | Indexed list writes, reusable BiConsumer for HashMap writes, and sparse EnumSet bit packing/unpacking without BitSet temporaries | all |
+| `net.minecraft.network.MixinFriendlyByteBuf` | Indexed list writes and sparse EnumSet bit packing/unpacking without BitSet temporaries | all |
 | `net.minecraft.network.MixinCompressionEncoder` | Reuses the input buffer between packet compressions | all |
-| `net.minecraft.network.MixinCompressionDecoder` | Direct-buffer inflate path for compressed packets | 1.21+ |
+| `net.minecraft.network.MixinCompressionDecoder` | Hands the inflater Netty's cached internal NIO buffer view instead of allocating a fresh `ByteBuffer` per compressed packet | 1.21+ |
 | `net.minecraft.network.protocol.game.MixinVecDeltaCodec` | Zero-delta fast path returning `Vec3.ZERO` instead of subtract + allocation (CoO port, priority 999 defers to CoO) | all |
 
 ## Resource packs mixins
@@ -171,19 +171,20 @@ version simply does not exist in your jar the config loader ignores it with an
 | Key | Description | Versions |
 |---|---|---|
 | `net.minecraft.server.packs.resources.MixinFallbackResourceManager` | Builds a base-to-metadata index after pack filtering to avoid per-file metadata identifier allocations; caches the logger | 1.20.1+ |
-| `net.minecraft.server.packs.resources.MixinMultiPackResourceManager` | Skips redundant TreeMap copies with one namespace manager | all |
-| `net.minecraft.server.packs.MixinVanillaPackResources` | Fast namespace/path resolution and cached pack.mcmeta | 1.20.1+ |
+| `net.minecraft.server.packs.resources.MixinMultiPackResourceManager` | Skips redundant TreeMap copies with one namespace manager | 1.20+ |
+| `net.minecraft.server.packs.MixinVanillaPackResources` | Fast namespace/path resolution and cached pack.mcmeta | 1.20-26.2 |
 
 ## Utils mixins
 
 | Key | Description | Versions |
 |---|---|---|
-| `net.minecraft.util.thread.MixinBlockableEventLoop` | No captured-lambda allocation on async task submission (`main` - all environments) | all |
+| `net.minecraft.nbt.MixinIntArrayTag` | Bulk array reads on `DataInputStream` (server-side world/player/structure data from disk); vanilla loop for buffer-backed and network inputs | all |
+| `net.minecraft.nbt.MixinLongArrayTag` | Bulk array reads on `DataInputStream` (server-side chunk heightmaps, player and structure data from disk); vanilla loop for buffer-backed and network inputs | all |
 | `net.minecraft.util.MixinLightCoordsUtil` | Early-out for zero-emission light coordinates | 26.1+ |
 | `net.minecraft.util.MixinByIdMap` | Leaner sparse/continuous id maps | 1.20.1+ |
-| `net.minecraft.util.MixinMth` | numberOfLeadingZeros-based ceillog2 and similar math shortcuts | all |
-| `net.minecraft.util.MixinARGB` | Flat LUT lookup instead of float division in color helpers | all |
-| `net.minecraft.util.MixinUtil` | Zero-alloc `getEpochMillis`/`sanitizeName`, branch-efficient `growByHalf`, fastutil shuffle specializations, index lookups, single-step codepoint offsets and cached `allOf`/`anyOf` | all |
+| `net.minecraft.util.MixinMth` | numberOfLeadingZeros-based ceillog2, exact degree/hsv helpers, and other parity-safe math shortcuts | all |
+| `net.minecraft.util.MixinARGB` | Flat LUT lookup instead of float division in color helpers, exact reciprocal multiply in `alphaBlend`/`multiply` instead of per-channel `/255`, SWAR color averaging | all |
+| `net.minecraft.util.MixinUtil` | Zero-alloc `getEpochMillis`/`sanitizeName`, exact `growByHalf`, fastutil shuffle specializations, identity index lookups, single-step codepoint offsets and cached `allOf`/`anyOf` | all |
 | `net.minecraft.util.MixinArrayListDeque` | Power-of-two deque indexing without modulo | 1.21+ |
 
 
@@ -191,4 +192,5 @@ version simply does not exist in your jar the config loader ignores it with an
 
 | Key | Description | Versions |
 |---|---|---|
-| `accessor.InvokerBlockBehaviour` | Internal access bridge used by MixinBlockStateBase | all |
+| `accessor.InvokerBlockBehaviour` | Internal access bridge used by MixinBlockStateBase | 1.20.1+ |
+| `accessor.AbstractTextureAccessor` | Reads the texture field MixinTextureAtlas inherits from `AbstractTexture` | 1.21.6-1.21.10 |

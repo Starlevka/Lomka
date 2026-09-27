@@ -29,6 +29,7 @@ import java.util.TreeMap;
 //? if <26.3 {
 import java.util.function.Predicate;
 //?}
+import lomka.starl.utils.pack.ResourceEntry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
@@ -87,7 +88,6 @@ public abstract class MixinFallbackResourceManager {
     }
     //?}
 
-    @Unique private record Entry(PackResources source, IoSupplier<InputStream> resource, int packIndex) {}
 
     @Shadow
     private static IoSupplier<InputStream> wrapForDebug(Identifier id, PackResources pack, IoSupplier<InputStream> supplier) {
@@ -111,8 +111,8 @@ public abstract class MixinFallbackResourceManager {
     //?} else {
     public Map<Identifier, Resource> listResources(String directory, Predicate<Identifier> filter) {
     //?}
-        Map<Identifier, Entry> fileEntries = new HashMap<>();
-        Map<Identifier, Entry> metaEntries = new HashMap<>();
+        Map<Identifier, ResourceEntry<IoSupplier<InputStream>>> fileEntries = new HashMap<>();
+        Map<Identifier, ResourceEntry<IoSupplier<InputStream>>> metaEntries = new HashMap<>();
         int count = this.fallbacks.size();
 
         for (int i = 0; i < count; ++i) {
@@ -125,10 +125,10 @@ public abstract class MixinFallbackResourceManager {
                 pack.listResources(this.type, this.namespace, directory, (id, streamSupplier) -> {
                     if (lomka$isMetadata(id)) {
                         if (lomka$isIncluded(filter, lomka$getIdentifierFromMetadata(id))) {
-                            metaEntries.put(id, new Entry(pack, streamSupplier, packIndex));
+                            metaEntries.put(id, new ResourceEntry(pack, streamSupplier, packIndex));
                         }
                     } else if (lomka$isIncluded(filter, id)) {
-                        fileEntries.put(id, new Entry(pack, streamSupplier, packIndex));
+                        fileEntries.put(id, new ResourceEntry(pack, streamSupplier, packIndex));
                     }
                 });
             }
@@ -153,14 +153,14 @@ public abstract class MixinFallbackResourceManager {
         // before filtering is NOT version-agnostic). One base-id alloc per META (rare path)
         // instead of one file+".mcmeta" concat per FILE; the hot loop below is then a
         // zero-alloc direct get. (Figures: scripts/bench.)
-        Map<Identifier, Entry> metaByBase = new HashMap<>(metaEntries.size() * 2 + 1);
+        Map<Identifier, ResourceEntry<IoSupplier<InputStream>>> metaByBase = new HashMap<>(metaEntries.size() * 2 + 1);
         metaEntries.forEach((metaId, metaEntry) ->
             metaByBase.put(lomka$getIdentifierFromMetadata(metaId), metaEntry));
 
         // Kept as forEach (not an entrySet loop): HashMap.forEach's internal table walk
         // measured faster than the loop. (Figures: scripts/bench.)
         fileEntries.forEach((id, entry) -> {
-            Entry metaEntry = metaByBase.get(id);
+            ResourceEntry<IoSupplier<InputStream>> metaEntry = metaByBase.get(id);
             IoSupplier<InputStream> resSupplier = debug
                     ? wrapForDebug(id, entry.source, entry.resource)
                     : entry.resource;

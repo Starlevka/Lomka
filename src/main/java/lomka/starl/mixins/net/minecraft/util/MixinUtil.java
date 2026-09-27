@@ -24,18 +24,11 @@ import net.minecraft.util.Util;
 //?} else {
 /*import net.minecraft.Util;
 *///?}
-import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectLists;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
@@ -99,11 +92,9 @@ public abstract class MixinUtil {
     //? if >=1.21.6 {
     @Overwrite
     public static int growByHalf(int i, int j) {
-        int grown = i + (i >> 1);
-        if (grown > 2147483639 || grown < 0) {
-            grown = 2147483639;
-        }
-        return grown < j ? j : grown;
+        long grown = (long) i + (long) (i >> 1);
+        grown = Math.min(grown, 2147483639L);
+        return (int) Math.max(grown, (long) j);
     }
     //?}
 
@@ -119,7 +110,7 @@ public abstract class MixinUtil {
         }
         if (i == 2) {
             for (int l = 0, row = 0; l < j; ++l, row += 2) {
-                if (!Objects.equals(list.get(row), list.get(row + 1))) {
+                if (!list.get(row).equals(list.get(row + 1))) {
                     return false;
                 }
             }
@@ -127,7 +118,7 @@ public abstract class MixinUtil {
         }
         if (i == 3) {
             for (int l = 0, row = 0; l < j; ++l, row += 3) {
-                if (!Objects.equals(list.get(row), list.get(row + 2))) {
+                if (!list.get(row).equals(list.get(row + 2))) {
                     return false;
                 }
             }
@@ -136,31 +127,12 @@ public abstract class MixinUtil {
         int k = i >> 1;
         for (int l = 0, row = 0; l < j; ++l, row += i) {
             for (int left = row, right = row + i - 1; left < row + k; ++left, --right) {
-                if (!Objects.equals(list.get(left), list.get(right))) {
+                if (!list.get(left).equals(list.get(right))) {
                     return false;
                 }
             }
         }
         return true;
-    }
-    //?}
-
-    /**
-     * @author Starlev
-     * @reason Replaces stream pipeline and collector overhead with direct entrySet iteration and pre-sized map.
-     */
-    //? if >=1.21.6 {
-    @Overwrite
-    public static <K, V1, V2> Map<K, V2> mapValues(Map<K, V1> map, Function<? super V1, V2> function) {
-        int size = map.size();
-        if (size == 0) {
-            return Map.of();
-        }
-        Map<K, V2> result = Maps.newHashMapWithExpectedSize(size);
-        for (Map.Entry<K, V1> entry : map.entrySet()) {
-            result.put(entry.getKey(), function.apply(entry.getValue()));
-        }
-        return result;
     }
     //?}
 
@@ -206,82 +178,10 @@ public abstract class MixinUtil {
 
     /**
      * @author Starlev
-     * @reason Specializes 0, 1, and 2-element equality lookups; avoids method reference allocation and list traversal.
-     */
-    @Overwrite
-    public static <T> ToIntFunction<T> createIndexLookup(List<T> list) {
-        int size = list.size();
-        if (size == 0) {
-            return t -> -1;
-        }
-        if (size == 1) {
-            T val0 = list.get(0);
-            return t -> Objects.equals(t, val0) ? 0 : -1;
-        }
-        if (size == 2) {
-            T val0 = list.get(0);
-            T val1 = list.get(1);
-            return t -> Objects.equals(t, val0) ? 0 : (Objects.equals(t, val1) ? 1 : -1);
-        }
-        if (size < 8) {
-            Objects.requireNonNull(list);
-            return list::indexOf;
-        }
-        Object2IntOpenHashMap<T> map = new Object2IntOpenHashMap<>(size);
-        map.defaultReturnValue(-1);
-        for (int j = 0; j < size; ++j) {
-            map.put(list.get(j), j);
-        }
-        return map;
-    }
-
-    /**
-     * @author Starlev
-     * @reason Eliminates stream/lambda collector in sequence future; fast-paths already completed futures.
-     */
-    @Overwrite
-    public static <V> CompletableFuture<List<V>> sequence(List<? extends CompletableFuture<V>> list) {
-        int size = list.size();
-        if (size == 0) {
-            return CompletableFuture.completedFuture(List.of());
-        }
-        if (size == 1) {
-            //? if >=1.21.11 {
-            return list.get(0).thenApply(ObjectLists::singleton);
-            //?} else {
-            /*return ((CompletableFuture<V>) list.get(0)).thenApply(List::of);
-            *///?}
-        }
-        boolean allDone = true;
-        for (int i = 0; i < size; ++i) {
-            if (!list.get(i).isDone()) {
-                allDone = false;
-                break;
-            }
-        }
-        if (allDone) {
-            ObjectArrayList<V> result = new ObjectArrayList<>(size);
-            for (int i = 0; i < size; ++i) {
-                result.add(list.get(i).join());
-            }
-            return CompletableFuture.completedFuture(result);
-        }
-        CompletableFuture<?>[] array = list.toArray(new CompletableFuture[size]);
-        return CompletableFuture.allOf(array).thenApply(v -> {
-            ObjectArrayList<V> result = new ObjectArrayList<>(size);
-            for (int i = 0; i < size; ++i) {
-                result.add(list.get(i).join());
-            }
-            return result;
-        });
-    }
-
-    /**
-     * @author Starlev
      * @reason Direct primitive array swapping during shuffle for ObjectArrayList; bypasses virtual get/set and bounds checking (legacy 1.20.1).
      */
     //? if <1.21 {
-    @Overwrite
+    /*@Overwrite
     public static <T> void shuffle(ObjectArrayList<T> list, RandomSource randomsource) {
         int size = list.size();
         if (size <= 1) {
@@ -295,7 +195,7 @@ public abstract class MixinUtil {
             elements[k] = tmp;
         }
     }
-    //?}
+    *///?}
     //? if >=1.21 {
     @Overwrite
     public static <T> void shuffle(List<T> list, RandomSource randomsource) {
