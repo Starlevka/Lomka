@@ -32,9 +32,11 @@ public abstract class MixinAutoStorageIndexBuffer {
     /**
      * Minimum index count requested from {@code ensureStorage} by the warmup
      * injection below. With vanilla's doubling patched to 4x, the first growth
-     * goes to max(4096, req)*4 = 16384 indices (~32 KB SHORT, 16384 quads) on
-     * first use instead of a few dozen, skipping the first six growth
-     * reallocations that otherwise hitch mid-frame during early rendering.
+     * goes to max(4096, req)*4 = 16384 indices (~32 KB of short indices) on first
+     * use instead of a few dozen, skipping the first six growth reallocations that
+     * otherwise hitch mid-frame during early rendering. Indices, not quads: a
+     * triangle list spends three indices per triangle, so 16384 indices cover
+     * roughly 10900 quads, not 16384.
      * hasStorage() then makes subsequent calls a single int compare.
      */
     private static final int WARMUP_INDEX_COUNT = 4096;

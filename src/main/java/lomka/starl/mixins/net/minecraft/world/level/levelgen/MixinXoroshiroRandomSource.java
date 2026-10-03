@@ -60,7 +60,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * {@code net.minecraft.world.level.levelgen.MixinXoroshiroRandomSource=false} in
  * {@code config/lomka-mixins.properties} to restore vanilla behaviour.
  */
-@Mixin(XoroshiroRandomSource.class) // Compatibility with C2ME OpenCL probably
+@Mixin(XoroshiroRandomSource.class)
 public abstract class MixinXoroshiroRandomSource {
 
     /* Constants Xoroshiro128PlusPlus(long, long) substitutes for an all-zero seed; we bypass that constructor. */
@@ -79,7 +79,7 @@ public abstract class MixinXoroshiroRandomSource {
     @Inject(
             method = "setSeed",
             at = @At("HEAD"),
-            cancellable = true
+            cancellable = true  // Compatibility with C2ME OpenCL probably
     )
     private void lomka$reseedInPlace(long seed, CallbackInfo ci) {
         Xoroshiro128PlusPlus generator = this.randomNumberGenerator;

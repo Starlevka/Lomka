@@ -96,9 +96,11 @@ public class MixinMth {
     /**
      * @author Starlev
      * @reason Optimize HSV to ARGB conversion by lazily evaluating sector-specific floats (f5/f6)
-     *         and bypassing modulo division on the normalized fast-path. Channel clamping and the
-     *         default-branch exception replicate vanilla exactly (negative hues reach default just
-     *         like vanilla's switch and must fail loudly, not fall through to sector 5).
+     *         instead of computing every sector up front. The hue still goes through
+     *         {@code (int) (f * 6) % 6}, so the modulo division remains; only the redundant
+     *         per-sector work is gone. Channel clamping and the default-branch exception
+     *         replicate vanilla exactly (negative hues reach default just like vanilla's
+     *         switch and must fail loudly, not fall through to sector 5).
      */
     @Overwrite
     public static int hsvToArgb(float f, float f1, float f2, int i) {

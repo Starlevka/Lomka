@@ -10,6 +10,10 @@
 private fun exactOrRange(min: String, max: String): String =
 	if (min == max) "[$min]" else "[$min,$max]"
 
+private fun mcRange(ctx: Context): String =
+	if (ctx.hasMinecraftMin) exactOrRange(ctx.minecraftMinVersion, ctx.minecraftMaxVersion)
+	else exactOrRange(ctx.stonecutterVersion, ctx.minecraftMaxVersion)
+
 sealed class Loader(val id: String) {
 	abstract val jarTask: String
 	abstract val sourcesJarTask: String
@@ -94,18 +98,7 @@ sealed class Loader(val id: String) {
 		override val modManifestPath = "META-INF/neoforge.mods.toml"
 
 		override fun generateManifest(ctx: Context): String {
-			val mcVersionRange = when {
-				ctx.hasMinecraftMin -> exactOrRange(ctx.minecraftMinVersion, ctx.minecraftMaxVersion)
-				ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion) -> {
-					val maxVersion = ctx.minecraftMaxVersion
-					if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
-						"[${ctx.stonecutterVersion},)"
-					} else {
-						"[${ctx.stonecutterVersion},${maxVersion}]"
-					}
-				}
-				else -> "[${ctx.currentMcVersion}]"
-			}
+			val mcVersionRange = mcRange(ctx)
 			val neoforgeVersionRange = when {
 				// 26.x NeoForge is still beta-only. Every 26.x release carries a "-beta" qualifier,
 				// and Maven orders a qualified version below the same version without one, so a
@@ -160,18 +153,7 @@ sealed class Loader(val id: String) {
 		)
 
 		override fun generateManifest(ctx: Context): String {
-			val mcVersionRange = when {
-				ctx.hasMinecraftMin -> exactOrRange(ctx.minecraftMinVersion, ctx.minecraftMaxVersion)
-				ctx.stonecutter.eval(ctx.stonecutterVersion, "<=" + ctx.currentMcVersion) -> {
-					val maxVersion = ctx.minecraftMaxVersion
-					if (maxVersion == ctx.currentMcVersion && ctx.stonecutterVersion == ctx.currentMcVersion) {
-						"[${ctx.stonecutterVersion},)"
-					} else {
-						"[${ctx.stonecutterVersion},${maxVersion}]"
-					}
-				}
-				else -> "[${ctx.currentMcVersion}]"
-			}
+			val mcVersionRange = mcRange(ctx)
 			val forgeMajor = ctx.forgeMajor.ifBlank {
 				if (ctx.stonecutter.eval(ctx.currentMcVersion, "<1.20")) "43" else "47"
 			}

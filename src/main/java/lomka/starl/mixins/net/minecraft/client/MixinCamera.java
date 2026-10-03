@@ -45,7 +45,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Camera.class)
+@Mixin(value = Camera.class, priority = 500)
 public abstract class MixinCamera {
 
     @Shadow private Vec3 position;
@@ -182,11 +182,15 @@ public abstract class MixinCamera {
 
     /**
      * @author Starlev
-     * @reason Cache fluid-in-camera results to skip block lookups when the camera
-     *         has not moved. Also reuses pre-allocated arrays and MutableBlockPos to
-     *         eliminate per-frame allocation of Vec3/Vec3i objects. FIX vs previous
+     * @reason Reuses pre-allocated scratch arrays and MutableBlockPos to eliminate the
+     *         per-call allocation of vanilla's NearPlane, its three corner Vec3s, the
+     *         Arrays.asList wrapper and its iterator, plus the per-corner BlockPos.
+     *         The fluid and block queries are still executed once per {@code setup()}
+     *         (see {@code lomka$onSetup}) and served from the cached result for the
+     *         remaining calls of the same frame - never across a frame boundary, because
+     *         the world can change while the camera stands still. FIX vs previous
      *         revision: dx[1] (top-left corner, forward+up+left) used up.y (uy) in the
-     *         X-component instead of up.x (ux) — at pitch~0, up.x~0 while up.y~1, so the
+     *         X-component instead of up.x (ux) - at pitch~0, up.x~0 while up.y~1, so the
      *         bug injected an error of roughly the full near-plane half-height into the
      *         X-coordinate of that corner for nearly any camera orientation. Uses the
      *         shadowed level field instead of Minecraft.getInstance().level.
@@ -313,11 +317,20 @@ public abstract class MixinCamera {
     }
 
     /**
-     * Invalidates the cached water/LS fog inputs on camera reset so a freshly re-created
-     * camera never reuses stale positions for underwater/biome fog lookup.
+     * Drops the fluid-in-camera caches at the start of every {@code setup()}, which
+     * {@code GameRenderer#updateCamera} calls exactly once per rendered frame before any
+     * {@code getFluidInCamera()} call of that frame. That makes the cache exactly
+     * frame-scoped: the first caller of a frame pays the vanilla block queries and the
+     * remaining callers reuse the result, while a block, fluid, FOV or window-aspect
+     * change is always picked up by the next frame because it always comes with a new
+     * {@code setup()}. Keying the cache on camera position alone was unsound - a
+     * stationary camera kept {@code FogType.WATER} after the water below it was removed
+     * and skipped the water query entirely once the cache held {@code FogType.NONE}.
+     * Vanilla's block mutations are applied while the level ticks, never during
+     * rendering, so nothing can change under the cache between two calls of one frame.
      */
-    @Inject(method = "reset()V", at = @At("TAIL"))
-    private void onReset(CallbackInfo ci) {
+    @Inject(method = "setup", at = @At("HEAD"))
+    private void lomka$onSetup(CallbackInfo ci) {
         this.lomka$lastWaterPosX        = Integer.MIN_VALUE;
         this.lomka$lastWaterPosY        = Integer.MIN_VALUE;
         this.lomka$lastWaterPosZ        = Integer.MIN_VALUE;

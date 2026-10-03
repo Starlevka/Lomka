@@ -24,21 +24,23 @@ import net.minecraft.world.phys.Vec3;
 import org.lwjgl.openal.AL10;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = Channel.class, priority = 500) // Mojang overwrite first
+@Mixin(Channel.class)
 public abstract class MixinChannel {
 
     @Shadow @Final private int source;
 
-    /**
-     * @author Starlev
-     * @reason Avoid allocating a float[3] array on every sound position update.
-     *         LWJGL 3 provides an overloaded alSource3f which passes primitives directly.
+    /*
+     * Vanilla passes a fresh float[3] to alSourcefv; the alSource3f overload takes the three
+     * components as primitives, so the per-update allocation disappears.
      */
-    @Overwrite
-    public void setSelfPosition(Vec3 vec3) {
+    @Inject(method = "setSelfPosition", at = @At("HEAD"), cancellable = true)
+    private void lomka$setSelfPosition(Vec3 vec3, CallbackInfo ci) {
         AL10.alSource3f(this.source, 4100, (float) vec3.x, (float) vec3.y, (float) vec3.z);
+        ci.cancel();
     }
 }

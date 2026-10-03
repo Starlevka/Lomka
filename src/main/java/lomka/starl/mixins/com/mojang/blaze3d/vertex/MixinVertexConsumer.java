@@ -25,7 +25,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 //? if >=26.1 {
 /*import com.mojang.blaze3d.vertex.QuadInstance;
-import org.joml.Vector3f;
+import org.joml.Matrix3fc;
 *///?}
 //? if >=1.21.11 {
 import net.minecraft.client.model.geom.builders.UVPair;
@@ -55,28 +55,54 @@ import org.spongepowered.asm.mixin.Shadow;
  * Scalar replacements for the allocating default transforms of VertexConsumer.
  *
  * Coverage by era (file is config-gated >=1.21):
- * - addVertex(Matrix4fc/Matrix4f): all eras. The fma chain mirrors JOML
- *   transformPosition term-for-term; w is computed alongside (it pipelines
- *   with the x/y/z chains) and applied via DIRECT division whenever
- *   w != 1.0F - never on vanilla's affine pose matrices - reproducing JOML's
- *   dx/dw form bit-for-bit for non-affine callers.
+ * - addVertex(Matrix4fc/Matrix4f): all eras. Vanilla routes through
+ *   {@code Matrix4f.transformPosition}, which is {@code Vector3f#mulPosition}: the 3x3
+ *   block plus translation, with NO w term and no perspective divide anywhere. The bodies
+ *   below reproduce that sum exactly and drop the temporary Vector3f. Two earlier
+ *   revisions got it wrong, and both looked harmless on every pose matrix the game builds:
+ *   one computed w and divided by it whenever w != 1, silently reimplementing perspective
+ *   projection that vanilla never performs; the other built the same sum from nested
+ *   {@code java.lang.Math.fma}. The second one is the subtle one. JOML writes the identical
+ *   expression, but through {@code org.joml.Math.fma}, and in every JOML release Minecraft
+ *   ships {@code org.joml.Runtime.HAS_Math_fma} is false - each of those calls is a plain
+ *   {@code a * b + c}. A replica that uses the fused JDK intrinsic is therefore off by up to
+ *   one ulp on most vertices while looking like a faithful transcription. The same applies to
+ *   the association: vanilla nests as {@code m00 * x + (m10 * y + (m20 * z + m30))}, while the
+ *   2D transform is a left-to-right sum - both verified bit-identical by
+ *   {@code FormulaParityCrossCheck}. (Figures: scripts/bench.)
  * - addVertexWith2DPose: >=1.21.6 only (Matrix3x2f 3-arg on 1.21.6-1.21.8,
- *   Matrix3x2f 2-arg on 1.21.9-1.21.10, Matrix3x2fc 2-arg >=1.21.11). The 2D
- *   affine transform has no w - plain fma, unconditionally bit-identical.
- * - setNormal(Pose, ...): >=1.21 && <26.1. Reads pose.trustedNormals through
- *   the AW/AT-widened field (gate >=1.21 in lomka.ct / accesstransformer.ct);
- *   on 26.1+ the field stays private and un-widened, so vanilla remains.
+ *   Matrix3x2f 2-arg on 1.21.9-1.21.10, Matrix3x2fc 2-arg >=1.21.11).
+ * - setNormal(Pose, ...): >=1.21 && <26.1. Mirrors {@code Pose#transformNormal}:
+ *   {@code normal.transform(...)} and, when the pose flags untrusted normals,
+ *   {@code normalize()} - which is {@code invsqrt} of the nested length-squared, not a
+ *   reciprocal square root of a different sum.
  * - putBulkData: >=1.21.11 && <26.1 ONLY. Pre-1.21.11 vanilla differs too much
  *   to replicate blind (boolean flag color branches, getUnitVec3i normals,
  *   MemoryStack raw-int extraction at a different vertex stride) - those eras
  *   keep vanilla. 26.1+ replaced putBulkData with putBakedQuad(QuadInstance),
- *   which is optimized below: per-vertex position transform via scalar fma with
- *   the affine w-check, normal delegated to vanilla transformNormal (the private
- *   trustedNormals field is left untouched on 26.x).
+ *   which is optimized below.
+ * - putBakedQuad: >=26.1. The same two JOML expressions on the shape 26.1 introduced.
+ *   Vanilla allocates one {@code Vector3f} for the normal plus one per vertex, five per
+ *   quad; this body allocates none, and {@code BakedQuad#position(int)} /
+ *   {@code #packedUV(int)} are switch dispatches over record fields, so nothing else in
+ *   the loop allocates either.
  *
  * putBulkData additionally inlines vanilla's 8->9-arg delegation; the float[4]
  * and int[4] bridge arrays are real per-quad allocations whenever the large
  * 9-arg default fails to inline into the meshing caller.
+ *
+ * Both quad overwrites and both scalar transforms are verified bit-identical to the vanilla
+ * JOML operation by {@code FormulaParityCrossCheck}, including the untrusted-normal branch
+ * and the 8-arg delegation. (Figures: scripts/bench.)
+ *
+ * Deliberately left vanilla on 26.x:
+ * - {@code putBlockBakedQuad} allocates nothing to begin with - it adds the block offset per
+ *   component instead of transforming a position.
+ * - {@code putBakedQuadWithGlint} (>=26.3 only) has a single call site, the item-foil branch
+ *   in {@code ItemFeatureRenderer}, and cannot be written allocation-free:
+ *   {@code SheetedDecalTextureGenerator#setSheetedDecalUv} takes the position and the normal
+ *   as {@code Vector3f} arguments, and it allocates two more per vertex itself. Removing the
+ *   four position transforms would not change the shape of that path.
  */
 @Mixin(value = VertexConsumer.class, priority = 999) // Sodium/VulkanMod compability
 public interface MixinVertexConsumer {
@@ -88,72 +114,69 @@ public interface MixinVertexConsumer {
     //? if >=1.21.11 {
     @Overwrite
     default VertexConsumer addVertex(Matrix4fc matrix, float x, float y, float z) {
-        float tx = Math.fma(matrix.m00(), x, Math.fma(matrix.m10(), y, Math.fma(matrix.m20(), z, matrix.m30())));
-        float ty = Math.fma(matrix.m01(), x, Math.fma(matrix.m11(), y, Math.fma(matrix.m21(), z, matrix.m31())));
-        float tz = Math.fma(matrix.m02(), x, Math.fma(matrix.m12(), y, Math.fma(matrix.m22(), z, matrix.m32())));
-        float w = Math.fma(matrix.m03(), x, Math.fma(matrix.m13(), y, Math.fma(matrix.m23(), z, matrix.m33())));
-        if (w != 1.0F) {
-            tx /= w;
-            ty /= w;
-            tz /= w;
-        }
-        return this.addVertex(tx, ty, tz);
+        return this.addVertex(
+                matrix.m00() * x + (matrix.m10() * y + (matrix.m20() * z + matrix.m30())),
+                matrix.m01() * x + (matrix.m11() * y + (matrix.m21() * z + matrix.m31())),
+                matrix.m02() * x + (matrix.m12() * y + (matrix.m22() * z + matrix.m32())));
     }
     //?}
     //? if >=1.21 && <1.21.11 {
     /*@Overwrite
     default VertexConsumer addVertex(Matrix4f matrix, float x, float y, float z) {
-        float tx = Math.fma(matrix.m00(), x, Math.fma(matrix.m10(), y, Math.fma(matrix.m20(), z, matrix.m30())));
-        float ty = Math.fma(matrix.m01(), x, Math.fma(matrix.m11(), y, Math.fma(matrix.m21(), z, matrix.m31())));
-        float tz = Math.fma(matrix.m02(), x, Math.fma(matrix.m12(), y, Math.fma(matrix.m22(), z, matrix.m32())));
-        float w = Math.fma(matrix.m03(), x, Math.fma(matrix.m13(), y, Math.fma(matrix.m23(), z, matrix.m33())));
-        if (w != 1.0F) {
-            tx /= w;
-            ty /= w;
-            tz /= w;
-        }
-        return this.addVertex(tx, ty, tz);
+        return this.addVertex(
+                matrix.m00() * x + (matrix.m10() * y + (matrix.m20() * z + matrix.m30())),
+                matrix.m01() * x + (matrix.m11() * y + (matrix.m21() * z + matrix.m31())),
+                matrix.m02() * x + (matrix.m12() * y + (matrix.m22() * z + matrix.m32())));
     }
     *///?}
 
     //? if >=1.21.6 && <1.21.9 {
     /*@Overwrite
     default VertexConsumer addVertexWith2DPose(Matrix3x2f matrix, float x, float y, float z) {
-        float tx = Math.fma(matrix.m00(), x, Math.fma(matrix.m10(), y, matrix.m20()));
-        float ty = Math.fma(matrix.m01(), x, Math.fma(matrix.m11(), y, matrix.m21()));
-        return this.addVertex(tx, ty, z);
+        return this.addVertex(
+                matrix.m00() * x + matrix.m10() * y + matrix.m20(),
+                matrix.m01() * x + matrix.m11() * y + matrix.m21(),
+                z);
     }
     *///?}
     //? if >=1.21.9 && <1.21.11 {
     /*@Overwrite
     default VertexConsumer addVertexWith2DPose(Matrix3x2f matrix, float x, float y) {
-        float tx = Math.fma(matrix.m00(), x, Math.fma(matrix.m10(), y, matrix.m20()));
-        float ty = Math.fma(matrix.m01(), x, Math.fma(matrix.m11(), y, matrix.m21()));
-        return this.addVertex(tx, ty, 0.0F);
+        return this.addVertex(
+                matrix.m00() * x + matrix.m10() * y + matrix.m20(),
+                matrix.m01() * x + matrix.m11() * y + matrix.m21(),
+                0.0F);
     }
     *///?}
     //? if >=1.21.11 {
     @Overwrite
     default VertexConsumer addVertexWith2DPose(Matrix3x2fc matrix, float x, float y) {
-        float tx = Math.fma(matrix.m00(), x, Math.fma(matrix.m10(), y, matrix.m20()));
-        float ty = Math.fma(matrix.m01(), x, Math.fma(matrix.m11(), y, matrix.m21()));
-        return this.addVertex(tx, ty, 0.0F);
+        return this.addVertex(
+                matrix.m00() * x + matrix.m10() * y + matrix.m20(),
+                matrix.m01() * x + matrix.m11() * y + matrix.m21(),
+                0.0F);
     }
     //?}
 
     //? if >=1.21 && <26.1 {
+    /**
+     * @author Starlev
+     * @reason Reproduces {@code Pose#transformNormal} in scalars - the 3x3 normal matrix
+     *         sum plus the {@code normalize()} that an untrusted pose demands - without
+     *         the Vector3f vanilla allocates on every call.
+     */
     @Overwrite
     default VertexConsumer setNormal(PoseStack.Pose pose, float x, float y, float z) {
         Matrix3fc normal = pose.normal();
-        float nx = Math.fma(normal.m00(), x, Math.fma(normal.m10(), y, normal.m20() * z));
-        float ny = Math.fma(normal.m01(), x, Math.fma(normal.m11(), y, normal.m21() * z));
-        float nz = Math.fma(normal.m02(), x, Math.fma(normal.m12(), y, normal.m22() * z));
+        float nx = normal.m00() * x + (normal.m10() * y + normal.m20() * z);
+        float ny = normal.m01() * x + (normal.m11() * y + normal.m21() * z);
+        float nz = normal.m02() * x + (normal.m12() * y + normal.m22() * z);
 
         if (!pose.trustedNormals) {
-            float invLen = org.joml.Math.invsqrt(Math.fma(nx, nx, Math.fma(ny, ny, nz * nz)));
-            nx *= invLen;
-            ny *= invLen;
-            nz *= invLen;
+            float inv = org.joml.Math.invsqrt(nx * nx + (ny * ny + nz * nz));
+            nx *= inv;
+            ny *= inv;
+            nz *= inv;
         }
 
         return this.setNormal(nx, ny, nz);
@@ -166,12 +189,12 @@ public interface MixinVertexConsumer {
         Matrix3fc normalMat = pose.normal();
         Vector3fc unit = quad.direction().getUnitVec3f();
         float dx = unit.x(), dy = unit.y(), dz = unit.z();
-        float nx = Math.fma(normalMat.m00(), dx, Math.fma(normalMat.m10(), dy, normalMat.m20() * dz));
-        float ny = Math.fma(normalMat.m01(), dx, Math.fma(normalMat.m11(), dy, normalMat.m21() * dz));
-        float nz = Math.fma(normalMat.m02(), dx, Math.fma(normalMat.m12(), dy, normalMat.m22() * dz));
+        float nx = normalMat.m00() * dx + (normalMat.m10() * dy + normalMat.m20() * dz);
+        float ny = normalMat.m01() * dx + (normalMat.m11() * dy + normalMat.m21() * dz);
+        float nz = normalMat.m02() * dx + (normalMat.m12() * dy + normalMat.m22() * dz);
 
         if (!pose.trustedNormals) {
-            float invLen = org.joml.Math.invsqrt(Math.fma(nx, nx, Math.fma(ny, ny, nz * nz)));
+            float invLen = org.joml.Math.invsqrt(nx * nx + (ny * ny + nz * nz));
             nx *= invLen;
             ny *= invLen;
             nz *= invLen;
@@ -180,50 +203,41 @@ public interface MixinVertexConsumer {
         Matrix4f poseMat = pose.pose();
         int color = ARGB.colorFromFloat(a, r, g, b);
         int lightWithEmission = LightTexture.lightCoordsWithEmission(light, quad.lightEmission());
-        boolean affine = poseMat.m03() == 0.0F && poseMat.m13() == 0.0F && poseMat.m23() == 0.0F && poseMat.m33() == 1.0F;
-        float m00 = poseMat.m00(), m10 = poseMat.m10(), m20 = poseMat.m20(), m30 = poseMat.m30();
-        float m01 = poseMat.m01(), m11 = poseMat.m11(), m21 = poseMat.m21(), m31 = poseMat.m31();
-        float m02 = poseMat.m02(), m12 = poseMat.m12(), m22 = poseMat.m22(), m32 = poseMat.m32();
-        float m03 = poseMat.m03(), m13 = poseMat.m13(), m23 = poseMat.m23(), m33 = poseMat.m33();
 
         {
             Vector3fc p = quad.position(0);
             long packedUV = quad.packedUV(0);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
         }
         {
             Vector3fc p = quad.position(1);
             long packedUV = quad.packedUV(1);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
         }
         {
             Vector3fc p = quad.position(2);
             long packedUV = quad.packedUV(2);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
         }
         {
             Vector3fc p = quad.position(3);
             long packedUV = quad.packedUV(3);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, lightWithEmission, nx, ny, nz);
         }
     }
@@ -233,12 +247,12 @@ public interface MixinVertexConsumer {
         Matrix3fc normalMat = pose.normal();
         Vector3fc unit = quad.direction().getUnitVec3f();
         float dx = unit.x(), dy = unit.y(), dz = unit.z();
-        float nx = Math.fma(normalMat.m00(), dx, Math.fma(normalMat.m10(), dy, normalMat.m20() * dz));
-        float ny = Math.fma(normalMat.m01(), dx, Math.fma(normalMat.m11(), dy, normalMat.m21() * dz));
-        float nz = Math.fma(normalMat.m02(), dx, Math.fma(normalMat.m12(), dy, normalMat.m22() * dz));
+        float nx = normalMat.m00() * dx + (normalMat.m10() * dy + normalMat.m20() * dz);
+        float ny = normalMat.m01() * dx + (normalMat.m11() * dy + normalMat.m21() * dz);
+        float nz = normalMat.m02() * dx + (normalMat.m12() * dy + normalMat.m22() * dz);
 
         if (!pose.trustedNormals) {
-            float invLen = org.joml.Math.invsqrt(Math.fma(nx, nx, Math.fma(ny, ny, nz * nz)));
+            float invLen = org.joml.Math.invsqrt(nx * nx + (ny * ny + nz * nz));
             nx *= invLen;
             ny *= invLen;
             nz *= invLen;
@@ -246,11 +260,6 @@ public interface MixinVertexConsumer {
 
         Matrix4f poseMat = pose.pose();
         int emission = quad.lightEmission();
-        boolean affine = poseMat.m03() == 0.0F && poseMat.m13() == 0.0F && poseMat.m23() == 0.0F && poseMat.m33() == 1.0F;
-        float m00 = poseMat.m00(), m10 = poseMat.m10(), m20 = poseMat.m20(), m30 = poseMat.m30();
-        float m01 = poseMat.m01(), m11 = poseMat.m11(), m21 = poseMat.m21(), m31 = poseMat.m31();
-        float m02 = poseMat.m02(), m12 = poseMat.m12(), m22 = poseMat.m22(), m32 = poseMat.m32();
-        float m03 = poseMat.m03(), m13 = poseMat.m13(), m23 = poseMat.m23(), m33 = poseMat.m33();
 
         {
             Vector3fc p = quad.position(0);
@@ -259,10 +268,9 @@ public interface MixinVertexConsumer {
             float br = brightness[0];
             int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
             int light = LightTexture.lightCoordsWithEmission(lights[0], emission);
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
         }
         {
@@ -272,10 +280,9 @@ public interface MixinVertexConsumer {
             float br = brightness[1];
             int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
             int light = LightTexture.lightCoordsWithEmission(lights[1], emission);
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
         }
         {
@@ -285,10 +292,9 @@ public interface MixinVertexConsumer {
             float br = brightness[2];
             int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
             int light = LightTexture.lightCoordsWithEmission(lights[2], emission);
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
         }
         {
@@ -298,10 +304,9 @@ public interface MixinVertexConsumer {
             float br = brightness[3];
             int color = ARGB.colorFromFloat(a, br * r, br * g, br * b);
             int light = LightTexture.lightCoordsWithEmission(lights[3], emission);
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
+            float vx = poseMat.m00() * px + (poseMat.m10() * py + (poseMat.m20() * pz + poseMat.m30()));
+            float vy = poseMat.m01() * px + (poseMat.m11() * py + (poseMat.m21() * pz + poseMat.m31()));
+            float vz = poseMat.m02() * px + (poseMat.m12() * py + (poseMat.m22() * pz + poseMat.m32()));
             this.addVertex(vx, vy, vz, color, UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), overlay, light, nx, ny, nz);
         }
     }
@@ -311,54 +316,62 @@ public interface MixinVertexConsumer {
     /*@Overwrite
     default void putBakedQuad(PoseStack.Pose pose, net.minecraft.client.resources.model.geometry.BakedQuad quad, QuadInstance instance) {
         Matrix4fc matrix = pose.pose();
+        Matrix3fc normalMat = pose.normal();
         Vector3fc unit = quad.direction().getUnitVec3f();
-        Vector3f normal = pose.transformNormal(unit, new Vector3f());
+        float dx = unit.x(), dy = unit.y(), dz = unit.z();
+        float nx = normalMat.m00() * dx + (normalMat.m10() * dy + normalMat.m20() * dz);
+        float ny = normalMat.m01() * dx + (normalMat.m11() * dy + normalMat.m21() * dz);
+        float nz = normalMat.m02() * dx + (normalMat.m12() * dy + normalMat.m22() * dz);
+
+        if (!pose.trustedNormals) {
+            float inv = org.joml.Math.invsqrt(nx * nx + (ny * ny + nz * nz));
+            nx *= inv;
+            ny *= inv;
+            nz *= inv;
+        }
+
         int emission = quad.materialInfo().lightEmission();
-        boolean affine = matrix.m03() == 0.0F && matrix.m13() == 0.0F && matrix.m23() == 0.0F && matrix.m33() == 1.0F;
-        float m00 = matrix.m00(), m10 = matrix.m10(), m20 = matrix.m20(), m30 = matrix.m30();
-        float m01 = matrix.m01(), m11 = matrix.m11(), m21 = matrix.m21(), m31 = matrix.m31();
-        float m02 = matrix.m02(), m12 = matrix.m12(), m22 = matrix.m22(), m32 = matrix.m32();
-        float m03 = matrix.m03(), m13 = matrix.m13(), m23 = matrix.m23(), m33 = matrix.m33();
+        int overlay = instance.overlayCoords();
 
         {
             Vector3fc p = quad.position(0);
             long packedUV = quad.packedUV(0);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
-            this.addVertex(vx, vy, vz, instance.getColor(0), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(0, emission), normal.x(), normal.y(), normal.z());
+            this.addVertex(matrix.m00() * px + (matrix.m10() * py + (matrix.m20() * pz + matrix.m30())),
+                    matrix.m01() * px + (matrix.m11() * py + (matrix.m21() * pz + matrix.m31())),
+                    matrix.m02() * px + (matrix.m12() * py + (matrix.m22() * pz + matrix.m32())),
+                    instance.getColor(0), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV),
+                    overlay, instance.getLightCoordsWithEmission(0, emission), nx, ny, nz);
         }
         {
             Vector3fc p = quad.position(1);
             long packedUV = quad.packedUV(1);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
-            this.addVertex(vx, vy, vz, instance.getColor(1), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(1, emission), normal.x(), normal.y(), normal.z());
+            this.addVertex(matrix.m00() * px + (matrix.m10() * py + (matrix.m20() * pz + matrix.m30())),
+                    matrix.m01() * px + (matrix.m11() * py + (matrix.m21() * pz + matrix.m31())),
+                    matrix.m02() * px + (matrix.m12() * py + (matrix.m22() * pz + matrix.m32())),
+                    instance.getColor(1), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV),
+                    overlay, instance.getLightCoordsWithEmission(1, emission), nx, ny, nz);
         }
         {
             Vector3fc p = quad.position(2);
             long packedUV = quad.packedUV(2);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
-            this.addVertex(vx, vy, vz, instance.getColor(2), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(2, emission), normal.x(), normal.y(), normal.z());
+            this.addVertex(matrix.m00() * px + (matrix.m10() * py + (matrix.m20() * pz + matrix.m30())),
+                    matrix.m01() * px + (matrix.m11() * py + (matrix.m21() * pz + matrix.m31())),
+                    matrix.m02() * px + (matrix.m12() * py + (matrix.m22() * pz + matrix.m32())),
+                    instance.getColor(2), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV),
+                    overlay, instance.getLightCoordsWithEmission(2, emission), nx, ny, nz);
         }
         {
             Vector3fc p = quad.position(3);
             long packedUV = quad.packedUV(3);
             float px = p.x(), py = p.y(), pz = p.z();
-            float vx = Math.fma(m00, px, Math.fma(m10, py, Math.fma(m20, pz, m30)));
-            float vy = Math.fma(m01, px, Math.fma(m11, py, Math.fma(m21, pz, m31)));
-            float vz = Math.fma(m02, px, Math.fma(m12, py, Math.fma(m22, pz, m32)));
-            if (!affine) { float w = Math.fma(m03, px, Math.fma(m13, py, Math.fma(m23, pz, m33))); vx /= w; vy /= w; vz /= w; }
-            this.addVertex(vx, vy, vz, instance.getColor(3), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV), instance.overlayCoords(), instance.getLightCoordsWithEmission(3, emission), normal.x(), normal.y(), normal.z());
+            this.addVertex(matrix.m00() * px + (matrix.m10() * py + (matrix.m20() * pz + matrix.m30())),
+                    matrix.m01() * px + (matrix.m11() * py + (matrix.m21() * pz + matrix.m31())),
+                    matrix.m02() * px + (matrix.m12() * py + (matrix.m22() * pz + matrix.m32())),
+                    instance.getColor(3), UVPair.unpackU(packedUV), UVPair.unpackV(packedUV),
+                    overlay, instance.getLightCoordsWithEmission(3, emission), nx, ny, nz);
         }
     }
     *///?}

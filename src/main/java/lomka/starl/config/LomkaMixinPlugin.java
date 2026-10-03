@@ -185,6 +185,10 @@ public final class LomkaMixinPlugin implements IMixinConfigPlugin {
         // null-check respects explicit -Djoml.fastmath=false user override
         if (System.getProperty("joml.fastmath") == null) {
             System.setProperty("joml.fastmath", "true");
+        if (System.getProperty("joml.sinLookup") == null)
+            System.setProperty("joml.sinLookup", "true");
+        if (System.getProperty("joml.sinLookup.bits") == null) 
+            System.setProperty("joml.sinLookup.bits", "11");
         }
         lomka$loadOptions();
     }

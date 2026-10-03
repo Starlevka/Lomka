@@ -41,8 +41,8 @@ public final class ResourceEntry<S> {
     public final int packIndex;
 
     public ResourceEntry(PackResources source, S resource, int packIndex) {
-        this.source = source;
-        this.resource = resource;
+        this.source    = source;
+        this.resource  = resource;
         this.packIndex = packIndex;
     }
 }

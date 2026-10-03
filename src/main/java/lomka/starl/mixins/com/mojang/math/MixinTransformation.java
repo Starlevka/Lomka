@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Transformation.class)
-public abstract class MixinTransformationInverse {
+public abstract class MixinTransformation {
 
     @Shadow @Final private static Transformation IDENTITY;
 

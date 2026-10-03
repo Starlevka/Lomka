@@ -87,19 +87,6 @@ public abstract class MixinUtil {
 
     /**
      * @author Starlev
-     * @reason Branch-efficient 32-bit integer arithmetic without 64-bit promotion or library calls.
-     */
-    //? if >=1.21.6 {
-    @Overwrite
-    public static int growByHalf(int i, int j) {
-        long grown = (long) i + (long) (i >> 1);
-        grown = Math.min(grown, 2147483639L);
-        return (int) Math.max(grown, (long) j);
-    }
-    //?}
-
-    /**
-     * @author Starlev
      * @reason Specializes 2x2 and 3x3 recipe symmetry checks; replaces inner multiplication with stepped pointers.
      */
     //? if >=1.21 {

@@ -44,9 +44,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FallbackResourceManager.class)
 public abstract class MixinFallbackResourceManager {
@@ -94,22 +96,20 @@ public abstract class MixinFallbackResourceManager {
         throw new AssertionError();
     }
 
-    /**
-     * @author Starlev
-     * @reason Fast-path metadata check to eliminate thousands of useless .mcmeta Identifier allocations and Map lookups;
-     *         a derived base->meta index (built after pack filtering, so filterAll keeps exact vanilla
-     *         META-id semantics across all versions) makes the final merge a zero-alloc direct get per file;
-     *         cached static logger skips a synchronized registry lookup per call. Debug-wrapped input stream
-     *         is preserved when log is in debug to keep LeakedResourceWarning parity with vanilla. Composes
-     *         with ModernFix's FilePackResources index and quick-pack's entries() wrap: both serve the
-     *         per-pack listResources callback we consume, never the methods overwritten here.
-     *         (Measured figures live in scripts/bench, not in source comments.)
+    /*
+     * Fast-path metadata check: eliminates thousands of useless .mcmeta Identifier allocations and Map lookups.
+     * A derived base->meta index (built after pack filtering, so filterAll keeps exact vanilla META-id
+     * semantics across all versions) makes the final merge a zero-alloc direct get per file; the cached
+     * static logger skips a synchronized registry lookup per call. Debug-wrapped input stream is preserved
+     * when log is in debug to keep LeakedResourceWarning parity with vanilla. Composes with ModernFix's
+     * FilePackResources index and quick-pack's entries() wrap: both serve the per-pack listResources
+     * callback we consume, never this method.
      */
-    @Overwrite
+    @Inject(method = "listResources", at = @At("HEAD"), cancellable = true)
     //? if >=26.3 {
-    /*public Map<Identifier, Resource> listResources(String directory, ResourceManager.Selector filter) {*/
+    /*private void lomka$listResources(String directory, ResourceManager.Selector filter, CallbackInfoReturnable<Map<Identifier, Resource>> cir) {*/
     //?} else {
-    public Map<Identifier, Resource> listResources(String directory, Predicate<Identifier> filter) {
+    private void lomka$listResources(String directory, Predicate<Identifier> filter, CallbackInfoReturnable<Map<Identifier, Resource>> cir) {
     //?}
         Map<Identifier, ResourceEntry<IoSupplier<InputStream>>> fileEntries = new HashMap<>();
         Map<Identifier, ResourceEntry<IoSupplier<InputStream>>> metaEntries = new HashMap<>();
@@ -144,7 +144,8 @@ public abstract class MixinFallbackResourceManager {
                         : entry.resource;
                 result.put(id, new Resource(entry.source, supplier));
             });
-            return result;
+            cir.setReturnValue(result);
+            return;
         }
 
         // Derived base->meta index: built AFTER all pack filters ran, so filterAll keeps
@@ -171,6 +172,6 @@ public abstract class MixinFallbackResourceManager {
             }
         });
 
-        return result;
+        cir.setReturnValue(result);
     }
 }

@@ -20,11 +20,16 @@
 package lomka.starl.mixins.net.minecraft.world.phys.shapes;
 
 import com.google.common.collect.Lists;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.util.Collections;
 import java.util.List;
+import lomka.starl.duck.IDiscreteVoxelShape;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.DiscreteVoxelShape;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,9 +38,51 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(VoxelShape.class)
 public abstract class MixinVoxelShape {
 
-    @Shadow public abstract void forAllBoxes(Shapes.DoubleLineConsumer shapes_doublelineconsumer);
+    @Shadow @Final protected DiscreteVoxelShape shape;
+    @Shadow public abstract DoubleList getCoords(Direction.Axis direction_axis);
+    @Shadow protected abstract double get(Direction.Axis direction_axis, int i);
+    @Shadow public abstract boolean isEmpty();
 
     @Unique private volatile List<AABB> lomka$aabbCache;
+
+    /**
+     * @author Starlev
+     * @reason Replays the shape's cached greedy decomposition instead of re-running it. Vanilla
+     *         routes every call through {@code DiscreteVoxelShape#forAllBoxes}, which clones the
+     *         whole BitSet and decomposes it destructively - about 4.3k cell probes even for a full
+     *         block. The boxes live in cell indices and never read the coordinate lists, so one
+     *         array serves every wrapper of the same shape, and only the index -&gt; double mapping
+     *         below is per-wrapper - left exactly as vanilla wrote it. Shapes whose decomposition
+     *         was too fragmented to retain, and any shape that does not expose the cache, keep
+     *         vanilla's path.
+     */
+    @Overwrite
+    public void forAllBoxes(Shapes.DoubleLineConsumer consumer) {
+        if (this.shape instanceof IDiscreteVoxelShape cache) {
+            int[] indices = cache.lomka$boxes();
+            if (indices.length > 0) {
+                for (int i = 0; i < indices.length; i += 6) {
+                    consumer.consume(
+                            this.getCoords(Direction.Axis.X).getDouble(indices[i]),
+                            this.getCoords(Direction.Axis.Y).getDouble(indices[i + 1]),
+                            this.getCoords(Direction.Axis.Z).getDouble(indices[i + 2]),
+                            this.getCoords(Direction.Axis.X).getDouble(indices[i + 3]),
+                            this.getCoords(Direction.Axis.Y).getDouble(indices[i + 4]),
+                            this.getCoords(Direction.Axis.Z).getDouble(indices[i + 5]));
+                }
+                return;
+            }
+            if (this.isEmpty()) {
+                return;
+            }
+        }
+
+        this.shape.forAllBoxes((i, j, k, l, i1, j1) -> {
+            consumer.consume(
+                    this.get(Direction.Axis.X, i), this.get(Direction.Axis.Y, j), this.get(Direction.Axis.Z, k),
+                    this.get(Direction.Axis.X, l), this.get(Direction.Axis.Y, i1), this.get(Direction.Axis.Z, j1));
+        }, true);
+    }
 
     /**
      * @author Starlev

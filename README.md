@@ -12,7 +12,7 @@
 <a href="https://github.com/Starlevka/Lomka/wiki"><img alt="Wiki" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/documentation/gitbook_vector.svg"></a>
 </div>
 
-An open source mod with mix of small optimizations for your Minecraft. **Fewer stutters, slightly improvements: more FPS (up to 4.58% increase depends on your hardware), faster resource loading, world generation and reduces memory usage**.
+An open source mod with mix of small optimizations for your Minecraft. **Fewer stutters, faster resource loading, world generation, and lower memory usage**.
 
 ## Optimizations
 - Faster hot-path math and color engine
@@ -24,7 +24,7 @@ An open source mod with mix of small optimizations for your Minecraft. **Fewer s
 - Bulk NBT array reads for world, player and structure data on the server side (chunks, heightmaps, saves load in blocks instead of per-element stream calls)
 - Faster heightmap priming for world generation
 - Cached font glyph advances for faster text rendering
-- Playing a sound no longer waits for the sound thread
+- Playing a sound skips the wait for the sound thread
 - Fewer native buffer reallocations (audio streaming and mesh building)
 - Faster block and section traversal, plus in-place worldgen RNG reseeds (also, check incompatibilities list)
 - Cached uniform palette lookups
@@ -83,5 +83,5 @@ Lomka was created by Starlev and contributors.
 
 Also, other mods credits for their's effecient work!
 - `VecDeltaCodec` zero-delta path adapted from Collections Of Optimizations by Misanthropy (LGPL-3.0).
-- `Vec3i` PhiMix hashing credits efficient_hashing by ZZZank (CC0-1.0).
+- `Vec3i` PhiMix hashing credits EfficientHashing by ZZZank (CC0-1.0).
 - The legacy hardware-blit presentation path references from Tritium (MIT), but popularized in VulkanMod (LGPL-3.0-only).

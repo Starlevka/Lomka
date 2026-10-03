@@ -20,6 +20,7 @@
 package lomka.starl.mixins.net.minecraft.world.level.chunk;
 
 import lomka.starl.duck.IPalettedContainer;
+import lomka.starl.utils.cache.UniformPaletteCache;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -36,11 +37,15 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
     @Shadow private volatile PalettedContainer.Data<T> data;
 
     /*
-     * Uniform-section cache as a (value, Data) pair with no allocation: the value is stored
-     * plainly and published by the volatile store of the matching Data reference, so a reader
-     * that acquires on the volatile Data load always observes a consistent pair. Only uniform
-     * sections (zero-bit storage + single-entry palette) are cached; heterogeneous ones never
-     * allocate and fall through to the vanilla lookup.
+     * Uniform-section cache: one immutable (Data, value) holder behind a single volatile
+     * reference, so the pair is published atomically. A plain value field next to a volatile Data
+     * field is NOT equivalent - two concurrent fillers can interleave and leave the Data
+     * reference paired with another section's value, which would hand back a wrong block. The
+     * holder is allocated once per uniform Data generation, not per read, so the hot path stays
+     * one volatile load, one identity check and one plain load.
+     *
+     * Only uniform sections (zero-bit storage + single-entry palette) are cached; heterogeneous
+     * ones never allocate and fall through to the vanilla lookup.
      *
      * Identity is a valid key because a uniform section cannot change value under a stable Data:
      * ZeroBitStorage#set/getAndSet are validated no-ops that require value 0, so any real change
@@ -51,12 +56,11 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
      * The set/getAndSet/getAndSetUnchecked hooks this mixin used to carry were provably
      * redundant (zero-bit storage cannot be written) and cost an injected call per block write.
      */
-    @Unique private volatile PalettedContainer.Data<T> lomka$uniformData;
-    @Unique private T lomka$uniformValue;
+    @Unique private volatile UniformPaletteCache<T> lomka$uniform;
 
     @Unique
     private void lomka$invalidateUniform() {
-        this.lomka$uniformData = null;
+        this.lomka$uniform = null;
     }
 
     @Inject(method = "read", at = @At("HEAD"))
@@ -73,9 +77,10 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
     @Unique
     public Object lomka$uniformValue() {
         PalettedContainer.Data<T> d = this.data;
+        UniformPaletteCache<T> cached = this.lomka$uniform;
 
-        if (this.lomka$uniformData == d) {
-            return this.lomka$uniformValue;
+        if (cached != null && cached.data() == d) {
+            return cached.value();
         }
 
         if (d.storage().getBits() != 0 || d.palette().getSize() != 1) {
@@ -83,8 +88,7 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
         }
 
         T value = d.palette().valueFor(0);
-        this.lomka$uniformValue = value;
-        this.lomka$uniformData = d;
+        this.lomka$uniform = new UniformPaletteCache<>(d, value);
 
         return value;
     }
@@ -92,9 +96,10 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
     /**
      * @author Starlev
      * @reason Caches the value of zero-bit uniform palettes (air, deep stone, ocean water) so a
-     *         read costs one volatile load plus a reference identity check and a plain value
-     *         load, skipping the quadrimorphic Palette#valueFor dispatch and BitStorage#get bit
-     *         arithmetic. Non-uniform sections take the exact vanilla path.
+     *         read costs one volatile load, an identity check and a plain load, skipping the
+     *         quadrimorphic Palette#valueFor dispatch and BitStorage#get bit arithmetic. The pair
+     *         lives in one immutable holder so concurrent fillers cannot publish a mismatched
+     *         Data/value combination. Non-uniform sections take the exact vanilla path.
      *         Declared public even though vanilla's is protected: Mixin resolves the target
      *         signature as PUBLIC and rejects an @Overwrite that would reduce it, which aborts
      *         the launch with "cannot reduce visibility of PUBLIC target method".
@@ -103,16 +108,16 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
     @Overwrite
     public T get(int index) {
         PalettedContainer.Data<T> d = this.data;
+        UniformPaletteCache<T> cached = this.lomka$uniform;
 
-        if (this.lomka$uniformData == d) {
-            return this.lomka$uniformValue;
+        if (cached != null && cached.data() == d) {
+            return cached.value();
         }
 
         T value = d.palette().valueFor(d.storage().get(index));
 
         if (d.storage().getBits() == 0 && d.palette().getSize() == 1) {
-            this.lomka$uniformValue = value;
-            this.lomka$uniformData = d;
+            this.lomka$uniform = new UniformPaletteCache<>(d, value);
         }
 
         return value;
