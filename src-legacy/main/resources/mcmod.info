@@ -1,0 +1,17 @@
+[{
+	"modid": "lomka",
+	"name": "Lomka",
+	"version": "${version}",
+	"mcversion": "${mcversion}",
+	"description": "Mix of small optimizations for your Minecraft",
+	"authorList": ["Starlev"],
+	"url": "https://github.com/Starlevka/Lomka",
+	"updateUrl": "",
+	"logoFile": "logo.png"
+	/*? if >=1.8 { */
+	,"useDependencyInformation": true
+	,"dependencies": [
+		"mixinbooter:[11.17,)"
+	]
+	/*? } */
+}]

@@ -50,6 +50,7 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
 	 *         per-block path of light propagation. The collector is initialized lazily
 	 *         to avoid any dependency on target-field initialization order.
 	 */
+	//? if >=1.20 {
 	@Overwrite
 	protected void setStoredLevel(long i, int j) {
 		long k = SectionPos.blockToSection(i);
@@ -68,4 +69,49 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
 		}
 		SectionPos.aroundAndAtBlockPos(i, collector);
 	}
+	//? }
+
+	//? if >=1.18 && <1.20 {
+	/*@Overwrite
+	protected void setStoredLevel(long i, int j) {
+		long k = SectionPos.blockToSection(i);
+
+		if (this.changedSections.add(k)) {
+			this.updatingSectionData.copyDataLayer(k);
+		}
+
+		DataLayer datalayer = this.getDataLayer(k, true);
+		datalayer.set(SectionPos.sectionRelative(BlockPos.getX(i)), SectionPos.sectionRelative(BlockPos.getY(i)), SectionPos.sectionRelative(BlockPos.getZ(i)), j);
+		LongConsumer collector = this.lomka$affectedSectionsCollector;
+		if (collector == null) {
+			collector = this.lomka$affectedSectionsCollector = this.sectionsAffectedByLightUpdates::add;
+		}
+		SectionPos.aroundAndAtBlockPos(i, collector);
+	}
+	*///? }
+
+	//? if <1.18 {
+	/*@Overwrite
+	protected void setStoredLevel(long i, int j) {
+		long k = SectionPos.blockToSection(i);
+
+		if (this.changedSections.add(k)) {
+			this.updatingSectionData.copyDataLayer(k);
+		}
+
+		DataLayer datalayer = this.getDataLayer(k, true);
+		datalayer.set(SectionPos.sectionRelative(BlockPos.getX(i)), SectionPos.sectionRelative(BlockPos.getY(i)), SectionPos.sectionRelative(BlockPos.getZ(i)), j);
+		LongConsumer collector = this.lomka$affectedSectionsCollector;
+		if (collector == null) {
+			collector = this.lomka$affectedSectionsCollector = this.sectionsAffectedByLightUpdates::add;
+		}
+		for (int l = -1; l <= 1; ++l) {
+			for (int i1 = -1; i1 <= 1; ++i1) {
+				for (int j1 = -1; j1 <= 1; ++j1) {
+					collector.accept(SectionPos.blockToSection(BlockPos.offset(i, i1, j1, l)));
+				}
+			}
+		}
+	}
+	*///? }
 }

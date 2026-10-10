@@ -1,0 +1,44 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven { url 'https://maven.minecraftforge.net' }
+	}
+	dependencies {
+		classpath 'com.anatawa12.forge:ForgeGradle:1.2-1.1.1'
+	}
+}
+
+apply plugin: 'forge'
+apply from: rootProject.file('../../gradle/preprocess.gradle')
+apply from: rootProject.file('../dependencies.gradle')
+
+ext.lomkaMcVersion = '1.7.10'
+ext.lomkaPreprocessTask = 'preprocessLegacySources'
+ext.lomkaMixinConfigs = null             
+ext.lomkaRefmap = null                  
+ext.lomkaConfigCopy = 'unimixins.json'  
+ext.lomkaReobfTask = 'reobf'            
+ext.lomkaNoAnnotationProcessing = true
+
+apply from: rootProject.file('../common.gradle')
+
+group = 'lomka.starl'
+version = '0.7.0'
+
+tasks.jar {
+	archiveFileName.set("lomka-${version}-forge+1.7.10.jar")
+}
+
+def forgeVersion = '1.7.10-10.13.4.1614-1.7.10'
+def mappingsVersion = 'stable_12'
+
+minecraft {
+	version = forgeVersion
+	runDir = 'run'
+	mappings = mappingsVersion
+}
+
+dependencies {
+	compileOnly lomkaVersions.uniMixins
+	compileOnly lomkaVersions.forgeUniversal
+}

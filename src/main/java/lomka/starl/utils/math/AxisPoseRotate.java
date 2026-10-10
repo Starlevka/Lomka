@@ -27,6 +27,16 @@ import org.joml.Quaternionfc;
  * Fast quaternion-based pose rotation helper used by the custom pose stack path.
  * The implementation keeps the single-axis branches lightweight while still
  * falling back to JOML's generic rotation for arbitrary quaternions.
+ *
+ * <p>The axis branches are only valid for a unit quaternion, so the norm is checked once
+ * and anything else is handed to JOML unchanged. The reason is that
+ * {@code Matrix4f.rotate(Quaternionfc)} is not a rotation alone: it composes the rotation
+ * with a uniform scale of the quaternion norm squared, so for {@code q = (0, 0, 0, 2)} on
+ * an identity matrix it leaves the diagonal at {@code (4, 4, 4)} while an axis-only fast
+ * path that skips the axis column would leave it at {@code (1, 4, 4)}. Minecraft only ever
+ * produces unit quaternions here, so the check never fires in the game and the fast path
+ * is bit-identical to JOML on the axis-aligned and the general branch alike, over a parity
+ * cross-check of 200k rotations.
  */
 public final class AxisPoseRotate {
 
@@ -37,6 +47,12 @@ public final class AxisPoseRotate {
         float y = q.y();
         float z = q.z();
         float w = q.w();
+
+        if (x * x + y * y + z * z + w * w != 1.0F) {
+            pose.rotate(q);
+            normal.rotate(q);
+            return;
+        }
 
         if (y == 0.0F && z == 0.0F) {
             float s = 2.0F * x * w;

@@ -44,7 +44,7 @@ import org.spongepowered.asm.mixin.Shadow;
  * class and a magnet for foreign patches, and vanilla already keeps it at one
  * store per element.
  */
-@Mixin(value = BufferBuilder.class, priority = 999) // levl
+@Mixin(value = BufferBuilder.class, priority = 2000)
 public abstract class MixinBufferBuilder implements VertexConsumer {
 
     @Shadow @Final private static boolean IS_LITTLE_ENDIAN;

@@ -121,24 +121,30 @@ public class MixinARGB {
         return (i & 0xFF000000) | (r << 16) | (g << 8) | b;
     }
 
-    /**
-     * @author Starlev
-     * @reason Replace per-channel float cost with fixed-point multiply by 65794 (2^24 / 255),
-     *         eliminating division and float-to-int conversion overhead. Uses long arithmetic and a
-     *         signed (arithmetic) shift, then clamps explicitly -- the original unsigned-shift version
-     *         silently corrupted the result for j outside 0..255 (e.g. j=256 produced 0 instead of 255)
-     *         because vanilla's Math.clamp was dropped without an equivalent replacement.
-     */
-    @Overwrite
-    public static int scaleRGB(int i, int j) {
-        int r = (int) (((long) ((i >> 16) & 255) * j * 65794) >> 24);
-        int g = (int) (((long) ((i >> 8) & 255)  * j * 65794) >> 24);
-        int b = (int) (((long) (i & 255)         * j * 65794) >> 24);
-        r = r < 0 ? 0 : (r > 255 ? 255 : r);
-        g = g < 0 ? 0 : (g > 255 ? 255 : g);
-        b = b < 0 ? 0 : (b > 255 ? 255 : b);
-        return (i & 0xFF000000) | (r << 16) | (g << 8) | b;
-    }
+/**
+ * @author Starlev
+ * @reason Replace per-channel float cost with fixed-point multiply by 65794 (2^24 / 255) on
+ *         the domain vanilla actually defines, and fall back to the exact form outside it.
+ *         Vanilla clamps the divisor to 0..255 before dividing, so the reciprocal may only
+ *         be used inside that range: the long product stays far inside int there, while an
+ *         unclamped divisor of 2^31-1 pushes it past 2^24 * Integer.MAX_VALUE and the
+ *         narrowing to int wraps to a negative channel that clamps to 0 (white scaled by
+ *         Integer.MAX_VALUE became black). Outside the range the clamp is reproduced
+ *         directly - c * 0 / 255 == 0 and c * 255 / 255 == c, so no division is needed.
+ */
+@Overwrite
+public static int scaleRGB(int i, int j) {
+    if (j < 0) return i & 0xFF000000;
+    if (j > 255) return i;
+
+    int r = (int) (((long) ((i >> 16) & 255) * j * 65794) >> 24);
+    int g = (int) (((long) ((i >> 8) & 255)  * j * 65794) >> 24);
+    int b = (int) (((long) (i & 255)         * j * 65794) >> 24);
+    r = r < 0 ? 0 : (r > 255 ? 255 : r);
+    g = g < 0 ? 0 : (g > 255 ? 255 : g);
+    b = b < 0 ? 0 : (b > 255 ? 255 : b);
+    return (i & 0xFF000000) | (r << 16) | (g << 8) | b;
+}
 
     /**
      * @author Starlev

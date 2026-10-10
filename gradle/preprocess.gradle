@@ -1,0 +1,226 @@
+
+def compareVersions = { String a, String b ->
+    def pa = a.tokenize('.')*.toInteger()
+    def pb = b.tokenize('.')*.toInteger()
+    def len = Math.max(pa.size(), pb.size())
+    for (i in 0..<len) {
+        def va = i < pa.size() ? pa[i] : 0
+        def vb = i < pb.size() ? pb[i] : 0
+        if (va != vb) {
+            return va <=> vb
+        }
+    }
+    return 0
+}
+
+def splitTop = { String text, String operator ->
+    def parts = []
+    def depth = 0
+    def current = new StringBuilder()
+    for (int i = 0; i < text.length(); i++) {
+        def c = text.charAt(i)
+        if (c == ('(' as char)) { depth++ }
+        if (c == (')' as char)) { depth-- }
+        if (depth == 0 && text.startsWith(operator, i)) {
+            parts << current.toString()
+            current = new StringBuilder()
+            i += operator.length() - 1
+            continue
+        }
+        current.append(c)
+    }
+    parts << current.toString()
+    return parts
+}
+
+def evaluateCondition
+evaluateCondition = { String body, String mcVersion ->
+    def text = body.trim()
+
+    def orParts = splitTop(text, '||')
+    if (orParts.size() > 1) {
+        return orParts.any { evaluateCondition(it, mcVersion) }
+    }
+    def andParts = splitTop(text, '&&')
+    if (andParts.size() > 1) {
+        return andParts.every { evaluateCondition(it, mcVersion) }
+    }
+
+    def inner = (text =~ /^\((.*)\)$/)
+    if (inner.matches()) {
+        return evaluateCondition(inner.group(1), mcVersion)
+    }
+
+    def cmp = (text =~ /^([<>!=]=|[<>])\s*(\d[\d.]*)$/)
+    if (cmp.matches()) {
+        def result = compareVersions(mcVersion, cmp.group(2))
+        switch (cmp.group(1)) {
+            case '>=': return result >= 0
+            case '<=': return result <= 0
+            case '>':  return result > 0
+            case '<':  return result < 0
+            case '==': return result == 0
+            case '!=': return result != 0
+        }
+    }
+
+    if (text ==~ /^\d[\d.]*$/) {
+        return compareVersions(mcVersion, text) == 0
+    }
+    throw new GradleException("Unparseable preprocessor condition: '${body}'")
+}
+
+def parseDirective
+parseDirective = { String line ->
+    def trimmed = line.trim()
+
+    if (trimmed.startsWith('//$')) {
+        def rest = trimmed.substring(3).trim()
+        if (rest.startsWith('if ')) {
+            return ['open', rest.substring(3).trim()]
+        }
+        if (rest == 'else') {
+            return ['else', null]
+        }
+        if (rest == 'end') {
+            return ['close', null]
+        }
+        throw new GradleException("Unknown preprocessor directive '${rest}'")
+    }
+
+    def open = (trimmed =~ ~/^\/\*\?\s*if\s+(.+?)\s*\{\s*\*\/$/)
+    if (open.matches()) {
+        return ['open', open.group(1)]
+    }
+    if (trimmed ==~ ~/^\/\*\?\s*\}\s*\*\/$/) {
+        return ['close', null]
+    }
+    return null
+}
+
+ext.lomkaStripComments = { String text ->
+    return text.replaceAll('(?s)/\\*.*?\\*/', ' ').replaceAll('(?m)//.*$', ' ')
+}
+
+ext.lomkaDeclaresType = { String text ->
+    return lomkaStripComments(text) =~ /(?m)^\s*(?:@\w+(?:\s*\([^)]*\))?\s*)*(?:(?:public|protected|private|abstract|final|static|strictfp)\s+)*(?:class|interface|enum)\s/
+}
+
+ext.generateMixinConfig = { File generatedJavaRoot, File outputFile, Map options ->
+    def mixinPackage = options.mixinPackage ?: 'lomka/starl/mixins'
+    def plugin = options.plugin ?: 'lomka.starl.config.LomkaMixinPlugin'
+    def minVersion = options.minVersion ?: '0.6'
+    def refmap = options.refmap
+
+    def client = []
+    def common = []
+
+    def scanRoot = new File(generatedJavaRoot, mixinPackage)
+    if (!scanRoot.isDirectory()) {
+        throw new GradleException("Cannot build a mixin config: ${scanRoot} does not exist")
+    }
+
+    scanRoot.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+        if (!f.name.endsWith('.java') || !f.name.startsWith('Mixin')) {
+            return
+        }
+        def relative = scanRoot.toPath().relativize(f.toPath()).toString().replace('\\', '/')
+        def name = relative.replace('.java', '').replace('/', '.')
+        if (relative.startsWith('net/minecraft/client/')) {
+            client << name
+        } else {
+            common << name
+        }
+    }
+    client.sort()
+    common.sort()
+
+    if (client.isEmpty() && common.isEmpty()) {
+        throw new GradleException("Mixin config came out empty; the gates probably filtered everything")
+    }
+
+    def out = new StringBuilder()
+    out << '{\n'
+    out << '  "required": true,\n'
+    out << '  "minVersion": "' << minVersion << '",\n'
+    if (refmap) {
+        out << '  "refmap": "' << refmap << '",\n'
+    }
+    out << '  "package": "' << mixinPackage.replace('/', '.') << '",\n'
+    out << '  "compatibilityLevel": "JAVA_8",\n'
+    out << '  "plugin": "' << plugin << '",\n'
+
+    def renderList = { String key, List values ->
+        out << '  "' << key << '": [\n'
+        values.eachWithIndex { v, i ->
+            out << '    "' << v << '"' << (i < values.size() - 1 ? ',' : '') << '\n'
+        }
+        out << "  ],\n"
+    }
+    renderList('client', client)
+    renderList('mixins', common)
+    out << '  "server": [\n  ]\n}\n'
+
+    outputFile.parentFile.mkdirs()
+    outputFile.setText(out.toString(), 'UTF-8')
+
+    return [client: client, common: common, total: client.size() + common.size()]
+}
+
+ext.runLegacyPreprocessor = { File sourceRoot, File outputRoot, String mcVersion ->
+    sourceRoot.eachFileRecurse(groovy.io.FileType.FILES) { sourceFile ->
+        def name = sourceFile.name
+        def relative = sourceRoot.toPath().relativize(sourceFile.toPath()).toString()
+        def target = new File(outputRoot, relative)
+        target.parentFile.mkdirs()
+
+        if (!(name.endsWith('.java') || name.endsWith('.json') || name.endsWith('.json5')
+                || name.endsWith('.info') || name.endsWith('.cfg'))) {
+            target.bytes = sourceFile.bytes
+            return
+        }
+
+        def emitting = []
+        def out = new StringBuilder()
+        def directives = 0
+
+        sourceFile.eachLine('UTF-8') { line ->
+            def directive = parseDirective(line)
+            if (directive == null) {
+                if (emitting.isEmpty() || emitting.last()) {
+                    out.append(line).append('\n')
+                }
+                return
+            }
+
+            def kind = directive[0]
+            directives++
+            if (kind == 'open') {
+                def parentEmitting = emitting.isEmpty() ? true : emitting.last()
+                emitting.add(parentEmitting && evaluateCondition(directive[1], mcVersion))
+                return
+            }
+            if (kind == 'else') {
+                if (emitting.isEmpty()) {
+                    throw new GradleException("else without if in ${relative}")
+                }
+                def parentEmitting = emitting.size() == 1 ? true : emitting[-2]
+                emitting[-1] = parentEmitting && !emitting[-1]
+                return
+            }
+            emitting.remove(emitting.size() - 1)
+        }
+
+        if (!emitting.isEmpty()) {
+            throw new GradleException("Unclosed if in ${relative}")
+        }
+        def emitted = out.toString()
+        def dead = directives == 0 ? false
+                : (name.endsWith('.java') ? !lomkaDeclaresType(emitted) : emitted.trim().isEmpty())
+        if (dead) {
+            target.delete()
+        } else {
+            target.setText(emitted, 'UTF-8')
+        }
+    }
+}

@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(BitSetDiscreteVoxelShape.class)
 public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVoxelShape {
@@ -45,6 +46,29 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
 
     @Override public BitSet lomka$storage() { return this.storage; }
     @Override public int lomka$index(int x, int y, int z) { return this.getIndex(x, y, z); }
+
+    /*
+     * Writes the accumulated contiguous bit run out. BitSet.set(from, to) edits the backing
+     * long words directly and never routes through the single-bit set(int), so a BitSet subclass
+     * that keeps derived state in an overridden set(int) desynchronises the moment the range
+     * overload is used: Palladium's BitSetDiscreteVoxelShape mixin swaps the storage for a
+     * FastBitSet whose get(int) is the sole reader of a LongOpenHashSet mirror that only
+     * set(int)/clear(int) maintain, so every cell of a shape built here reports empty while its
+     * bounds stay correct - which silently empties collision shapes, ray hits and entity reach
+     * queries for anything built through Shapes.join (bed shapes, stairs, slabs, ...). The run
+     * detector is therefore only enabled for a stock java.util.BitSet storage; any other
+     * implementation falls back to vanilla's per-bit set(int).
+     */
+    @Unique
+    private static void lomka$flushRun(BitSet storage, int[] run, boolean bulkRuns) {
+        if (bulkRuns) {
+            storage.set(run[0], run[1] + 1);
+        } else {
+            for (int bit = run[0]; bit <= run[1]; bit++) {
+                storage.set(bit);
+            }
+        }
+    }
 
     @Override
     public void lomka$setBounds(int xMin, int yMin, int zMin, int xMax, int yMax, int zMax) {
@@ -70,12 +94,24 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
      *         already relies on forMergedIndexes running strictly sequentially (its
      *         shared-array min/max mutation would be racy otherwise) — this extends that
      *         same pre-existing assumption to the boolean flags and the run scratch rather
-     *         than introducing a new one.
+     *         than introducing a new one. The bulk write is restricted to a stock
+     *         java.util.BitSet storage - see lomka$flushRun for why that guard is required.
      */
     @Overwrite
     public static BitSetDiscreteVoxelShape join(DiscreteVoxelShape discretevoxelshape, DiscreteVoxelShape discretevoxelshape1, IndexMerger indexmerger, IndexMerger indexmerger1, IndexMerger indexmerger2, BooleanOp booleanop) {
-        BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(indexmerger.size() - 1, indexmerger1.size() - 1, indexmerger2.size() - 1);
+        //? if >=1.18 {
+        int xSize = indexmerger.size() - 1;
+        int ySize = indexmerger1.size() - 1;
+        int zSize = indexmerger2.size() - 1;
+        //? } else {
+        /*int xSize = indexmerger.getList().size() - 1;
+        int ySize = indexmerger1.getList().size() - 1;
+        int zSize = indexmerger2.getList().size() - 1;
+        *///?}
+        BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(xSize, ySize, zSize);
         IBitSetDiscreteVoxelShape IBit = (IBitSetDiscreteVoxelShape) (Object) bitsetdiscretevoxelshape;
+        BitSet storage = IBit.lomka$storage();
+        boolean bulkRuns = storage.getClass() == BitSet.class;
         int[] aint = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
         int[] run  = new int[2];
         boolean[] aboolean  = new boolean[1];
@@ -95,7 +131,7 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
                         if (run[0] == -1) {
                             run[0] = bitIndex;
                         } else if (bitIndex != run[1] + 1) {
-                            IBit.lomka$storage().set(run[0], run[1] + 1);
+                            lomka$flushRun(storage, run, bulkRuns);
                             run[0] = bitIndex;
                         }
 
@@ -107,7 +143,7 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
                     return true;
                 });
                 if (run[0] != -1) {
-                    IBit.lomka$storage().set(run[0], run[1] + 1);
+                    lomka$flushRun(storage, run, bulkRuns);
                     run[0] = -1;
                 }
                 if (aboolean1[0]) {

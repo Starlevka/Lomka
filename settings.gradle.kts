@@ -28,6 +28,9 @@ stonecutter {
 			version("$version-$loader", version).buildscript = buildscript(version, loader)
 		}
 
+		match("1.16.5", "fabric")
+		match("1.18.2", "fabric")
+		match("1.18.2", "forge")
 		match("1.19.2", "fabric")
 		match("1.19.2", "forge")
 		match("1.20.1", "fabric")

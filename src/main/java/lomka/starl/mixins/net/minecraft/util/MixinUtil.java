@@ -33,7 +33,9 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
 import net.minecraft.CharPredicate;
+//? if >=1.19 {
 import net.minecraft.util.RandomSource;
+//?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
@@ -61,6 +63,7 @@ public abstract class MixinUtil {
      *         finds the first rejected char, and only a containing case copies to a char[] and patches the
      *         substitutes in place. All-valid input returns the lowercased string directly.
      */
+    //? if >=1.17 {
     @Overwrite
     public static String sanitizeName(String s, CharPredicate charpredicate) {
         String lower = s.toLowerCase(Locale.ROOT);
@@ -84,19 +87,7 @@ public abstract class MixinUtil {
         }
         return new String(chars);
     }
-
-    /**
-     * @author Starlev
-     * @reason Branch-efficient 32-bit integer arithmetic without 64-bit promotion or library calls.
-     */
-    //? if >=1.21.6 {
-    @Overwrite
-    public static int growByHalf(int i, int j) {
-        long grown = (long) i + (long) (i >> 1);
-        grown = Math.min(grown, 2147483639L);
-        return (int) Math.max(grown, (long) j);
-    }
-    //?}
+    //? }
 
     /**
      * @author Starlev
@@ -180,7 +171,7 @@ public abstract class MixinUtil {
      * @author Starlev
      * @reason Direct primitive array swapping during shuffle for ObjectArrayList; bypasses virtual get/set and bounds checking (legacy 1.20.1).
      */
-    //? if <1.21 {
+    //? if >=1.19 && <1.21 {
     /*@Overwrite
     public static <T> void shuffle(ObjectArrayList<T> list, RandomSource randomsource) {
         int size = list.size();
@@ -224,6 +215,7 @@ public abstract class MixinUtil {
      * @author Starlev
      * @reason Direct primitive int array swapping during shuffle; bypasses virtual get/set and bounds checking.
      */
+    //? if >=1.19 {
     @Overwrite
     public static IntArrayList toShuffledList(IntStream intstream, RandomSource randomsource) {
         int[] array = intstream.toArray();
@@ -236,11 +228,13 @@ public abstract class MixinUtil {
         }
         return IntArrayList.wrap(array);
     }
+    //?}
 
     /**
      * @author Starlev
      * @reason Specializes single cursor steps (j == 1 or -1) in text fields; avoids loop overhead for non-surrogate text.
      */
+    //? if >=1.17 {
     @Overwrite
     public static int offsetByCodepoints(String s, int i, int j) {
         int len = s.length();
@@ -283,6 +277,7 @@ public abstract class MixinUtil {
         }
         return i;
     }
+    //? }
 
     /**
      * @author Starlev

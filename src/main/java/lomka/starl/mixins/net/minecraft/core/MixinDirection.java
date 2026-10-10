@@ -19,7 +19,9 @@
 
 package lomka.starl.mixins.net.minecraft.core;
 
+//? if >=1.18 {
 import lomka.starl.utils.constants.DirectionTables;
+//?}
 import net.minecraft.core.Direction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -27,6 +29,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 @Mixin(Direction.class)
 public abstract class MixinDirection {
 
+    //? if >=1.18 {
     /**
      * @author Starlev
      * @reason Single flat-array lookup instead of an outer axis switch plus an inner helper-method
@@ -46,4 +49,5 @@ public abstract class MixinDirection {
     public Direction getCounterClockWise(Direction.Axis axis) {
         return DirectionTables.COUNTERCLOCKWISE[axis.ordinal() * 6 + ((Direction) (Object) this).ordinal()];
     }
+    //?}
 }

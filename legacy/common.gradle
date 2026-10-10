@@ -1,0 +1,75 @@
+
+def javaExt = extensions.findByName('java')
+if (javaExt != null) {
+	javaExt.sourceCompatibility = JavaVersion.VERSION_1_8
+	javaExt.targetCompatibility = JavaVersion.VERSION_1_8
+} else {
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
+}
+
+repositories {
+	mavenCentral()
+	maven { url 'https://maven.minecraftforge.net' }
+	maven { url 'https://repo.spongepowered.org/repository/maven-public/' }
+	maven { url 'https://nexus.gtnewhorizons.com/repository/public/' }
+	maven { url 'https://maven.cleanroommc.com/' }
+	maven { url 'https://api.modrinth.com/maven' }
+	maven { url 'https://jitpack.io' }
+}
+
+sourceSets {
+	main {
+		java { srcDirs = ["$buildDir/generated-src/java"] }
+        resources { srcDirs = ["$buildDir/generated-src/resources"] }
+	}
+}
+
+tasks.create(lomkaPreprocessTask) {
+	doLast {
+		runLegacyPreprocessor(
+			rootProject.file('../../src-legacy/main/java'),
+			file("$buildDir/generated-src/java"),
+			lomkaMcVersion)
+		runLegacyPreprocessor(
+			rootProject.file('../../src-legacy/main/resources'),
+			file("$buildDir/generated-src/resources"),
+			lomkaMcVersion)
+
+		def resourcesDir = file("$buildDir/generated-src/resources")
+		def configFile = new File(resourcesDir, 'lomka.mixins.json')
+		generateMixinConfig(file("$buildDir/generated-src/java"), configFile,
+			lomkaRefmap ? [refmap: lomkaRefmap] : [:])
+		if (lomkaConfigCopy) {
+			new File(resourcesDir, lomkaConfigCopy).text = configFile.text
+		}
+	}
+}
+
+['compileJava', 'processResources'].each { name ->
+	tasks.matching { it.name == name }.all { dependsOn(lomkaPreprocessTask) }
+}
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+	if (lomkaNoAnnotationProcessing) {
+		options.compilerArgs += ['-proc:none']
+	}
+}
+
+tasks.withType(ProcessResources) {
+	inputs.property 'version', project.version
+	inputs.property 'mcversion', lomkaMcVersion
+	filesMatching('mcmod.info') {
+		expand('version': project.version.toString(), 'mcversion': lomkaMcVersion)
+	}
+}
+
+tasks.matching { it.name == 'jar' }.all {
+	manifest {
+		if (lomkaMixinConfigs) {
+			attributes('MixinConfigs': lomkaMixinConfigs)
+		}
+		attributes('FMLAT': 'accesstransformer.cfg')
+	}
+}

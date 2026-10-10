@@ -40,8 +40,21 @@ public abstract class MixinVec3i {
      * @author Starlev
      * @reason Exhaustive enum switch instead of the virtual Axis.choose dispatch through three
      *         enum constants. Unreachable default is impossible: Direction.Axis has exactly three
-     *         constants, so the switch expression stays exhaustive without a fallback branch.
+     *         constants, so the switch stays exhaustive without a fallback branch.
      */
+    //? if <1.17 {
+    /*@Overwrite
+    public int get(Direction.Axis axis) {
+        switch (axis) {
+            case X:
+                return this.x;
+            case Y:
+                return this.y;
+            default:
+                return this.z;
+        }
+    }
+    *///?} else {
     @Overwrite
     public int get(Direction.Axis axis) {
         return switch (axis) {
@@ -50,6 +63,7 @@ public abstract class MixinVec3i {
             case Z -> this.z;
         };
     }
+    //?}
 
     /**
      * @author Starlev

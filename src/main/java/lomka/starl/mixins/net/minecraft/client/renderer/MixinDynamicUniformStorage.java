@@ -51,27 +51,78 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
 
     /**
      * Returns a {@link GpuBufferSlice} for {@code (buffer, offset, blockSize)},
-     * re-emitting the previously returned instance when every component matches.
+     * re-emitting the previously returned instance when the buffer and offset match.
      * GpuBufferSlice is an immutable record, so aliasing a repeated request is
      * observably identical to handing out a fresh copy; ring rotation and
      * resizeBuffers invalidate the cache implicitly through buffer identity.
+     *
+     * <p>The length is deliberately not compared. Every slice this class ever stores
+     * in the cache is built with {@code blockSize} as its length - here, and by the
+     * tail element of the batch write - so the component cannot differ and the test
+     * could never fail. Do not add a third write path to the cache without
+     * restoring it.
      */
     @Unique
     private GpuBufferSlice lomka$sliceFor(GpuBuffer gpubuffer, int i) {
-        GpuBufferSlice gpubufferslice = this.lomka$lastSlice;
+        GpuBufferSlice cached = this.lomka$lastSlice;
 
-        if (gpubufferslice != null && gpubufferslice.buffer() == gpubuffer
-                && gpubufferslice.offset() == (long) i && gpubufferslice.length() == (long) this.blockSize) {
-            return gpubufferslice;
+        if (cached != null && cached.buffer() == gpubuffer && cached.offset() == (long) i) {
+            return cached;
         } else {
+            GpuBufferSlice fresh;
             //? if >=1.21.11 {
-            gpubufferslice = gpubuffer.slice((long) i, (long) this.blockSize);
+            fresh = gpubuffer.slice((long) i, (long) this.blockSize);
             //?} else {
-            /*gpubufferslice = gpubuffer.slice(i, this.blockSize);
+            /*fresh = gpubuffer.slice(i, this.blockSize);
             *///?}
-            this.lomka$lastSlice = gpubufferslice;
-            return gpubufferslice;
+            this.lomka$lastSlice = fresh;
+            return fresh;
         }
+    }
+
+    /**
+     * Maps {@code (currentBuffer, offset, blockSize)}, writes the uniform into it and
+     * returns the slice that now describes those bytes.
+     *
+     * <p>Exists so {@link #writeUniform} reads the same on every version. The map call
+     * changed shape twice - {@code CommandEncoder#mapBuffer} below 1.21.11's signature
+     * widening, and a plain {@code GpuBufferSlice#map} from 26.2 - and the pre-26.2 forms
+     * return a {@code GpuBuffer.MappedView} interface that exposes no slice accessor,
+     * while 26.2 and later return a {@code GpuBufferSlice.MappedView} record that does.
+     *
+     * <p>That difference is why the three bodies are separate top-level blocks and not an
+     * {@code else if} chain: only the 26.2 one can reuse the mapped view's own slice.
+     */
+    @Unique
+    private GpuBufferSlice lomka$mapWrite(GpuBuffer currentBuffer, int offset, T t0) {
+        //? if >=26.2 {
+        /*GpuBufferSlice written;
+        try (GpuBufferSlice.MappedView mappedView = currentBuffer.slice((long) offset, (long) this.blockSize).map(false, true)) {
+            t0.write(mappedView.data());
+            written = mappedView.slice();
+        }
+        return written;*/
+        //?}
+
+        //? if >=1.21.11 && <26.2 {
+        GpuBufferSlice written;
+        try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
+                .mapBuffer(currentBuffer.slice((long) offset, (long) this.blockSize), false, true)) {
+            t0.write(mappedView.data());
+        }
+        written = currentBuffer.slice((long) offset, (long) this.blockSize);
+        return written;
+        //?}
+
+        //? if <1.21.11 {
+        /*GpuBufferSlice written;
+        try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
+                .mapBuffer(currentBuffer.slice(offset, this.blockSize), false, true)) {
+            t0.write(mappedView.data());
+        }
+        written = currentBuffer.slice(offset, this.blockSize);
+        return written;*/
+        //?}
     }
 
     @Shadow
@@ -87,7 +138,11 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
      *         a record's auto-generated equals() invokes zero field-level equals()
      *         calls when compared against itself), so this mainly guards the case
      *         where T is a hand-written class without that same fast path, at
-     *         negligible cost either way.
+     *         negligible cost either way. The census says no such class exists on
+     *         any version Lomka builds: DynamicUniforms.Transform and
+     *         ChunkSectionInfo are both records, and every caller reaches this method
+     *         through writeTransform(Matrix4f, ...), which allocates a fresh record
+     *         per call - so the short-circuit is never true either and it cannot pay.
      *
      *         The actual win here is caching ringBuffer.currentBuffer(): vanilla
      *         calls this getter twice per writeUniform() invocation even though
@@ -100,6 +155,16 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
      *         Returned slices are additionally deduplicated through lomka$lastSlice:
      *         repeated fast-path hits re-emit the same immutable record instead of
      *         allocating a fresh one per call.
+     *
+     *         The slow path builds its slice directly through lomka$mapWrite instead
+     *         of routing it through lomka$sliceFor. The cached slice belongs to the
+     *         previous block, so its offset is always (nextBlock - 1) * blockSize and
+     *         can never equal the offset being written now; after a ring rotation or a
+     *         resize the buffer differs as well. The probe could only ever miss, so it
+     *         was three compares spent on a guaranteed miss. The fresh slice is still
+     *         stored, which is what primes the next fast-path hit. On 26.2 and later
+     *         lomka$mapWrite additionally returns the mapping's own slice rather than
+     *         allocating a second identical record.
      */
     @Overwrite
     public GpuBufferSlice writeUniform(T t0) {
@@ -117,22 +182,12 @@ public abstract class MixinDynamicUniformStorage<T extends DynamicUniformStorage
 
         int offset = this.nextBlock * this.blockSize;
         GpuBuffer currentBuffer = this.ringBuffer.currentBuffer();
-
-        //? if >=26.2 {
-        /*try (GpuBufferSlice.MappedView mappedView = currentBuffer.slice((long) offset, (long) this.blockSize).map(false, true)) {*/
-        //?} else if >=1.21.11 {
-        try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
-                .mapBuffer(currentBuffer.slice((long) offset, (long) this.blockSize), false, true)) {
-        //?} else {
-        /*try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder()
-                .mapBuffer(currentBuffer.slice(offset, this.blockSize), false, true)) {
-        *///?}
-            t0.write(mappedView.data());
-        }
+        GpuBufferSlice written = this.lomka$mapWrite(currentBuffer, offset, t0);
 
         ++this.nextBlock;
         this.lastUniform = t0;
-        return this.lomka$sliceFor(currentBuffer, offset);
+        this.lomka$lastSlice = written;
+        return written;
     }
 
     /**

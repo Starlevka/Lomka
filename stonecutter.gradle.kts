@@ -100,7 +100,6 @@ stonecutter parameters {
 	swaps["minecraft"] = "\"${current.version}\";"
 	constants["release"] = properties.get<String>("mod.id") == "lomka"
 
-	// Loader gates for the unified Lomka entrypoint (see lomka/Lomka.java).
 	val lomkaLoader = current.project.substringAfterLast('-')
 	constants["fabric"] = lomkaLoader == "fabric"
 	constants["forge"] = lomkaLoader == "forge"
@@ -113,6 +112,11 @@ stonecutter parameters {
 	replacements.string(current.parsed < "1.21.11") {
 		replace("net.minecraft.client.renderer.rendertype.RenderType", "net.minecraft.client.renderer.RenderType")
 	}
+	// ChunkStatus moved *into* a `status` subpackage in 1.21; below that it sits directly in
+	// `world.level.chunk`, on both 1.16.5 and 1.18.2 as well as 1.19.2/1.20.1.
+	replacements.string(current.parsed < "1.21") {
+		replace("net.minecraft.world.level.chunk.status.ChunkStatus", "net.minecraft.world.level.chunk.ChunkStatus")
+	}
 	replacements.string(current.parsed < "1.21.6") {
 		replace("com.mojang.blaze3d.opengl.GlStateManager", "com.mojang.blaze3d.platform.GlStateManager")
 	}
@@ -120,7 +124,6 @@ stonecutter parameters {
 		replace("net.minecraft.client.resources.model.AtlasManager", "net.minecraft.client.resources.model.sprite.AtlasManager")
 		replace("net.minecraft.client.resources.model.Material", "net.minecraft.client.resources.model.sprite.Material")
 	}
-	// 26.3 moved the whole GPU backend out of blaze3d into the new com.mojang.renderpearl library.
 	replacements.string(current.parsed >= "26.3") {
 		replace("com.mojang.blaze3d.buffers.GpuBuffer", "com.mojang.renderpearl.api.buffers.GpuBuffer")
 		replace("com.mojang.blaze3d.textures.GpuTexture", "com.mojang.renderpearl.api.textures.GpuTexture")
@@ -167,19 +170,20 @@ val lomkaLicenseHeader = """
  */
 """.trimIndent()
 
-val lomkaJavaSources = layout.projectDirectory.dir("src/main/java").asFile
+val lomkaJavaSources = listOf(
+	layout.projectDirectory.dir("src/main/java").asFile,
+	layout.projectDirectory.dir("src-legacy/main/java").asFile
+)
 
-// Adds or rewrites the license header on every Java source. Runs automatically before each
-// variant's compileJava (see lomkaPlatform), so new classes and edited header wording both
-// converge to the current template without manual steps. A stale header is detected by an
-// exact prefix match against the current template; any leading block comment containing an
-// SPDX line is treated as the old header and replaced.
+val lomkaPreprocessorOpeners = listOf("//\$", "//?", "/*?")
+
 tasks.register("licenseHeaders") {
 	group = "build"
 	description = "Adds or rewrites the Lomka license header on every Java source."
 	doLast {
 		var updated = 0
-		lomkaJavaSources.walkTopDown()
+		lomkaJavaSources.forEach { root ->
+			root.walkTopDown()
 			.filter { it.isFile && it.extension == "java" }
 			.forEach { file ->
 				val text = file.readText(Charsets.UTF_8).replace("\r\n", "\n")
@@ -191,9 +195,23 @@ tasks.register("licenseHeaders") {
 						rest = rest.substring(end + 2).trimStart('\n')
 					}
 				}
-				file.writeText(lomkaLicenseHeader + "\n\n" + rest, Charsets.UTF_8)
+				val opener = rest.lineSequence().firstOrNull { line ->
+					val trimmed = line.trim()
+					lomkaPreprocessorOpeners.any { trimmed.startsWith(it) }
+				}
+				val gated = opener != null && opener.trim().startsWith("//")
+				val body = if (gated) {
+					if (rest.removePrefix(opener).trimStart('\n').startsWith(lomkaLicenseHeader)) {
+						return@forEach
+					}
+					opener + "\n\n" + lomkaLicenseHeader + "\n\n" + rest.removePrefix(opener).trimStart('\n')
+				} else {
+					lomkaLicenseHeader + "\n\n" + rest
+				}
+				file.writeText(body, Charsets.UTF_8)
 				updated++
 			}
+		}
 		if (updated > 0) {
 			println("Lomka license header written to $updated file(s)")
 		}
