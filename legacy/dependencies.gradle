@@ -1,0 +1,7 @@
+
+ext.lomkaVersions = [
+	mixinBooter   : 'zone.rong:mixinbooter:11.17',
+	uniMixins     : 'maven.modrinth:unimixins:1.7.10-0.3.1',
+	asmTree       : 'org.ow2.asm:asm-tree:5.2',
+	forgeUniversal: 'net.minecraftforge:forge:1.7.10-10.13.4.1614-1.7.10:universal',
+]

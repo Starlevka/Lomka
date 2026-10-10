@@ -1,3 +1,5 @@
+//$ if >=1.8
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.util;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,3 +46,4 @@ public abstract class MixinEnumFacing {
 		return EnumFacingTables.CLOCKWISE[axis.ordinal() * 6 + ((EnumFacing) (Object) this).ordinal()];
 	}
 }
+//$ end

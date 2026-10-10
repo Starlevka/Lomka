@@ -5,8 +5,13 @@
 	"mcversion": "${mcversion}",
 	"description": "Mix of small optimizations for your Minecraft",
 	"authorList": ["Starlev"],
-	"credits": "Includes adaptations from Collections Of Optimizations (LGPL-3.0-only) by Misanthropy; Vec3i PhiMix hashing credits EfficientHashing (LGPL-3.0-only) by ZZZank.",
 	"url": "https://github.com/Starlevka/Lomka",
 	"updateUrl": "",
 	"logoFile": "logo.png"
+	/*? if >=1.8 { */
+	,"useDependencyInformation": true
+	,"dependencies": [
+		"mixinbooter:[11.17,)"
+	]
+	/*? } */
 }]

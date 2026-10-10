@@ -1,0 +1,91 @@
+base {
+	archivesName = 'lomka'
+}
+
+ext.lomkaModVersion = project.version.toString()
+version = "${lomkaModVersion}-ornithe+${project.minecraft_version}"
+group = project.maven_group
+
+repositories {
+	maven {
+		name = 'Ornithe Releases'
+		url = 'https://maven.ornithemc.net/releases'
+	}
+	mavenCentral()
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	if (project.hasProperty('raven_build')) {
+		exceptions ploceus.raven(project.raven_build)
+	}
+	if (project.hasProperty('sparrow_build')) {
+		signatures ploceus.sparrow(project.sparrow_build)
+	}
+	if (project.hasProperty('nests_build')) {
+		nests ploceus.nests(project.nests_build)
+	}
+
+	mappings ploceus.featherMappings(project.feather_build)
+
+	ploceus.dependOsl(project.osl_version)
+}
+
+loom {
+	mixin {
+		useLegacyMixinAp = true
+	}
+}
+
+apply from: '../../gradle/preprocess.gradle'
+
+ext.lomkaMcVersion = project.minecraft_version
+
+sourceSets {
+	main {
+		java { srcDirs = ["$buildDir/generated-src/java"] }
+		resources { srcDirs = ["$buildDir/generated-src/resources"] }
+	}
+}
+
+tasks.register('runLomkaPreprocessor') {
+	doLast {
+		runLegacyPreprocessor(
+			rootProject.file('../../src-ornithe/main/java'),
+			file("$buildDir/generated-src/java"),
+			lomkaMcVersion)
+		runLegacyPreprocessor(
+			rootProject.file('../../src-ornithe/main/resources'),
+			file("$buildDir/generated-src/resources"),
+			lomkaMcVersion)
+
+		generateMixinConfig(file("$buildDir/generated-src/java"),
+			new File(file("$buildDir/generated-src/resources"), 'lomka.mixins.json'),
+			[refmap: 'lomka-refmap.json'])
+	}
+}
+
+tasks.named('compileJava').configure { dependsOn('runLomkaPreprocessor') }
+tasks.named('processResources').configure { dependsOn('runLomkaPreprocessor') }
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = 'UTF-8'
+	it.options.release = 8
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+	withSourcesJar()
+}
+
+processResources {
+	inputs.property 'version', version
+	inputs.property 'mcversion', project.minecraft_version
+
+	filesMatching('fabric.mod.json') {
+		expand 'version': lomkaModVersion, 'mcversion': project.minecraft_version
+	}
+}

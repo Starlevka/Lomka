@@ -20,13 +20,17 @@ package lomka;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+//$ if >=1.8
 import net.minecraftforge.fml.common.Mod;
+//$ else
+import cpw.mods.fml.common.Mod;
+//$ end
 
 @Mod(modid = Lomka.MOD_ID)
 public final class Lomka {
 
 	public static final String MOD_ID = "lomka";
-	public static final String VERSION = "0.6.0";
+	public static final String VERSION = "0.7.0";
 
 	private static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 

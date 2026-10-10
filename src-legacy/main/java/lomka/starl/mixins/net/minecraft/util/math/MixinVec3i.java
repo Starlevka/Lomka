@@ -1,3 +1,5 @@
+//$ if >=1.8
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,11 +18,16 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.util.math;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+//$ if >=1.12
 import net.minecraft.util.math.Vec3i;
+//$ else
+import net.minecraft.util.Vec3i;
+//$ end
 
 /**
  * Port of the phi-mix {@code hashCode} from the modern build. 1.12.2 carries the identical weak
@@ -30,7 +37,7 @@ import net.minecraft.util.math.Vec3i;
  * 64^3 block region it collapses a large share of the 262144 cells onto far fewer distinct values,
  * and its low bits degenerate to {@code (x - y + z)} for small coordinates, so neighbouring
  * positions land on the same bucket. The phi-mix chain is bijective and, per the modern javadoc,
- * keeps z additive so z-runs spread evenly across power-of-two tables. (Figures: scripts/bench.)
+ * keeps z additive so z-runs spread evenly across power-of-two tables.
  *
  * <p>Caching the result would be unsound here and is deliberately not attempted:
  * {@code BlockPos.MutableBlockPos} mutates x/y/z in place, so a cached value would go stale. This
@@ -39,10 +46,9 @@ import net.minecraft.util.math.Vec3i;
  * <p>{@code priority = 999} matches the modern mixin. Mixin applies higher priorities first, so at
  * 999 this overwrite is written before a normally-prioritised foreign one and the foreign body ends
  * up on top - the same deferral as {@code MixinVecDeltaCodec} and CoO. That matters here in
- * particular: the grep over {@code scripts/COMPABILITY} finds no {@code Vec3i.hashCode} overwrite,
- * but the mods that actually compete with this patch (EfficientHashing and its forks, from which
- * the phi-mix constants are taken) are 1.12-era and are not vendored, so a collision is expected
- * in the wild rather than in the snapshot set.
+ * particular: the mods that actually compete with this patch (EfficientHashing and its forks,
+ * from which the phi-mix constants are taken) are 1.12-era and are not covered by any check
+ * performed here, so a collision is expected in the wild rather than ruled out.
  */
 @Mixin(value = Vec3i.class, priority = 999)
 public abstract class MixinVec3i {
@@ -66,3 +72,4 @@ public abstract class MixinVec3i {
 		return (mixed2 ^ (mixed2 >>> 16)) + self.getZ();
 	}
 }
+//$ end

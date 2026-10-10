@@ -1,3 +1,5 @@
+//$ if >=1.8
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.client.shader;
 
 import org.lwjgl.opengl.ContextCapabilities;
@@ -89,10 +92,10 @@ public abstract class MixinFramebuffer {
 		Framebuffer self = (Framebuffer) (Object) this;
 
 		OpenGlHelper.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, self.framebufferObject);
-		GL30.glBlitFramebuffer(0, 0, self.framebufferWidth, self.framebufferHeight, 0, 0, width, height,
-				GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+				GL30.glBlitFramebuffer(0, 0, self.framebufferWidth, self.framebufferHeight, 0, 0, width, height, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 		OpenGlHelper.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
 
 		ci.cancel();
 	}
 }
+//$ end

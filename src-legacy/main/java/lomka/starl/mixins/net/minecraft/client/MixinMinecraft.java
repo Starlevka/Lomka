@@ -37,12 +37,11 @@ import net.minecraft.client.Minecraft;
  * 16.7 ms frame. This is a vanilla wart, not a Lomka optimization, and the figure is recorded so
  * the trade is visible rather than assumed: it is a scheduler hint that lets helper threads (skin
  * and resource downloads) run sooner, and the JDK schedules them anyway. 1.19.2 through 1.21.11
- * keep the same call in the same place; Mojang removed it in 26.x. (Figures: scripts/bench.)
+ * keep the same call in the same place; Mojang removed it in 26.x.
  */
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft {
 
-	// Replaces the spin hint with nothing; C2 folds the empty body away entirely.
 	@Redirect(method = "runGameLoop", at = @At(value = "INVOKE", target = "Ljava/lang/Thread;yield()V"))
 	private static void lomka$skipFrameYield() {
 	}

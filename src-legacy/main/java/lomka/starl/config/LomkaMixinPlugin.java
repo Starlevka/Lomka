@@ -35,7 +35,11 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+//$ if >=1.8
 import org.objectweb.asm.tree.ClassNode;
+//$ else
+import org.spongepowered.asm.lib.tree.ClassNode;
+//$ end
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -74,7 +78,7 @@ public final class LomkaMixinPlugin implements IMixinConfigPlugin {
 
     private static final Logger LOGGER = LogManager.getLogger("Lomka/MixinConfig");
     private static final String CONFIG_PATH = "lomka-mixins.properties";
-    private static final String WIKI_URL = " https://github.com/Starlevka/Lomka/wiki/Configuration-legacy";
+    private static final String WIKI_URL = " https://github.com/Starlevka/Lomka/wiki/Mixin-Configuration-Legacy";
     private static final String MIXIN_PREFIX = "lomka.starl.mixins.";
 
     private static volatile Properties options = new Properties();

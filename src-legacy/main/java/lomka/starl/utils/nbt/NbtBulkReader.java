@@ -1,3 +1,5 @@
+//$ if >=1.8
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.utils.nbt;
 
 import java.io.DataInputStream;
@@ -27,6 +30,10 @@ import java.nio.ByteOrder;
  * Shared scratch for the bulk NBT array reads. Vanilla reads these payloads element by element,
  * so every int costs four {@code read()} calls and every long costs eight; funneling the bytes
  * through one big-endian buffer turns that into block reads.
+ *
+ * <p>Gated {@code >=1.8} after the lowest-gated of its consumers, {@code MixinNBTTagIntArray}
+ * (the other one, {@code MixinNBTTagLongArray}, is {@code >=1.12}). A helper is gated to the widest
+ * set of mixins that reference it, never wider.
  *
  * <p>The scratch is per-thread because chunk NBT is read on the server's IO workers, and it is
  * thread-local rather than a static single buffer for that reason. Both fields are lazily
@@ -102,3 +109,4 @@ public final class NbtBulkReader {
 	private NbtBulkReader() {
 	}
 }
+//$ end

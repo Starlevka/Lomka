@@ -1,3 +1,5 @@
+//$ if >=1.12
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.network;
 
 import java.util.zip.Deflater;
@@ -76,3 +79,4 @@ public abstract class MixinNettyCompressionEncoder {
 		this.deflater.reset();
 	}
 }
+//$ end

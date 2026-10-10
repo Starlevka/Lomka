@@ -1,0 +1,6 @@
+plugins {
+	id 'fabric-loom' version '1.18.3'
+	id 'ploceus' version '1.18.1'
+}
+
+apply from: '../ornithe-common.gradle'

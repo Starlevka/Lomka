@@ -1,3 +1,5 @@
+//$ if >=1.8
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.nbt;
 
 import java.io.DataInput;
@@ -43,8 +46,6 @@ public abstract class MixinNBTTagIntArray {
 
 	@Shadow private int[] intArray;
 
-	// No @Override: the target method is package-private in net.minecraft.nbt, so javac cannot
-	// see it from this package. Mixin resolves it by name and descriptor instead.
 	@Overwrite
 	void read(DataInput dataInput, int depth, NBTSizeTracker sizeTracker) throws IOException {
 		sizeTracker.read(192L);
@@ -63,3 +64,4 @@ public abstract class MixinNBTTagIntArray {
 		this.intArray = target;
 	}
 }
+//$ end

@@ -1,3 +1,5 @@
+//$ if >=1.8
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.utils.constants;
 
 import net.minecraft.util.EnumFacing;
@@ -23,6 +26,10 @@ import net.minecraft.util.EnumFacing;
 /**
  * Flat lookup table for {@code EnumFacing#rotateAround(Axis)}, indexed by
  * {@code axis.ordinal() * 6 + facing.ordinal()}.
+ *
+ * <p>Gated {@code >=1.8} because its only consumer is {@code MixinEnumFacing}, which is gated the
+ * same way - the helper must not outlive the mixin that needs it, or 1.7.10 compiles a table whose
+ * only reader does not exist.
  *
  * <p>Held outside {@code lomka.starl.mixins} and built here rather than in a static field on the
  * mixin, for two reasons. A class that lives in a configured mixin package cannot be loaded by the
@@ -34,9 +41,8 @@ import net.minecraft.util.EnumFacing;
  * <p>Row contents are transcribed from the three private helpers vanilla dispatches to - X from
  * {@code func_176744_n}, Y from {@code func_176746_e}, Z from {@code func_176738_p} - with the
  * parallel-axis entries filled in from the identity checks the public method performs before
- * calling them. Verified cell-by-cell against those switch bodies, plus the four-cycle and
- * bijection invariants, by
- * {@code scripts/bench/src/main/java/lomka/bench/legacy/EnumFacingClockwiseCrossCheck.java}.
+ * calling them. Verified cell-by-cell against those switch bodies, and against the four-cycle and
+ * bijection invariants, by a dedicated cross-check over the full table.
  */
 public final class EnumFacingTables {
 
@@ -50,3 +56,4 @@ public final class EnumFacingTables {
 	private EnumFacingTables() {
 	}
 }
+//$ end

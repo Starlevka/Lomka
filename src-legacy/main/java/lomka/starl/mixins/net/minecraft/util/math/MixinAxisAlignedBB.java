@@ -1,3 +1,5 @@
+//$ if >=1.12
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.util.math;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,8 +48,6 @@ public abstract class MixinAxisAlignedBB {
 	/** Same threshold vanilla's {@code getIntermediateWithXValue} uses. */
 	private static final double AXIS_EPSILON = (double) 1.0E-7F;
 
-	// The bounds are protected in 1.12.2 and this mixin is not a subclass, so they are
-	// shadowed rather than widened with an access transformer.
 	@Shadow protected double minX;
 	@Shadow protected double minY;
 	@Shadow protected double minZ;
@@ -221,5 +222,4 @@ public abstract class MixinAxisAlignedBB {
 		return found ? new RayTraceResult(new Vec3d(bestX, bestY, bestZ), bestFacing) : null;
 	}
 }
-
-
+//$ end

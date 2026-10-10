@@ -1,3 +1,5 @@
+//$ if >=1.12
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.network;
 
 import java.util.List;
@@ -75,7 +78,6 @@ public abstract class MixinNettyCompressionDecoder extends ByteToMessageDecoder 
 		PacketBuffer buffer = new PacketBuffer(in);
 		int decompressed = buffer.readVarInt();
 		if (decompressed == 0) {
-			// Uncompressed packet: this slice is the payload the pipeline wants, nothing to reuse.
 			out.add(buffer.readBytes(buffer.readableBytes()));
 			return;
 		}
@@ -100,10 +102,10 @@ public abstract class MixinNettyCompressionDecoder extends ByteToMessageDecoder 
 		buffer.readBytes(scratch, 0, readable);
 		this.inflater.setInput(scratch, 0, readable);
 
-		// Fresh on purpose: this one escapes into the pipeline through wrappedBuffer.
 		byte[] inflated = new byte[decompressed];
 		this.inflater.inflate(inflated);
 		out.add(Unpooled.wrappedBuffer(inflated));
 		this.inflater.reset();
 	}
 }
+//$ end

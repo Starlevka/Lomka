@@ -1,3 +1,5 @@
+//$ if >=1.12
+
 /*
  * This file is part of Lomka (https://github.com/Starlevka/Lomka)
  * Copyright (C) 2026 Starlev (a.k.a. Starlevka) and contributors
@@ -16,6 +18,7 @@
  *
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
 package lomka.starl.mixins.net.minecraft.client.resources;
 
 import java.io.FileNotFoundException;
@@ -90,7 +93,6 @@ public abstract class MixinFallbackResourceManager {
 		for (int i = this.resourcePacks.size() - 1; i >= 0; --i) {
 			IResourcePack pack = this.resourcePacks.get(i);
 
-			// Resolved at most once, and only for a pack that reports having the sidecar.
 			if (metadataPack == null) {
 				ResourceLocation candidate = getLocationMcmeta(location);
 				if (pack.resourceExists(candidate)) {
@@ -153,3 +155,4 @@ public abstract class MixinFallbackResourceManager {
 		return resources;
 	}
 }
+//$ end
