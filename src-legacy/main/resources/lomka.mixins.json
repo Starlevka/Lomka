@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "refmap": "lomka.refmap.json",
+  "package": "lomka.starl.mixins",
+  "compatibilityLevel": "JAVA_8",
+  "plugin": "lomka.starl.config.LomkaMixinPlugin",
+  "client": [
+    "net.minecraft.client.MixinMinecraft",
+    "net.minecraft.client.resources.MixinAbstractResourcePack",
+    "net.minecraft.client.resources.MixinFallbackResourceManager",
+    "net.minecraft.client.shader.MixinFramebuffer"
+  ],
+  "mixins": [
+    "net.minecraft.nbt.MixinNBTTagIntArray",
+    "net.minecraft.nbt.MixinNBTTagLongArray",
+    "net.minecraft.network.MixinNettyCompressionDecoder",
+    "net.minecraft.network.MixinNettyCompressionEncoder",
+    "net.minecraft.util.MixinEnumFacing",
+    "net.minecraft.util.math.MixinAxisAlignedBB",
+    "net.minecraft.util.math.MixinMathHelper",
+    "net.minecraft.util.math.MixinVec3i"
+  ],
+  "server": [
+  ]
+}
+
+

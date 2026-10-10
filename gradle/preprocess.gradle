@@ -1,0 +1,120 @@
+// Shared source preprocessor for the legacy Forge builds.
+//
+// Stonecutter cannot be used here: its Gradle plugin needs Gradle 7.4+ and the Kotlin DSL, while
+// 1.7.10 and 1.8.9 are stuck on ForgeGradle 2.1.6 / Gradle 2.14.1 (which has no Kotlin DSL at all).
+// So this file reproduces the one Stonecutter feature we actually need - conditional compilation -
+// in about a hundred lines of Gradle 2-compatible Groovy.
+//
+// Source of truth stays a single physical tree, src-legacy/main/java. Nothing is edited in place:
+// preprocessLegacySources writes a filtered copy under build/generated-src/java and the build
+// compiles that instead. That keeps src-legacy/ writable and reviewable while every version still
+// gets its own javac input.
+//
+// Directive syntax - each directive must be the whole line, and is stripped from the output:
+//
+//   //$ if >=1.8.9          keep the block only for 1.8.9 and anything newer
+//   //$ if ==1.7.10         keep only for exactly 1.7.10
+//   //$ else                the alternative branch
+//   //$ end                 closes the block
+//
+// Versions compare as numeric triples, never as strings. A string compare is wrong here in a way
+// that fails silently: "1.7.10" > "1.8.9" lexicographically, so every guard would come out
+// inverted and no build would complain.
+
+// Compares two dotted versions numerically, component by component, padding the shorter with
+// zeroes so 1.8 and 1.8.0.1 are equal. Returns a negative number, zero or a positive number the
+// way Comparable does.
+def compareVersions = { String a, String b ->
+    def pa = a.tokenize('.')*.toInteger()
+    def pb = b.tokenize('.')*.toInteger()
+    def len = Math.max(pa.size(), pb.size())
+    for (i in 0..<len) {
+        def va = i < pa.size() ? pa[i] : 0
+        def vb = i < pb.size() ? pb[i] : 0
+        if (va != vb) {
+            return va <=> vb
+        }
+    }
+    return 0
+}
+
+// Evaluates one condition body against the target MC version. Supports a single comparison,
+// which is all the directives actually need - every version check we have written so far is a
+// version comparison, and a grammar nobody uses is a grammar nobody tests.
+def evaluateCondition = { String body, String mcVersion ->
+    def text = body.trim()
+    def match = (text =~ /^([<>!=]=|[<>])\s*(\d[\d.]*)$/)
+    if (match.matches()) {
+        def op = match.group(1)
+        def rhs = match.group(2)
+        def cmp = compareVersions(mcVersion, rhs)
+        switch (op) {
+            case '>=': return cmp >= 0
+            case '<=': return cmp <= 0
+            case '>':  return cmp > 0
+            case '<':  return cmp < 0
+            case '==': return cmp == 0
+            case '!=': return cmp != 0
+        }
+    }
+    // No operator means equality, so "//$ if 1.8.9" reads naturally.
+    if (text ==~ /^\d[\d.]*$/) {
+        return compareVersions(mcVersion, text) == 0
+    }
+    throw new GradleException("Unparseable preprocessor condition: '${body}'")
+}
+
+ext.preprocessLegacySources = { File sourceRoot, File outputRoot, String mcVersion ->
+    sourceRoot.eachFileRecurse(groovy.io.FileType.FILES) { sourceFile ->
+        if (!sourceFile.name.endsWith('.java')) {
+            return
+        }
+        def relative = sourceRoot.toPath().relativize(sourceFile.toPath()).toString()
+        def target = new File(outputRoot, relative)
+        target.parentFile.mkdirs()
+
+        // A stack of "is this block emitting" booleans, one entry per open //$ if.
+        def emitting = []
+        def out = new StringBuilder()
+
+        sourceFile.eachLine('UTF-8') { line ->
+            def trimmed = line.trim()
+            if (trimmed.startsWith('//$ ')) {
+                def directive = trimmed.substring(4).trim()
+
+                if (directive ==~ /^if\s+(.+)$/) {
+                    def parentEmitting = emitting.isEmpty() ? true : emitting.last()
+                    // Parent still has to be emitting for this branch to be considered at all,
+                    // otherwise a nested //$/else inside a skipped block would resurrect output.
+                    emitting.add(parentEmitting && evaluateCondition(directive.substring(3), mcVersion))
+                    return
+                }
+                if (directive == 'else') {
+                    if (emitting.isEmpty()) {
+                        throw new GradleException("//\$ else without //\$ if in ${relative}")
+                    }
+                    def parentEmitting = emitting.size() == 1 ? true : emitting[-2]
+                    emitting[-1] = parentEmitting && !emitting[-1]
+                    return
+                }
+                if (directive == 'end') {
+                    if (emitting.isEmpty()) {
+                        throw new GradleException("//\$ end without //\$ if in ${relative}")
+                    }
+                    emitting.removeLast()
+                    return
+                }
+                throw new GradleException("Unknown preprocessor directive '${directive}' in ${relative}")
+            }
+
+            if (emitting.isEmpty() || emitting.last()) {
+                out.append(line).append('\n')
+            }
+        }
+
+        if (!emitting.isEmpty()) {
+            throw new GradleException("Unclosed //\$ if in ${relative}")
+        }
+        target.setText(out.toString(), 'UTF-8')
+    }
+}

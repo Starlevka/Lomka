@@ -26,3 +26,4 @@ Thumbs.db
 
 # ── Other project files not part of the mod source ──
 /scripts/
+legacy-*/run/
