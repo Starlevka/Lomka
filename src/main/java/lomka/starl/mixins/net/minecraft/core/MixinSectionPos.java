@@ -84,6 +84,7 @@ public abstract class MixinSectionPos {
      *         a single-section fast path covering the overwhelmingly common case where a block
      *         change touches exactly one section.
      */
+    //? if >=1.18 {
     @Overwrite
     public static void aroundAndAtBlockPos(int x, int y, int z, LongConsumer consumer) {
         int minX = blockToSectionCoord(x - 1);
@@ -107,6 +108,7 @@ public abstract class MixinSectionPos {
             }
         }
     }
+    //?}
 
     /**
      * @author Starlev

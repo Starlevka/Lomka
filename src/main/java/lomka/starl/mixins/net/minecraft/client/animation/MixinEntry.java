@@ -35,17 +35,17 @@ import org.spongepowered.asm.mixin.Unique;
  *
  * The search is deliberately NOT reimplemented here any more. It was, to drop the capturing
  * IntPredicate that `Mth#binarySearch(0, len, seconds <= timestamp)` builds per channel:
- * scripts/bench AnimationAllocBenchRunner measures that object at 0.00 B/frame through both
- * an interface and a direct call site - `Mth#binarySearch` is a 10-line static method, so C2
- * inlines it and scalar-replaces the callback, while the scratch Vector3f (passed on into the
+ * allocation profiling measures that object at 0.00 B/frame through both an interface and a
+ * direct call site - `Mth#binarySearch` is a 10-line static method, so C2 inlines it and
+ * scalar-replaces the callback, while the scratch Vector3f (passed on into the
  * Interpolation/Target interfaces) keeps escaping. The inlined replica was also the slower of
- * the two, 5.067 vs 4.654 ns per search in AnimationBenchRunner#benchSearch. So reimplementing
- * it bought nothing measurable and cost a permanent parity obligation against vanilla's
- * insertion index - through an @Invoker/@Shadow call the vanilla search stays authoritative.
+ * the two, 5.067 vs 4.654 ns per search. So reimplementing it bought nothing measurable and
+ * cost a permanent parity obligation against vanilla's insertion index - through an
+ * @Invoker/@Shadow call the vanilla search stays authoritative.
  *
- * This is where COO (scripts/COMPABILITY owns Collections of Optimizations) stops: it rewrites
- * KeyframeAnimations#animate, which only exists before the 1.21.6 bake rework, and that mixin
- * is `require = 0` on newer versions. No competitor touches Entry#apply.
+ * This is where Collections Of Optimizations stops: it rewrites KeyframeAnimations#animate,
+ * which only exists before the 1.21.6 bake rework, and that mixin is `require = 0` on newer
+ * versions. No competitor touches Entry#apply.
  */
 @Mixin(targets = "net.minecraft.client.animation.KeyframeAnimation$Entry")
 public abstract class MixinEntry implements IKeyframeAnimationEntry {

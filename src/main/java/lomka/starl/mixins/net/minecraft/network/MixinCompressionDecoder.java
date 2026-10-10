@@ -45,7 +45,7 @@ public abstract class MixinCompressionDecoder {
      *         nioBuffer's, so the try never throws there - but a refused buffer would throw
      *         inside the packet decoder and drop the connection. A non-throwing try/catch costs
      *         nothing once JIT-compiled, so the guard costs us nothing and removes the failure
-     *         mode. (Measured figures live in scripts/bench, not in source comments.)
+     *         mode.
      */
     @Overwrite
     private void setupInflaterInput(ByteBuf bytebuf) {

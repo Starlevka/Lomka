@@ -103,7 +103,6 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer {
      *         Declared public even though vanilla's is protected: Mixin resolves the target
      *         signature as PUBLIC and rejects an @Overwrite that would reduce it, which aborts
      *         the launch with "cannot reduce visibility of PUBLIC target method".
-     *         (Measured figures live in scripts/bench, not in source comments.)
      */
     @Overwrite
     public T get(int index) {

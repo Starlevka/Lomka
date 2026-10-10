@@ -58,8 +58,17 @@ public abstract class MixinVoxelShape {
      */
     @Overwrite
     public void forAllBoxes(Shapes.DoubleLineConsumer consumer) {
+        int[] indices = null;
+        //? if >=1.17 {
         if (this.shape instanceof IDiscreteVoxelShape cache) {
-            int[] indices = cache.lomka$boxes();
+            indices = cache.lomka$boxes();
+        }
+        //? } else {
+        /*if (this.shape instanceof IDiscreteVoxelShape) {
+            indices = ((IDiscreteVoxelShape) this.shape).lomka$boxes();
+        }
+        *///?}
+        if (indices != null) {
             if (indices.length > 0) {
                 for (int i = 0; i < indices.length; i += 6) {
                     consumer.consume(

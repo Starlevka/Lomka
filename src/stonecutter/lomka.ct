@@ -4,10 +4,18 @@ accessWidener v2 official
 accessWidener v2 named
 #?}
 
+# Everything below widens 1.17+ classes and members, so the 1.16.5 variant generates a
+# header-only widener. Loom rejects an entry whose class or member does not exist
+# ("Unable to find ..."), which is what an ungated block would produce there.
+#
+# 1.18.2 is included (>=1.18) because the 1.18 ports need the IndexMerger / SectionPos /
+# BlockStateBase$Cache / PalettedContainer$Data widenings below - all verified present on
+# 1.18.2 with javap, and absent under those names on 1.16.5.
+#? if >=1.18 {
 #? if >=26.1 {
 accessible method net/minecraft/client/resources/model/geometry/QuadCollection <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
 accessible method net/minecraft/client/resources/model/geometry/QuadCollection$Builder createFromSublists (Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/geometry/QuadCollection;
-#?} else if >=1.21.11 {
+#?} else if >=1.21.6 {
 accessible method net/minecraft/client/resources/model/QuadCollection <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
 accessible method net/minecraft/client/resources/model/QuadCollection$Builder createFromSublists (Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/QuadCollection;
 #?}
@@ -15,22 +23,54 @@ accessible method net/minecraft/client/resources/model/QuadCollection$Builder cr
 #? if >=1.21.6 && <26.3 {
 mutable field com/mojang/blaze3d/opengl/GlProgram uniformsByName Ljava/util/Map;
 #?}
+#? }
 
+# SectionPos's (int,int,int) constructor is private on every version we build, so the AW is
+# unconditional. IndexMerger is package-private everywhere, but its accessor changed: 1.18.2
+# added a direct size() while 1.16.5 only exposes getList() (verified in both vendored trees),
+# so the two member sets cannot share a block.
+accessible method net/minecraft/core/SectionPos <init> (III)V
+
+#? if >=1.18 {
 accessible class net/minecraft/world/phys/shapes/IndexMerger
 accessible class net/minecraft/world/phys/shapes/IndexMerger$IndexConsumer
 accessible method net/minecraft/world/phys/shapes/IndexMerger size ()I
 accessible method net/minecraft/world/phys/shapes/IndexMerger forMergedIndexes (Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
-accessible method net/minecraft/core/SectionPos <init> (III)V
-
 accessible class net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache
 accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase cache Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
 accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache collisionShape Lnet/minecraft/world/phys/shapes/VoxelShape;
 
+#? }
+
+#? if <1.18 {
+accessible class net/minecraft/world/phys/shapes/IndexMerger
+accessible class net/minecraft/world/phys/shapes/IndexMerger$IndexConsumer
+accessible method net/minecraft/world/phys/shapes/IndexMerger getList ()Lit/unimi/dsi/fastutil/doubles/DoubleList;
+accessible method net/minecraft/world/phys/shapes/IndexMerger forMergedIndexes (Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
+
+accessible class net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache
+accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase cache Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
+accessible field net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache collisionShape Lnet/minecraft/world/phys/shapes/VoxelShape;
+#? }
+
+# PalettedContainer.Data only exists from 1.18.2 on; 1.16.5 keeps the palette and the bit
+# storage in separate fields (verified with javap on both mapped jars).
+#? if >=1.18.2 {
+accessible class net/minecraft/world/level/chunk/PalettedContainer$Data
+#? }
+
+# PalettedContainer.Configuration is the Data holder's companion record from 1.18.2 up to
+# 1.21.6 - 1.21.9 inlined it into Data (javap on the loom-mapped jars: present 1.19.2-1.21.6,
+# absent 1.21.9+). UniformPaletteCache only stores Data, so nothing references it, but
+# MixinPalettedContainer reaches it through Data, hence the widening while it exists.
+#? if >=1.18.2 && <1.21.9 {
+accessible class net/minecraft/world/level/chunk/PalettedContainer$Configuration
+#? }
+
+#? if >=1.19 {
 accessible class net/minecraft/client/Camera$NearPlane
 accessible method net/minecraft/client/Camera$NearPlane <init> (Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
-
-accessible class net/minecraft/world/level/chunk/PalettedContainer$Data
 
 accessible field net/minecraft/world/level/levelgen/Xoroshiro128PlusPlus seedLo J
 accessible field net/minecraft/world/level/levelgen/Xoroshiro128PlusPlus seedHi J
@@ -49,4 +89,5 @@ accessible method com/mojang/blaze3d/vertex/PoseStack$Pose <init> (Lorg/joml/Mat
 #? if >=1.21 {
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
 #?}
+#? }
 

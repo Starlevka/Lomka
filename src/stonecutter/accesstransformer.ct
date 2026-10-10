@@ -1,7 +1,14 @@
+# Same reason as lomka.ct: every entry below widens a 1.17+ class, and an unknown member is a
+# hard error in the Forge transformer. 1.16.5 therefore ships an empty transformer, which is valid
+# (see the legacy tree's "declared but empty AT" rule) - it stays declared.
+#
+# 1.18.2 is included: the IndexMerger / SectionPos / BlockStateBase$Cache / PalettedContainer$Data
+# widenings are needed by the 1.18 ports and all resolve there (verified with javap).
+#? if >=1.18 {
 #? if >=26.1 {
 public net.minecraft.client.resources.model.geometry.QuadCollection <init>(Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
 public net.minecraft.client.resources.model.geometry.QuadCollection$Builder createFromSublists(Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/geometry/QuadCollection;
-#?} else if >=1.21.11 {
+#?} else if >=1.21.6 {
 public net.minecraft.client.resources.model.QuadCollection <init>(Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
 public net.minecraft.client.resources.model.QuadCollection$Builder createFromSublists(Ljava/util/List;IIIIIII)Lnet/minecraft/client/resources/model/QuadCollection;
 #?}
@@ -10,30 +17,58 @@ public net.minecraft.client.resources.model.QuadCollection$Builder createFromSub
 private-f com.mojang.blaze3d.opengl.GlProgram uniformsByName # Ljava/util/Map;
 #?}
 
+# SectionPos's (int,int,int) constructor is private on every version we build.
+public net.minecraft.core.SectionPos <init>(III)V
+
+# IndexMerger is package-private everywhere, but 1.16.5 only exposes getList() where 1.18.2
+# added a direct size() (verified in both vendored trees), so the member sets are version-gated.
+#? if >=1.18 {
 public net.minecraft.world.phys.shapes.IndexMerger
 public net.minecraft.world.phys.shapes.IndexMerger$IndexConsumer
 public net.minecraft.world.phys.shapes.IndexMerger size()I
 public net.minecraft.world.phys.shapes.IndexMerger forMergedIndexes(Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
-public net.minecraft.core.SectionPos <init>(III)V
+#? if <1.21 {
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase f_60593_ # cache
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache f_60842_ # collisionShape
+#?} else {
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase cache # Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
+public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache collisionShape # Lnet/minecraft/world/phys/shapes/VoxelShape;
+#?}
+#? } else {
+public net.minecraft.world.phys.shapes.IndexMerger
+public net.minecraft.world.phys.shapes.IndexMerger$IndexConsumer
+public net.minecraft.world.phys.shapes.IndexMerger getList()Lit/unimi/dsi/fastutil/doubles/DoubleList;
+public net.minecraft.world.phys.shapes.IndexMerger forMergedIndexes(Lnet/minecraft/world/phys/shapes/IndexMerger$IndexConsumer;)Z
 
 #? if <1.21 {
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase f_60593_ # cache
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache f_60842_ # collisionShape
-
-public net.minecraft.client.Camera$NearPlane
-public net.minecraft.client.Camera$NearPlane <init>(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
 #?} else {
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase cache # Lnet/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase$Cache;
 public net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase$Cache collisionShape # Lnet/minecraft/world/phys/shapes/VoxelShape;
+#?}
+#? }
 
+# PalettedContainer$Data exists only from 1.18.2 on. Its companion Configuration record holds
+# from 1.18.2 to 1.21.6 - 1.21.9 inlined it into Data (javap on the loom-mapped jars: present
+# 1.19.2-1.21.6, absent 1.21.9+), and the transformer rejects an unknown member.
+#? if >=1.18.2 {
+public net.minecraft.world.level.chunk.PalettedContainer$Data
+#? }
+#? if >=1.18.2 && <1.21.9 {
+public net.minecraft.world.level.chunk.PalettedContainer$Configuration
+#? }
+
+#? if >=1.19 {
+# InvokerBlockBehaviour needs no widening on 1.18+: BlockBehaviour.getCollisionShape(BlockState,
+# BlockGetter, BlockPos, CollisionContext) is already public there (verified with javap).
 public net.minecraft.client.Camera$NearPlane
 public net.minecraft.client.Camera$NearPlane <init>(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)V
-#?}
-
-public net.minecraft.world.level.chunk.PalettedContainer$Data
 
 #? if <1.21 {
 public net.minecraft.world.level.levelgen.Xoroshiro128PlusPlus f_190089_ # seedLo
@@ -52,7 +87,7 @@ public net.minecraft.client.gui.Font getFontSet(Lnet/minecraft/resources/Resourc
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry filterAll(Ljava/util/Collection;)V
 public net.minecraft.server.packs.resources.FallbackResourceManager$PackEntry resources()Lnet/minecraft/server/packs/PackResources;
-
+#? }
 
 #? if >=1.19.3 && <1.21.5 {
 public com.mojang.blaze3d.vertex.PoseStack$Pose <init>(Lorg/joml/Matrix4f;Lorg/joml/Matrix3f;)V
@@ -60,4 +95,5 @@ public com.mojang.blaze3d.vertex.PoseStack$Pose <init>(Lorg/joml/Matrix4f;Lorg/j
 #? if >=1.21 {
 public com.mojang.blaze3d.vertex.PoseStack$Pose trustedNormals # Z
 #?}
+#? }
 

@@ -153,13 +153,11 @@ public abstract class MixinFallbackResourceManager {
         // from "x.mcmeta"; PackEntry's filter accessor is version-specific, so re-keying
         // before filtering is NOT version-agnostic). One base-id alloc per META (rare path)
         // instead of one file+".mcmeta" concat per FILE; the hot loop below is then a
-        // zero-alloc direct get. (Figures: scripts/bench.)
+        // zero-alloc direct get.
         Map<Identifier, ResourceEntry<IoSupplier<InputStream>>> metaByBase = new HashMap<>(metaEntries.size() * 2 + 1);
         metaEntries.forEach((metaId, metaEntry) ->
             metaByBase.put(lomka$getIdentifierFromMetadata(metaId), metaEntry));
 
-        // Kept as forEach (not an entrySet loop): HashMap.forEach's internal table walk
-        // measured faster than the loop. (Figures: scripts/bench.)
         fileEntries.forEach((id, entry) -> {
             ResourceEntry<IoSupplier<InputStream>> metaEntry = metaByBase.get(id);
             IoSupplier<InputStream> resSupplier = debug

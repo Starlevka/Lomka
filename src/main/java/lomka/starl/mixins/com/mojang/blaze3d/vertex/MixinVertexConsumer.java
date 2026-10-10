@@ -68,8 +68,8 @@ import org.spongepowered.asm.mixin.Shadow;
  *   {@code a * b + c}. A replica that uses the fused JDK intrinsic is therefore off by up to
  *   one ulp on most vertices while looking like a faithful transcription. The same applies to
  *   the association: vanilla nests as {@code m00 * x + (m10 * y + (m20 * z + m30))}, while the
- *   2D transform is a left-to-right sum - both verified bit-identical by
- *   {@code FormulaParityCrossCheck}. (Figures: scripts/bench.)
+ *   2D transform is a left-to-right sum - both verified bit-identical by a fuzz comparison
+ *   against the vanilla operation.
  * - addVertexWith2DPose: >=1.21.6 only (Matrix3x2f 3-arg on 1.21.6-1.21.8,
  *   Matrix3x2f 2-arg on 1.21.9-1.21.10, Matrix3x2fc 2-arg >=1.21.11).
  * - setNormal(Pose, ...): >=1.21 && <26.1. Mirrors {@code Pose#transformNormal}:
@@ -92,8 +92,8 @@ import org.spongepowered.asm.mixin.Shadow;
  * 9-arg default fails to inline into the meshing caller.
  *
  * Both quad overwrites and both scalar transforms are verified bit-identical to the vanilla
- * JOML operation by {@code FormulaParityCrossCheck}, including the untrusted-normal branch
- * and the 8-arg delegation. (Figures: scripts/bench.)
+ * JOML operation by a fuzz comparison, including the untrusted-normal branch
+ * and the 8-arg delegation.
  *
  * Deliberately left vanilla on 26.x:
  * - {@code putBlockBakedQuad} allocates nothing to begin with - it adds the block offset per

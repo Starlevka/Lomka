@@ -48,7 +48,6 @@ import org.spongepowered.asm.mixin.Unique;
  * {@code PlayerCapeModel} (one per player per frame) - so this is an allocation reduction on a
  * narrow path, not a frame-time change. The trigonometry inside {@code getEulerAnglesZYX}
  * is untouched and remains the dominant cost of the call.
- * (Measured figures live in scripts/bench, not in source comments.)
  */
 @Mixin(ModelPart.class)
 public abstract class MixinModelPart {
@@ -70,8 +69,7 @@ public abstract class MixinModelPart {
      *         then JOML's {@code rotate(quat, dest)} which computes the same {@code M * Q}
      *         the in-place overload returns, then {@code getEulerAnglesZYX} into a reused
      *         vector. The resulting Euler angles are bit-identical to vanilla's sequence,
-     *         verified over 200k random rotations by {@code FormulaParityCrossCheck}.
-     *         (Figures: scripts/bench.)
+     *         verified over 200k random rotations.
      */
     @Overwrite
     public void rotateBy(Quaternionf quaternionf) {

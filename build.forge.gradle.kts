@@ -29,6 +29,9 @@ legacyForge {
 	}
 }
 
+// The mixin extension is what makes moddev's reobfJar expect a refmap, and the annotation processor
+// only writes one when the generated config actually lists a mixin. Every variant below does now
+// (see lomka.mixins.json5), so the extension is wired in unconditionally.
 mixin {
 	add(mainSourceSet, "lomka.refmap.json")
 	config("lomka.mixins.json")

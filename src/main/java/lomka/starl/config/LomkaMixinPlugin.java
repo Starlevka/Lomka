@@ -48,7 +48,7 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 public final class LomkaMixinPlugin implements IMixinConfigPlugin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Lomka/MixinConfig");
-    private static final String WIKI_URL = " https://github.com/Starlevka/Lomka/wiki/Configuration";
+    private static final String WIKI_URL = " https://github.com/Starlevka/Lomka/wiki/Mixin-Configuration";
     private static final String MIXIN_PREFIX = "lomka.starl.mixins.";
     private static volatile Properties options = new Properties();
 
@@ -185,11 +185,10 @@ public final class LomkaMixinPlugin implements IMixinConfigPlugin {
         // null-check respects explicit -Djoml.fastmath=false user override
         if (System.getProperty("joml.fastmath") == null) {
             System.setProperty("joml.fastmath", "true");
-        if (System.getProperty("joml.sinLookup") == null)
-            System.setProperty("joml.sinLookup", "true");
-        if (System.getProperty("joml.sinLookup.bits") == null) 
-            System.setProperty("joml.sinLookup.bits", "11");
         }
+            System.setProperty("joml.sinLookup", "true");
+        if (System.getProperty("joml.sinLookup.bits") == null)
+            System.setProperty("joml.sinLookup.bits", "11");
         lomka$loadOptions();
     }
     @Override public void preApply(String targetClass, org.objectweb.asm.tree.ClassNode classNode, String mixinClass, IMixinInfo mixinInfo) {}

@@ -49,22 +49,27 @@ public abstract class MixinDynamicGpuDataStorageMapped<T extends DynamicGpuDataS
 
     /**
      * Returns a {@link GpuBufferSlice} for {@code (buffer, offset, blockSize)},
-     * re-emitting the previously returned instance when every component matches.
+     * re-emitting the previously returned instance when the buffer and offset match.
      * GpuBufferSlice is an immutable record, so aliasing a repeated request is
      * observably identical to handing out a fresh copy; ring rotation and
      * resizeBuffers invalidate the cache implicitly through buffer identity.
+     *
+     * <p>The length is deliberately not compared. Every slice this class ever stores
+     * in the cache is built with {@code blockSize} as its length - here, and by the
+     * tail element of the batch write - so the component cannot differ and the test
+     * could never fail. Do not add a third write path to the cache without
+     * restoring it.
      */
     @Unique
     private GpuBufferSlice lomka$sliceFor(GpuBuffer gpubuffer, int i) {
-        GpuBufferSlice gpubufferslice = this.lomka$lastSlice;
+        GpuBufferSlice cached = this.lomka$lastSlice;
 
-        if (gpubufferslice != null && gpubufferslice.buffer() == gpubuffer
-                && gpubufferslice.offset() == (long) i && gpubufferslice.length() == (long) this.blockSize) {
-            return gpubufferslice;
+        if (cached != null && cached.buffer() == gpubuffer && cached.offset() == (long) i) {
+            return cached;
         } else {
-            gpubufferslice = gpubuffer.slice((long) i, (long) this.blockSize);
-            this.lomka$lastSlice = gpubufferslice;
-            return gpubufferslice;
+            GpuBufferSlice fresh = gpubuffer.slice((long) i, (long) this.blockSize);
+            this.lomka$lastSlice = fresh;
+            return fresh;
         }
     }
 
@@ -84,6 +89,21 @@ public abstract class MixinDynamicGpuDataStorageMapped<T extends DynamicGpuDataS
      *         immutable record instead of allocating a fresh one per call. The
      *         cache is read strictly AFTER the resize check, since resizeBuffers()
      *         reassigns the ringBuffer field.
+     *
+     *         The slow path builds its slice directly instead of routing it
+     *         through lomka$sliceFor: the cached slice belongs to the previous
+     *         block, so its offset is always (nextBlock - 1) * blockSize and can
+     *         never equal the offset being written now, and after a ring rotation
+     *         or a resize the buffer differs as well. The probe could only ever
+     *         miss, so it was three compares spent on a guaranteed miss; the fresh
+     *         slice is still stored, which is what primes the next fast-path hit.
+     *
+     *         The returned slice is the one the mapping already built -
+     *         GpuBufferSlice.MappedView is a record over (slice, data, onClose)
+     *         and the backend fills that slice with GpuBuffer#slice(offset, length)
+     *         from the very arguments it was handed, so it is component-for-
+     *         component the slice vanilla allocates here. Returning it drops the
+     *         second record per write without changing what the caller receives.
      */
     @Overwrite
     public GpuBufferSlice writeData(T gpuData) {
@@ -101,14 +121,17 @@ public abstract class MixinDynamicGpuDataStorageMapped<T extends DynamicGpuDataS
 
         int offset = this.nextBlock * this.blockSize;
         GpuBuffer currentBuffer = this.ringBuffer.currentBuffer();
+        GpuBufferSlice written;
 
         try (GpuBufferSlice.MappedView mappedView = currentBuffer.slice((long) offset, (long) this.blockSize).map(false, true)) {
             gpuData.write(mappedView.data());
+            written = mappedView.slice();
         }
 
         ++this.nextBlock;
         this.lastData = gpuData;
-        return this.lomka$sliceFor(currentBuffer, offset);
+        this.lomka$lastSlice = written;
+        return written;
     }
 
     /**

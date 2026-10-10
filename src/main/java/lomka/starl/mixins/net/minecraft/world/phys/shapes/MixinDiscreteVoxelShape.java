@@ -40,7 +40,7 @@ import org.spongepowered.asm.mixin.Unique;
  *
  * <p>This is the path {@code Entity.move} walks per touched block:
  * {@code shape.move(new Vec3(pos)).toAabbs()} allocates a new wrapper each time, so a cache keyed
- * on the wrapper is cold on every call. (Figures: scripts/bench.)
+ * on the wrapper is cold on every call.
  */
 @Mixin(DiscreteVoxelShape.class)
 public abstract class MixinDiscreteVoxelShape implements IDiscreteVoxelShape {

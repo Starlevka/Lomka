@@ -131,7 +131,6 @@ public class MixinARGB {
  *         narrowing to int wraps to a negative channel that clamps to 0 (white scaled by
  *         Integer.MAX_VALUE became black). Outside the range the clamp is reproduced
  *         directly - c * 0 / 255 == 0 and c * 255 / 255 == c, so no division is needed.
- *         (Figures: scripts/bench.)
  */
 @Overwrite
 public static int scaleRGB(int i, int j) {

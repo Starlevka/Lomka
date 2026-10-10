@@ -42,7 +42,9 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class MixinMultiPackResourceManager {
 
     @Shadow @Final private Map<String, FallbackResourceManager> namespacedManagers;
+    //? if >=1.20 {
     @Shadow private static void checkTrailingDirectoryPath(String path) {}
+    //?}
 
     /**
      * @author Starlev
@@ -54,7 +56,9 @@ public abstract class MixinMultiPackResourceManager {
     //?} else {
     public Map<Identifier, Resource> listResources(String path, Predicate<Identifier> filter) {
     //?}
+        //? if >=1.20 {
         checkTrailingDirectoryPath(path);
+        //?}
         Collection<FallbackResourceManager> managers = this.namespacedManagers.values();
         int size = managers.size();
         if (size == 0) {
@@ -80,7 +84,9 @@ public abstract class MixinMultiPackResourceManager {
     //?} else {
     public Map<Identifier, List<Resource>> listResourceStacks(String path, Predicate<Identifier> filter) {
     //?}
+        //? if >=1.20 {
         checkTrailingDirectoryPath(path);
+        //?}
         Collection<FallbackResourceManager> managers = this.namespacedManagers.values();
         int size = managers.size();
         if (size == 0) {

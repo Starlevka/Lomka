@@ -35,8 +35,8 @@ import org.joml.Quaternionfc;
  * an identity matrix it leaves the diagonal at {@code (4, 4, 4)} while an axis-only fast
  * path that skips the axis column would leave it at {@code (1, 4, 4)}. Minecraft only ever
  * produces unit quaternions here, so the check never fires in the game and the fast path
- * is bit-identical to JOML on the axis-aligned and the general branch alike.
- * (Figures: scripts/bench - the parity cross-check over 200k rotations.)
+ * is bit-identical to JOML on the axis-aligned and the general branch alike, over a parity
+ * cross-check of 200k rotations.
  */
 public final class AxisPoseRotate {
 

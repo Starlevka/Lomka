@@ -64,8 +64,10 @@ public abstract class MixinHeightmap implements IHeightmap {
      *         section in local coordinates, skipping null/hasOnlyAir sections in O(1) and resolving
      *         uniform sections with one predicate evaluation per type instead of a full walk. The
      *         walk order, the write index and the air filter stay vanilla's (see the notes below),
-     *         so every primed heightmap is bit-identical and nothing is allocated inside the
-     *         column loops; the per-Y lookup walk this removes is present in every version, so the
+     *         and nothing is allocated inside the column loops. Each column starts with a fresh
+     *         pending mask, so unmatched maps from water-only columns cannot accumulate and
+     *         overwrite a later column's height after vanilla's partial iterator rewind.
+     *         The per-Y lookup walk this removes is present in every version, so the
      *         win does not depend on the 26.3 scratch-state change.
      */
     @Overwrite
@@ -85,13 +87,14 @@ public abstract class MixinHeightmap implements IHeightmap {
             count++;
         }
 
-        // Heightmap.Types has six constants, so the pending set always fits in an int
         int initialPending = (1 << count) - 1;
 
         //? if >=1.21.4 {
         int minY = chunk.getMinY();
-        //?} else {
+        //?} else if >=1.17 {
         /*int minY = chunk.getMinBuildHeight();
+        *///?} else {
+        /*int minY = 0;
         *///?}
 
         LevelChunkSection[] sections = chunk.getSections();
@@ -103,6 +106,7 @@ public abstract class MixinHeightmap implements IHeightmap {
          */
         BlockState[] uniforms = new BlockState[sections.length];
         int topSection = -1;
+        //? if >=1.18 {
         for (int section = 0; section < sections.length; section++) {
             LevelChunkSection levelChunkSection = sections[section];
             if (levelChunkSection == null || levelChunkSection.hasOnlyAir()) {
@@ -118,6 +122,16 @@ public abstract class MixinHeightmap implements IHeightmap {
                 }
             }
         }
+        //?} else {
+        /*for (int section = 0; section < sections.length; section++) {
+            LevelChunkSection levelChunkSection = sections[section];
+            if (LevelChunkSection.isEmpty(levelChunkSection)) {
+                continue;
+            }
+
+            topSection = section;
+        }
+        *///?}
 
         for (int x = 0; x < 16; x++) {
             column:
@@ -127,6 +141,7 @@ public abstract class MixinHeightmap implements IHeightmap {
 
                 for (int section = topSection; section >= 0; section--) {
                     LevelChunkSection levelChunkSection = sections[section];
+                    //? if >=1.18 {
                     if (levelChunkSection == null || levelChunkSection.hasOnlyAir()) {
                         continue;
                     }
@@ -156,6 +171,11 @@ public abstract class MixinHeightmap implements IHeightmap {
 
                         continue;
                     }
+                    //?} else {
+                    /*if (LevelChunkSection.isEmpty(levelChunkSection)) {
+                        continue;
+                    }
+                    *///?}
 
                     int baseY = minY + (section << 4);
                     for (int y = 15; y >= 0; y--) {

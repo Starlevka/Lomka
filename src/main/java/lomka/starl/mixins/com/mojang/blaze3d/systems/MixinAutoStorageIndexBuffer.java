@@ -35,8 +35,8 @@ public abstract class MixinAutoStorageIndexBuffer {
      * goes to max(4096, req)*4 = 16384 indices (~32 KB of short indices) on first
      * use instead of a few dozen, skipping the first six growth reallocations that
      * otherwise hitch mid-frame during early rendering. Indices, not quads: a
-     * triangle list spends three indices per triangle, so 16384 indices cover
-     * roughly 10900 quads, not 16384.
+     * quad list spends six indices per quad; rounding to the stride gives
+     * 16386 indices, covering 2731 quads.
      * hasStorage() then makes subsequent calls a single int compare.
      */
     private static final int WARMUP_INDEX_COUNT = 4096;
@@ -50,8 +50,9 @@ public abstract class MixinAutoStorageIndexBuffer {
      *         it — typically chunk rendering after entering new areas, complex
      *         GUI batching, or cloud quad spikes. Growing x4 instead of x2
      *         halves the number of regens on the log scale and doubles the
-     *         time between them; buffer contents stay byte-identical to
-     *         vanilla's, only the allocation schedule changes.
+     *         time between them. Generated index values stay the same, while
+     *         vanilla chooses their element width from the larger capacity;
+     *         widening the growth can therefore switch to int indices earlier.
      */
     @ModifyConstant(method = "ensureStorage", constant = @Constant(intValue = 2))
     private int lomka$widenIndexBufferGrowth(int original) {
@@ -67,14 +68,16 @@ public abstract class MixinAutoStorageIndexBuffer {
      *         on every call. The host method wrapping ensureStorage() changed
      *         from bind(int) to getBuffer(int) in 1.21.6.
      */
-    //? if <1.21.6 {
-    /*@ModifyArg(method = "bind", at = @At(value = "INVOKE",
-        target = "Lcom/mojang/blaze3d/systems/RenderSystem$AutoStorageIndexBuffer;ensureStorage(I)V"))
-     *///?} else {
+    //? if >=1.21.6 {
     @ModifyArg(method = "getBuffer", at = @At(value = "INVOKE",
         target = "Lcom/mojang/blaze3d/systems/RenderSystem$AutoStorageIndexBuffer;ensureStorage(I)V"))
-    //?}
+    //?} else if >=1.19 {
+    /*@ModifyArg(method = "bind", at = @At(value = "INVOKE",
+        target = "Lcom/mojang/blaze3d/systems/RenderSystem$AutoStorageIndexBuffer;ensureStorage(I)V"))
+     *///?}
+    //? if >=1.19 {
     private int lomka$warmupIndexBuffer(int requested) {
         return Math.max(requested, WARMUP_INDEX_COUNT);
     }
+    //?}
 }

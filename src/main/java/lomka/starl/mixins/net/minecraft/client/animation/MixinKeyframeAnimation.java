@@ -33,9 +33,9 @@ import org.spongepowered.asm.mixin.Unique;
  * and interpolation writes into a caller-provided Vector3f, so the per-frame cost is meant to
  * be arithmetic only. It is not, in one place: 1.21.9 dropped the scratch vector field and
  * `apply(long, float)` now allocates `new Vector3f()` per call, and that object escapes into
- * the Interpolation and Target interfaces, so C2 cannot scalar-replace it. scripts/bench
- * AnimationAllocBenchRunner measures it at 24 B/frame in both an interface and a direct call
- * shape, and 0.00 B/frame with the vector reused - this overwrite is what removes it.
+ * the Interpolation and Target interfaces, so C2 cannot scalar-replace it. Allocation
+ * profiling measures it at 24 B/frame in both an interface and a direct call shape, and
+ * 0.00 B/frame with the vector reused - this overwrite is what removes it.
  *
  * Everything else in this method is left as vanilla computes it. The list iterator, the
  * AnimationState#ifStarted capturing Consumer and the search's capturing IntPredicate all
@@ -44,12 +44,12 @@ import org.spongepowered.asm.mixin.Unique;
  * zero-scale early return is not an allocation argument: with targetScale == 0 both vanilla
  * interpolations multiply their result by 0 and all three targets only offset by it, so the
  * pass cannot change the pose, and skipping it saves the whole 8-16 channel walk for a model
- * whose animation speed is zero. The fuzz in AnimationBenchRunner proves both invariants and
- * pins the only two bit-level exceptions of the skip: vanilla's +0.0F write normalizes a pose
- * component holding -0.0F (value-identical, sign of zero differs), and degenerate content with
- * duplicate head keyframe timestamps hit exactly on them lets vanilla poison the pose with NaN
- * where the skip does not - both unreachable on well-formed animations.
- * (Figures: scripts/bench.)
+ * whose animation speed is zero. A fuzz comparison against the vanilla body proves both
+ * invariants and pins the only two bit-level exceptions of the skip: vanilla's +0.0F write
+ * normalizes a pose component holding -0.0F (value-identical, sign of zero differs), and
+ * degenerate content with duplicate head keyframe timestamps hit exactly on them lets vanilla
+ * poison the pose with NaN where the skip does not - both unreachable on well-formed
+ * animations.
  *
  * Only for the versions where the vanilla allocation exists: vanilla used a field up to
  * 1.21.8, so this mixin's own field replaces it on 1.21.9+ and shadows it below.

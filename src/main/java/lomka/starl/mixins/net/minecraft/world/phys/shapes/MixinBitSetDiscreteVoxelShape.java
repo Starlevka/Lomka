@@ -99,7 +99,16 @@ public abstract class MixinBitSetDiscreteVoxelShape implements IBitSetDiscreteVo
      */
     @Overwrite
     public static BitSetDiscreteVoxelShape join(DiscreteVoxelShape discretevoxelshape, DiscreteVoxelShape discretevoxelshape1, IndexMerger indexmerger, IndexMerger indexmerger1, IndexMerger indexmerger2, BooleanOp booleanop) {
-        BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(indexmerger.size() - 1, indexmerger1.size() - 1, indexmerger2.size() - 1);
+        //? if >=1.18 {
+        int xSize = indexmerger.size() - 1;
+        int ySize = indexmerger1.size() - 1;
+        int zSize = indexmerger2.size() - 1;
+        //? } else {
+        /*int xSize = indexmerger.getList().size() - 1;
+        int ySize = indexmerger1.getList().size() - 1;
+        int zSize = indexmerger2.getList().size() - 1;
+        *///?}
+        BitSetDiscreteVoxelShape bitsetdiscretevoxelshape = new BitSetDiscreteVoxelShape(xSize, ySize, zSize);
         IBitSetDiscreteVoxelShape IBit = (IBitSetDiscreteVoxelShape) (Object) bitsetdiscretevoxelshape;
         BitSet storage = IBit.lomka$storage();
         boolean bulkRuns = storage.getClass() == BitSet.class;

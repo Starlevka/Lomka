@@ -29,20 +29,25 @@ public class MixinMth {
 
     /**
      * @author Starlev
-     * @reason Use numberOfLeadingZeros instead of De Bruijn lookup table.
+     * @reason Use numberOfLeadingZeros instead of the De Bruijn lookup table. The MIN_VALUE case
+     *         is spelled out because vanilla's isPowerOfTwo accepts it: MIN_VALUE & (MIN_VALUE - 1)
+     *         is 0 on the sign bit, so vanilla feeds MIN_VALUE straight into the table and answers
+     *         31, while the leading-zero body answers 0 for every non-positive input.
      */
     @Overwrite
     public static int ceillog2(int i) {
-        return i > 1 ? 32 - Integer.numberOfLeadingZeros(i - 1) : 0;
+        return i > 1 ? 32 - Integer.numberOfLeadingZeros(i - 1) : i == Integer.MIN_VALUE ? 31 : 0;
     }
 
     /**
      * @author Starlev
-     * @reason Use numberOfLeadingZeros instead of ceillog2 delegation.
+     * @reason Use numberOfLeadingZeros instead of ceillog2 delegation. Same MIN_VALUE case as
+     *         ceillog2: vanilla subtracts its non-power-of-two correction only when isPowerOfTwo
+     *         is false, and that check passes for MIN_VALUE, so vanilla answers 31 here too.
      */
     @Overwrite
     public static int log2(int i) {
-        return i > 0 ? 31 - Integer.numberOfLeadingZeros(i) : -1;
+        return i > 0 ? 31 - Integer.numberOfLeadingZeros(i) : i == Integer.MIN_VALUE ? 31 : -1;
     }
 
     /**
@@ -50,12 +55,15 @@ public class MixinMth {
      * @reason Single LZCNT instruction replaces the five-step OR-cone. Guarded to match
      *         vanilla exactly: f(0)=0, f(negative)=0 except f(MIN_VALUE)=MIN_VALUE (vanilla's
      *         OR-cone saturates to -1 whose +1 overflows back), f(1)=1; without the guard
-     *         value=0 would yield 1<<(32-nlz(-1))=1<<32=1.
+     *         value=0 would yield 1<<(32-nlz(-1))=1<<32=1. f(1) needs no case of its own - the
+     *         shift amount is 32 - nlz(0) = 0, so the general form already answers 1.
      */
     @Overwrite
     public static int smallestEncompassingPowerOfTwo(int i) {
-        if (i == Integer.MIN_VALUE) return i;
-        return i <= 0 ? 0 : i == 1 ? 1 : 1 << (32 - Integer.numberOfLeadingZeros(i - 1));
+        if (i <= 0) {
+            return i == Integer.MIN_VALUE ? i : 0;
+        }
+        return 1 << (32 - Integer.numberOfLeadingZeros(i - 1));
     }
 
     /**

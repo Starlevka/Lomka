@@ -55,65 +55,6 @@ public class MixinLightCoordsUtil {
         return lightCoords & 16711680 | block;
     }
 
-    /**
-     * @author Starlev
-     * @reason Per-component max on the light-packing hot path: adds an equality fast path so
-     *         identical coordinates return immediately, and packs each nibble max with direct
-     *         bit ops. Equivalent to vanilla, minus the branchlets for the common equal case.
-     */
-    @Overwrite
-    public static int max(final int coords1, final int coords2) {
-        if (coords1 == coords2) {
-            return coords1;
-        }
-        int block1 = coords1 >>  4 & 15;
-        int block2 = coords2 >>  4 & 15;
-        int sky1   = coords1 >> 20 & 15;
-        int sky2   = coords2 >> 20 & 15;
-        int block  = block1 > block2 ? block1 : block2;
-        int sky    = sky1 > sky2 ? sky1 : sky2;
-        return block << 4 | sky << 20;
-    }
-
-    /**
-     * @author Starlev
-     * @reason Emissive-light fast path: short-circuits the two trivial cases (emission <= 0 returns
-     *         coords unchanged, emission >= 15 returns FULL_BRIGHT) so the per-channel max is only
-     *         computed for the in-rage emissive blocks.
-     */
-    @Overwrite
-    public static int lightCoordsWithEmission(final int lightCoords, final int emission) {
-        if (emission <= 0) {
-            return lightCoords;
-        }
-        if (emission >= 15) {
-            return LightCoordsUtil.FULL_BRIGHT;
-        }
-        int sky   = lightCoords >> 20 & 15;
-        int block = lightCoords >>  4 & 15;
-        if (sky   < emission) {
-            sky   = emission;
-        }
-        if (block < emission) {
-            block = emission;
-        }
-        return block << 4 | sky << 20;
-    }
-
-    /**
-     * @author Starlev
-     * @reason Replaces vanilla's per-channel interpolation call with a single weighted accumulation
-     *         for each of the sky/block channels and a combined mask, cutting the call overhead on
-     *         the smooth-lighting interpolation hot path.
-     */
-    @Overwrite
-    public static int smoothWeightedBlend(final int coords1, final int coords2, final int coords3, final int coords4, final float weight1, final float weight2, final float weight3, final float weight4) {
-        int sky   = (int) ((coords1 >> 16 & 255) * weight1 + (coords2 >> 16 & 255) * weight2 + (coords3 >> 16 & 255) * weight3 + (coords4 >> 16 & 255) * weight4);
-        int block = (int) ((coords1 & 255)       * weight1 + (coords2 & 255)       * weight2 + (coords3 & 255)       * weight3 + (coords4 & 255)       * weight4);
-
-        return (block & 255) | ((sky & 255) << 16);
-    }
-
     //? if !=26.1 {
     /**
      * @author Starlev
@@ -148,7 +89,7 @@ public class MixinLightCoordsUtil {
         if (state.emissiveRendering()) {
             return LightCoordsUtil.FULL_BRIGHT;
         }
-        int packedBrightness = brightnessGetter.packedBrightness(level, pos);
+        int packedBrightness  = brightnessGetter.packedBrightness(level, pos);
         int blockSelfEmission = state.getLightEmission();
         if (blockSelfEmission > 0) {
             int block = packedBrightness >> 4 & 15;

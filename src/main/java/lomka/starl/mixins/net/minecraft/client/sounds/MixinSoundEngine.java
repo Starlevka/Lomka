@@ -66,13 +66,13 @@ public abstract class MixinSoundEngine {
      * therefore stay a small fraction of that budget or music loses sources, while the static
      * pool allows up to 255.
      */
-    @Unique @Final private static final int LOMKA$STREAMING_CAP = 2;
+    @Unique @Final private static final int LOMKA$STREAMING_CAP = 3;
     @Unique @Final private static final int LOMKA$STATIC_CAP    = 16;
     @Unique @Final private static final int LOMKA$STREAMING     = 1;
 
     @Unique @Final private Queue<ChannelHandle>[] lomka$pooled    = lomka$queues();
     @Unique @Final private AtomicInteger[] lomka$acquiring        = lomka$counters();
-    @Unique @Final private AtomicInteger[] lomka$pooledCount     = lomka$sizes();
+    @Unique @Final private AtomicInteger[] lomka$pooledCount      = lomka$sizes();
 
     @Redirect(method = "play", at = @At(value = "INVOKE", target =
             "Lnet/minecraft/client/sounds/ChannelAccess;"
@@ -84,21 +84,12 @@ public abstract class MixinSoundEngine {
         ChannelHandle pooled = this.lomka$poll(index);
 
         /*
-         * Replenish on hits too, not only on misses. This is the whole ballgame: a miss costs a
-         * full createHandle().join(), i.e. exactly what vanilla costs, so a pool that is only
-         * refilled by misses can improve the median but never the tail - measured at 96 channels
-         * the p99 was 400us against vanilla's 400us. Worse, the refill a miss triggers only
-         * arrives after that miss has already blocked, so the pool stays one step behind and the
-         * hit rate settles at 50% (30% on 32-sound bursts). Topping up while the pool is below
-         * half the cap, on every call, reaches a 100% hit rate and takes p99 to 20us at the same
-         * acquisition volume. (Figures: scripts/bench, SoundEngineStallBenchRunner.)
-         *
-         * <p>Regime limit, also measured: the win needs the pool to be replenished faster than it
-         * drains, so it holds while a tick plays at most about cap/2 sounds - with cap 16 that is
-         * up to 8 sounds per tick, and it decays to nothing by 16-32 sounds per tick, where both
-         * policies match vanilla because the executor round trip is the wall. It is never worse
-         * than vanilla: acquisition volume, sound-thread time, dropped sounds and stale handles
-         * are all unchanged.
+         * Replenish on hits too: refilling only on misses leaves the next burst waiting for the
+         * executor again. A hit avoids that wait while the executor can replenish the pool
+         * faster than playback drains it. Idle pooled handles still occupy device sources and
+         * participate in scheduleTick's state queries. At source saturation, unsuccessful
+         * refill requests add executor work before the ordinary acquisition, so this policy
+         * does not guarantee lower latency than vanilla in that regime.
          */
         this.lomka$topUp(channelAccess, pool, index);
 
