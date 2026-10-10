@@ -175,6 +175,7 @@ net.minecraft.core.MixinCursor3D = false
 
 * The mod version lives in `stonecutter.properties.toml` (`mod.version`) and is swapped into all templates — never hardcode it in Java.
 * Add a `CHANGELOG.md` entry under a new `[x.y.z]` heading (sections in use: `Performance`, `Bug Fixes`, `New`, `Removed`, `Changed`), noting the affected version range per change like `(all versions)`, `(<1.21.4)`, `(>=26.1)`.
+* Changes confined to the legacy Forge builds (`src-legacy/`, 1.7.10 - 1.12.2) go to `CHANGELOG_LEGACY.md` instead — that tree has its own build and release cadence, so the two changelogs do not mix.
 * Releases are published by the maintainer. Contributors do not need publishing tools or platform API tokens; submit source changes and verification results through a pull request.
 
 ## Pull Request Process

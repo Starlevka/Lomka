@@ -34,6 +34,11 @@ body:
       label: Minecraft version
       multiple: true
       options:
+        - 1.7.10
+        - 1.8.9
+        - 1.12.2
+        - 1.16.5
+        - 1.18.2
         - 1.19.2
         - 1.20-1.20.1
         - 1.21-1.21.1
@@ -52,8 +57,8 @@ body:
     attributes:
       label: Mod loader
       options:
-        - Fabric/Quilt
-        - NeoForge
+        - Fabric / Quilt / Ornithe
+        - Forge / NeoForge
         - Both / not relevant
     validations:
       required: true

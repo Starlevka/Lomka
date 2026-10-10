@@ -7,8 +7,8 @@ build/
 */.gradle/
 
 # ── Game run directories (excluded per requirement) ──
-versions/*/run/
-versions/*/bin/
+*/*/run/
+*/*/bin/
 
 # ── IDE / Editor ──
 .eclipse
@@ -26,4 +26,3 @@ Thumbs.db
 
 # ── Other project files not part of the mod source ──
 /scripts/
-legacy-*/run/
